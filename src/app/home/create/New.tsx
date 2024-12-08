@@ -3,6 +3,7 @@
 import UploadForm from "@/components/uploadForm"
 import CodeParser from "@/components/codeParser"
 import { prepareQuestions, PrepQuestionsResponse } from "@actions/prompt"
+import { createJobPost } from "@actions/jobpost"
 import { useState, useEffect, useCallback } from "react"
 import AppIconsList from "@/components/appIconsList"
 import ResultsSlider from "@/components/resultsSlider"
@@ -72,6 +73,7 @@ const PrepQuestionStepper = ({
   return <Stepper steps={steps} onChangeStep={setActiveStep} onDone={onDone} />
 }
 const NewPost = () => {
+  const [isProcessing, setIsProcessing] = useState(false)
   const [showCodeParser, setShowCodeParser] = useState(false)
   const [fileData, setFileData] = useState<{
     filename: string
@@ -81,29 +83,28 @@ const NewPost = () => {
     null
   )
 
-  const prepQuestions = useCallback(
-    async (data: { filename: string; data: string }) => {
-      const results = await prepareQuestions(data)
-      setPrepResults(results)
-    },
-    []
-  )
   useEffect(() => {
-    if (!fileData) return
-    if (fileData?.filename && fileData?.data) {
-      console.log(fileData)
-      prepQuestions(fileData)
-      setShowCodeParser(true)
-    }
-  }, [prepQuestions, fileData])
+    async function handleFileData() {
+      if (!fileData?.filename || !fileData?.data || isProcessing) return
 
-  useEffect(() => {
-    if (prepResults && fileData) {
-      setTimeout(() => {
-        setShowCodeParser(false)
-      }, 3000)
+      try {
+        setIsProcessing(true)
+        setShowCodeParser(true)
+        const results = await createJobPost(fileData)
+        setPrepResults(results)
+      } catch (error) {
+        console.error("Error processing file:", error)
+      } finally {
+        // Hide code parser after delay
+        setTimeout(() => {
+          setShowCodeParser(false)
+          setIsProcessing(false)
+        }, 3000)
+      }
     }
-  }, [prepResults, fileData])
+
+    handleFileData()
+  }, [fileData, isProcessing])
 
   return (
     <div className="space-y-6 flex flex-col h-full min-h-screen">

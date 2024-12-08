@@ -9,8 +9,9 @@
     "lint": "next lint",
     "db:seed": "./node_modules/.bin/prisma db seed"
   },
+  "type": "module",
   "prisma": {
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.0.6",

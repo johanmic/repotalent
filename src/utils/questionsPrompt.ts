@@ -12,6 +12,8 @@ const packageJSONDescription = `
   packages: no more than 5,group packages and understand the meaning of them. dont list exact names but understands what they are for, if there are a lot of the same just make that as one example @radix/ @prisma/ @types
   tags: add a few tags that describe the project, looking for react, next, node, typescript, etc, include design systems, build systems, etc
   check the license of the project, if it is MIT, Apache, etc, indicate that.
+
+  determine open source on 
 `
 
 const requirementsDescription = `
@@ -96,8 +98,10 @@ export const prepareQuestions = async (data: {
 
   always return the following json format:
   based on the project, what is the seniority level of the candidate? from 0 to 1, 0 being the lowest and 1 being the highest.
-  it can never be 0, but it can be 1.
+  it can never be 0, but it can be 1. Base the seniority on the mix of the packages, technologies and platforms used.
   suggest a title for the job description based on the project.
+
+  
 
 
   {
@@ -133,15 +137,6 @@ export const prepareQuestions = async (data: {
     })
 
     console.log(prompt)
-
-    const job = await prisma.jobPost.create({
-      data: {
-        title: cleanedText.suggestedTitle,
-        seniority: cleanedText.seniority,
-        source: filename,
-        packages: {},
-      },
-    })
 
     return responseFixture
     // const { text } = await generateText({

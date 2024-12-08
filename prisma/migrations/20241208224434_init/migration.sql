@@ -50,9 +50,9 @@ CREATE TABLE "jobPost" (
     "minSalary" INTEGER,
     "maxSalary" INTEGER,
     "type" TEXT,
+    "experience" TEXT,
     "seniority" DOUBLE PRECISION,
     "remote" BOOLEAN,
-    "location" geography,
     "organizationId" TEXT,
     "openSource" BOOLEAN NOT NULL DEFAULT false,
     "views" INTEGER NOT NULL DEFAULT 0,
@@ -63,24 +63,47 @@ CREATE TABLE "jobPost" (
 );
 
 -- CreateTable
-CREATE TABLE "jobPostPackage" (
+CREATE TABLE "jobPostRatings" (
     "id" TEXT NOT NULL,
     "jobPostId" TEXT NOT NULL,
+    "question" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "rating" INTEGER,
+
+    CONSTRAINT "jobPostRatings_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "jobPostToPackageVersion" (
+    "jobPostId" TEXT NOT NULL,
+    "packageVersionId" TEXT NOT NULL,
+
+    CONSTRAINT "jobPostToPackageVersion_pkey" PRIMARY KEY ("jobPostId","packageVersionId")
+);
+
+-- CreateTable
+CREATE TABLE "openSourcePackage" (
+    "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "gitUrl" TEXT,
     "website" TEXT,
     "description" TEXT,
     "logo" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "jobPostPackage_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "openSourcePackage_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "jobPostPackageVersion" (
+CREATE TABLE "openSourcePackageVersion" (
     "id" TEXT NOT NULL,
-    "jobPostPackageId" TEXT NOT NULL,
+    "version" TEXT NOT NULL,
+    "packageId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "jobPostPackageVersion_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "openSourcePackageVersion_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -89,7 +112,6 @@ CREATE TABLE "pricing" (
     "name" TEXT NOT NULL,
     "description" TEXT,
     "price" INTEGER NOT NULL,
-    "currency" TEXT NOT NULL,
     "duration" INTEGER NOT NULL,
     "isRecurring" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -102,7 +124,7 @@ CREATE TABLE "pricing" (
 CREATE TABLE "jobPostPricingPackage" (
     "id" TEXT NOT NULL,
     "jobPostId" TEXT NOT NULL,
-    "packageId" TEXT NOT NULL,
+    "pricingId" TEXT NOT NULL,
     "startDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "endDate" TIMESTAMP(3) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -232,22 +254,26 @@ CREATE TABLE "continent" (
     CONSTRAINT "continent_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "_jobPostTojobPostPackage" (
-    "A" TEXT NOT NULL,
-    "B" TEXT NOT NULL,
-
-    CONSTRAINT "_jobPostTojobPostPackage_AB_pkey" PRIMARY KEY ("A","B")
-);
-
 -- CreateIndex
 CREATE UNIQUE INDEX "user_email_key" ON "user"("email");
+
+-- CreateIndex
+CREATE INDEX "jobPostToPackageVersion_jobPostId_idx" ON "jobPostToPackageVersion"("jobPostId");
+
+-- CreateIndex
+CREATE INDEX "jobPostToPackageVersion_packageVersionId_idx" ON "jobPostToPackageVersion"("packageVersionId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "openSourcePackage_name_key" ON "openSourcePackage"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "openSourcePackageVersion_packageId_version_key" ON "openSourcePackageVersion"("packageId", "version");
 
 -- CreateIndex
 CREATE INDEX "jobPostPricingPackage_jobPostId_idx" ON "jobPostPricingPackage"("jobPostId");
 
 -- CreateIndex
-CREATE INDEX "jobPostPricingPackage_packageId_idx" ON "jobPostPricingPackage"("packageId");
+CREATE INDEX "jobPostPricingPackage_pricingId_idx" ON "jobPostPricingPackage"("pricingId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "jobPostTag_tag_key" ON "jobPostTag"("tag");
@@ -276,9 +302,6 @@ CREATE UNIQUE INDEX "language_code_key" ON "language"("code");
 -- CreateIndex
 CREATE UNIQUE INDEX "continent_code_key" ON "continent"("code");
 
--- CreateIndex
-CREATE INDEX "_jobPostTojobPostPackage_B_index" ON "_jobPostTojobPostPackage"("B");
-
 -- AddForeignKey
 ALTER TABLE "user" ADD CONSTRAINT "user_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "organization"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
@@ -292,13 +315,22 @@ ALTER TABLE "organization" ADD CONSTRAINT "organization_cityId_fkey" FOREIGN KEY
 ALTER TABLE "jobPost" ADD CONSTRAINT "jobPost_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "organization"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "jobPostPackageVersion" ADD CONSTRAINT "jobPostPackageVersion_jobPostPackageId_fkey" FOREIGN KEY ("jobPostPackageId") REFERENCES "jobPostPackage"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "jobPostRatings" ADD CONSTRAINT "jobPostRatings_jobPostId_fkey" FOREIGN KEY ("jobPostId") REFERENCES "jobPost"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "jobPostToPackageVersion" ADD CONSTRAINT "jobPostToPackageVersion_jobPostId_fkey" FOREIGN KEY ("jobPostId") REFERENCES "jobPost"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "jobPostToPackageVersion" ADD CONSTRAINT "jobPostToPackageVersion_packageVersionId_fkey" FOREIGN KEY ("packageVersionId") REFERENCES "openSourcePackageVersion"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "openSourcePackageVersion" ADD CONSTRAINT "openSourcePackageVersion_packageId_fkey" FOREIGN KEY ("packageId") REFERENCES "openSourcePackage"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "jobPostPricingPackage" ADD CONSTRAINT "jobPostPricingPackage_jobPostId_fkey" FOREIGN KEY ("jobPostId") REFERENCES "jobPost"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "jobPostPricingPackage" ADD CONSTRAINT "jobPostPricingPackage_packageId_fkey" FOREIGN KEY ("packageId") REFERENCES "pricing"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "jobPostPricingPackage" ADD CONSTRAINT "jobPostPricingPackage_pricingId_fkey" FOREIGN KEY ("pricingId") REFERENCES "pricing"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "jobPostQuestion" ADD CONSTRAINT "jobPostQuestion_jobPostId_fkey" FOREIGN KEY ("jobPostId") REFERENCES "jobPost"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -329,9 +361,3 @@ ALTER TABLE "countryLanguage" ADD CONSTRAINT "countryLanguage_countryId_fkey" FO
 
 -- AddForeignKey
 ALTER TABLE "countryLanguage" ADD CONSTRAINT "countryLanguage_languageCode_fkey" FOREIGN KEY ("languageCode") REFERENCES "language"("code") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "_jobPostTojobPostPackage" ADD CONSTRAINT "_jobPostTojobPostPackage_A_fkey" FOREIGN KEY ("A") REFERENCES "jobPost"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "_jobPostTojobPostPackage" ADD CONSTRAINT "_jobPostTojobPostPackage_B_fkey" FOREIGN KEY ("B") REFERENCES "jobPostPackage"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -8,6 +8,10 @@ import {
 } from "@/components/ui/select"
 import { useState } from "react"
 import { PrepQuestionsResponse } from "@/app/actions/prompt"
+import { Button } from "@/components/ui/button"
+import { PencilIcon, CheckIcon } from "lucide-react"
+import Text from "@/components/text"
+import { Label } from "@/components/ui/label"
 const toneOptions = [
   { value: "professional", label: "Professional" },
   { value: "casual", label: "Casual" },
@@ -30,6 +34,56 @@ const getSeniorityLabel = (seniority: number): string => {
   return "Lead (8+ years)"
 }
 
+interface EditableFieldProps {
+  value: string
+  isEditing: boolean
+  onToggleEdit: () => void
+  onValueChange?: (value: string) => void
+  options?: Array<{ value: string | number; label: string }>
+}
+
+const EditableField = ({
+  value,
+  isEditing,
+  onToggleEdit,
+  onValueChange,
+  options,
+}: EditableFieldProps) => {
+  if (!isEditing) {
+    return (
+      <div className="flex items-center gap-2">
+        <div className="flex-1">
+          <span className="flex-1">{value}</span>
+        </div>
+        <Button variant="ghost" size="sm" onClick={onToggleEdit}>
+          <PencilIcon className="h-4 w-4" />
+        </Button>
+      </div>
+    )
+  }
+
+  return options ? (
+    <Select value={value} onValueChange={(v) => onValueChange?.(v)}>
+      <SelectTrigger>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {options.map((option) => (
+          <SelectItem key={option.value} value={option.label}>
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  ) : (
+    <Input
+      value={value}
+      onChange={(e) => onValueChange?.(e.target.value)}
+      className="w-full"
+    />
+  )
+}
+
 export default function Confirm({
   response,
   setTone,
@@ -43,45 +97,46 @@ export default function Confirm({
   setTone: (tone: string) => void
   setAdditionalInfo: (additionalInfo: string) => void
 }) {
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const [isEditingLevel, setIsEditingLevel] = useState(false)
+
   return (
     <div className="space-y-6">
       {response && (
         <div className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="label">Suggested Title</label>
-              <Input
+              <Label className="flex items-center gap-2">
+                Suggested Title{" "}
+                <Text className="flex-0 text-xs text-rose-500">
+                  (AI Suggested)
+                </Text>
+              </Label>
+              <EditableField
                 value={response.suggestedTitle}
-                readOnly
-                className="w-full"
+                isEditing={isEditingTitle}
+                onToggleEdit={() => setIsEditingTitle(!isEditingTitle)}
               />
             </div>
 
             <div>
-              <label className="label">Experience Level</label>
-              <Select
+              <Label className="flex items-center gap-2">
+                Experience Level
+                <Text className="flex-0 text-xs text-rose-500">
+                  (AI Suggested)
+                </Text>
+              </Label>
+              <EditableField
                 value={getSeniorityLabel(response.seniority)}
-                onValueChange={(value) => {
-                  // If you need to handle selection changes, add handler here
-                  console.log(value)
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select experience level" />
-                </SelectTrigger>
-                <SelectContent>
-                  {experienceLevels.map((level) => (
-                    <SelectItem key={level.value} value={level.label}>
-                      {level.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                isEditing={isEditingLevel}
+                onToggleEdit={() => setIsEditingLevel(!isEditingLevel)}
+                options={experienceLevels}
+              />
             </div>
           </div>
 
           <div>
-            <label className="label">Tone of Voice</label>
+            <Label className="flex items-center gap-2">Tone of Voice</Label>
             <Select value={tone} onValueChange={setTone}>
               <SelectTrigger>
                 <SelectValue placeholder="Select tone" />
@@ -97,7 +152,9 @@ export default function Confirm({
           </div>
 
           <div>
-            <label className="label">Additional Information</label>
+            <Label className="flex items-center gap-2">
+              Additional Information
+            </Label>
             <Input
               value={additionalInfo}
               onChange={(e) => setAdditionalInfo(e.target.value)}
