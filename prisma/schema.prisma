@@ -1,0 +1,239 @@
+datasource db {
+    provider   = "postgresql"
+    url        = env("DATABASE_URL")
+    directUrl  = env("DIRECT_URL")
+    extensions = [postgis(version: "3.1.4")]
+}
+
+generator client {
+    provider        = "prisma-client-js"
+    previewFeatures = ["postgresqlExtensions"]
+}
+
+model user {
+    id             String        @id @default(cuid())
+    email          String        @unique
+    name           String?
+    avatar         String?
+    createdAt      DateTime      @default(now())
+    updatedAt      DateTime      @updatedAt
+    organization   organization? @relation(fields: [organizationId], references: [id])
+    organizationId String?
+    city           city?         @relation(fields: [cityId], references: [id])
+    cityId         String?
+}
+
+model organization {
+    id          String                    @id @default(cuid())
+    name        String
+    createdAt   DateTime                  @default(now())
+    updatedAt   DateTime                  @updatedAt
+    jobPosts    jobPost[]
+    linkedin    String?
+    twitter     String?
+    facebook    String?
+    instagram   String?
+    image       String?
+    website     String?
+    description String?
+    contact     String?
+    address     String?
+    zip         String?
+    location    Unsupported("geography")?
+    city        city?                     @relation(fields: [cityId], references: [id])
+    cityId      String?
+    state       String?
+    users       user[]
+}
+
+model jobPost {
+    id             String                    @id @default(cuid())
+    published      DateTime?                 @default(now())
+    title          String?
+    description    String?
+    source         String
+    createdAt      DateTime                  @default(now())
+    updatedAt      DateTime                  @updatedAt
+    minSalary      Int?
+    maxSalary      Int?
+    type           String?
+    seniority      Float?
+    remote         Boolean?
+    location       Unsupported("geography")?
+    organization   organization?             @relation(fields: [organizationId], references: [id])
+    organizationId String?
+    packages       jobPostPricingPackage[]
+    questions      jobPostQuestion[]
+    tags           jobPostToTag[]
+    openSource     Boolean                   @default(false)
+    views          Int                       @default(0)
+    package        jobPostPackage[]
+    hybrid         Boolean                   @default(false)
+    consulting     Boolean                   @default(false)
+}
+
+model jobPostPackage {
+    id          String                  @id @default(cuid())
+    jobPostId   String
+    name        String
+    gitUrl      String?
+    website     String?
+    description String?
+    logo        String?
+    versions    jobPostPackageVersion[]
+    jobPost     jobPost[]
+}
+
+model jobPostPackageVersion {
+    id               String         @id @default(cuid())
+    jobPostPackage   jobPostPackage @relation(fields: [jobPostPackageId], references: [id])
+    jobPostPackageId String
+}
+
+model pricing {
+    id          String                  @id @default(cuid())
+    name        String
+    description String?
+    price       Int
+    currency    String
+    duration    Int // Duration in days
+    isRecurring Boolean                 @default(false)
+    createdAt   DateTime                @default(now())
+    updatedAt   DateTime                @updatedAt
+    jobPosts    jobPostPricingPackage[]
+}
+
+model jobPostPricingPackage {
+    id        String  @id @default(cuid())
+    jobPost   jobPost @relation(fields: [jobPostId], references: [id])
+    jobPostId String
+
+    package   pricing  @relation(fields: [packageId], references: [id])
+    packageId String
+    startDate DateTime @default(now())
+    endDate   DateTime
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    stripeId  String?
+
+    @@index([jobPostId])
+    @@index([packageId])
+}
+
+model jobPostQuestion {
+    id        String   @id @default(cuid())
+    jobPostId String
+    question  String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    answer    String?
+    jobPost   jobPost  @relation(fields: [jobPostId], references: [id])
+}
+
+model jobPostTag {
+    id        String         @id @default(cuid())
+    tag       String         @unique
+    createdAt DateTime       @default(now())
+    updatedAt DateTime       @updatedAt
+    jobPosts  jobPostToTag[]
+    default   Boolean        @default(false)
+}
+
+model jobPostToTag {
+    jobPost   jobPost    @relation(fields: [jobPostId], references: [id])
+    jobPostId String
+    tag       jobPostTag @relation(fields: [tagId], references: [id])
+    tagId     String
+    createdAt DateTime   @default(now())
+    updatedAt DateTime   @updatedAt
+
+    @@id([jobPostId, tagId])
+    @@index([jobPostId])
+    @@index([tagId])
+}
+
+model postViews {
+    id        String @id @default(cuid())
+    jobPostId String
+    views     Int    @default(0)
+}
+
+// GEO -----
+
+model city {
+    id            String                    @id @default(cuid())
+    name          String
+    countryId     String
+    createdAt     DateTime                  @default(now())
+    updatedAt     DateTime                  @updatedAt
+    raw           String
+    population    Int?
+    location      Unsupported("geography")?
+    country       country                   @relation(fields: [countryId], references: [id])
+    user          user[]
+    organizations organization[]
+
+    @@unique([name, countryId])
+}
+
+model country {
+    id            String             @id @default(cuid())
+    name          String
+    nativeName    String
+    continentCode String
+    capital       String
+    a2            String             @unique
+    createdAt     DateTime           @default(now())
+    updatedAt     DateTime           @updatedAt
+    city          city[]
+    continent     continent          @relation(fields: [continentCode], references: [code])
+    currencies    countryCurrency[]
+    languages     countryLanguage[]
+    phoneCodes    countryPhoneCode[]
+}
+
+model countryPhoneCode {
+    id        String  @id @default(cuid())
+    code      Int
+    countryId String
+    country   country @relation(fields: [countryId], references: [id])
+
+    @@unique([code, countryId])
+}
+
+model currency {
+    id        String            @id @default(cuid())
+    code      String            @unique
+    countries countryCurrency[]
+}
+
+model countryCurrency {
+    countryId    String
+    currencyCode String
+    country      country  @relation(fields: [countryId], references: [id])
+    currency     currency @relation(fields: [currencyCode], references: [code])
+
+    @@id([countryId, currencyCode])
+}
+
+model language {
+    id        String            @id @default(cuid())
+    code      String            @unique
+    countries countryLanguage[]
+}
+
+model countryLanguage {
+    countryId    String
+    languageCode String
+    country      country  @relation(fields: [countryId], references: [id])
+    language     language @relation(fields: [languageCode], references: [code])
+
+    @@id([countryId, languageCode])
+}
+
+model continent {
+    id        String    @id @default(cuid())
+    name      String
+    code      String    @unique
+    countries country[]
+}
