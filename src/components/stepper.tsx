@@ -75,7 +75,7 @@ const Stepper = ({
         )}
         {currentStep === steps.length - 1 && (
           <Button className="ml-auto" onClick={onDone}>
-            Write job description
+            Write job description <Icon name="moveRight" className="ml-2" />
           </Button>
         )}
         {currentStep < steps.length - 1 && (

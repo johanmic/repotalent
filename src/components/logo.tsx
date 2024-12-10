@@ -1,25 +1,39 @@
 import Image from "next/image"
 
-export default function Logo({
+interface LogoSizes {
+  xs: { width: 50; height: 50 }
+  sm: { width: 100; height: 100 }
+  md: { width: 150; height: 150 }
+  lg: { width: 200; height: 200 }
+}
+
+const logoSizes: LogoSizes = {
+  xs: { width: 50, height: 50 },
+  sm: { width: 100, height: 100 },
+  md: { width: 150, height: 150 },
+  lg: { width: 200, height: 200 },
+} as const
+
+export const Logo = ({
   size,
   className,
   icon = false,
 }: {
-  size: "xs" | "sm" | "md" | "lg"
+  size: keyof LogoSizes
   className?: string
   icon?: boolean
-}) {
-  const width =
-    size === "xs" ? 50 : size === "sm" ? 100 : size === "md" ? 150 : 200
-  const height =
-    size === "xs" ? 50 : size === "sm" ? 100 : size === "md" ? 150 : 200
+}) => {
+  const dimensions = logoSizes[size]
+
   return (
     <Image
       src={icon ? "/logoIcon.png" : "/logo.png"}
       alt="Logo"
-      width={width}
-      height={height}
+      {...dimensions}
       className={className}
+      priority
     />
   )
 }
+
+export default Logo

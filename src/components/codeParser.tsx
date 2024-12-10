@@ -188,7 +188,7 @@ const CodeParser = ({
           }}
           onAnimationComplete={handleAnimationComplete}
           style={{ marginLeft: depth * 20 }}
-          className={`text-xs ${backgroundClass} rounded-sm text-white transition-colors duration-300`}
+          className={`text-xs ${backgroundClass} rounded-sm text-white transition-colors duration-300 font-mono`}
         >
           {typeof value === "object" ? (
             <div className="flex flex-col border-primary/20 rounded-md">

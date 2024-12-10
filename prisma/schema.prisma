@@ -32,6 +32,7 @@ model organization {
     linkedin    String?
     twitter     String?
     facebook    String?
+    github      String?
     instagram   String?
     image       String?
     website     String?
@@ -71,6 +72,10 @@ model jobPost {
     consulting            Boolean                   @default(false)
     jobPostPricingPackage jobPostPricingPackage[]
     ratings               jobPostRatings[]
+    tone                  String?
+    additionalInfo        String?
+    applicationUrl        String?
+    equity                Boolean                   @default(false)
 }
 
 model jobPostRatings {

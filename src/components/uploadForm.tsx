@@ -166,7 +166,7 @@ const UploadForm = ({
         </Select>
         <Textarea
           placeholder="Write your post here..."
-          className="min-h-96 text-xs w-full"
+          className="min-h-96 text-xs w-full font-mono"
           {...form.register("data")}
         ></Textarea>
         <Button type="submit">Create Post</Button>

@@ -3,31 +3,70 @@
 import prisma from "@/store/prisma"
 import { prepareQuestions } from "@/utils/questionsPrompt"
 import { getUser } from "@/utils/supabase/server"
+import { redirect } from "next/navigation"
+import { omit } from "ramda"
+import { revalidatePath } from "next/cache"
+import {
+  jobPost,
+  jobPostToPackageVersion,
+  jobPostToTag,
+  jobPostTag,
+  jobPostQuestion,
+  openSourcePackage,
+  openSourcePackageVersion,
+  jobPostRatings,
+  organization,
+  city,
+  country,
+} from "@prisma/client"
+
+export interface JobPostToPackageVersion {
+  package: openSourcePackage
+  packageVersion: openSourcePackageVersion
+}
+export interface JobPost extends jobPost {
+  tags?: { tag: jobPostTag }[]
+  questions?: jobPostQuestion[]
+  ratings?: jobPostRatings[]
+  packages?: {
+    packageVersion?: {
+      package: openSourcePackage
+      version: string
+    }
+  }[]
+  organization?: organization & {
+    city: city & {
+      country: country
+    }
+  }
+}
 export const createJobPost = async (data: {
   filename: string
   data: string
 }) => {
   const { user } = await getUser()
+  if (!user?.id) {
+    throw new Error("User not authenticated")
+  }
+
   const dbUser = await prisma.user.findUnique({
-    where: { id: user?.id },
+    where: { id: user.id },
     include: { organization: true },
   })
-  if (!dbUser?.organization?.id) {
+
+  const organizationId = dbUser?.organization?.id
+  if (!organizationId) {
     throw new Error("User not in organization")
   }
 
   const promptReuslts = await prepareQuestions(data)
-  const reuslts = await prisma.$transaction(async ($tx) => {
+  const job = await prisma.$transaction(async ($tx) => {
     const job = await $tx.jobPost.create({
       data: {
         title: promptReuslts.suggestedTitle,
         seniority: promptReuslts.seniority,
         source: data.filename,
-        organization: {
-          connect: {
-            id: dbUser?.organization?.id as string,
-          },
-        },
+        organizationId,
         questions: {
           create: promptReuslts.questions.map((question) => ({
             question,
@@ -92,7 +131,143 @@ export const createJobPost = async (data: {
         })
       )
     }
-
     return job
   })
+  console.log("job", job)
+  redirect(`/home/jobs/${job.id}/complete`)
+}
+
+export const getJobPost = async ({
+  jobId,
+}: {
+  jobId: string
+}): Promise<JobPost> => {
+  const { user } = await getUser()
+  if (!user) {
+    throw new Error("User not found")
+  }
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user?.id },
+    include: { organization: true },
+  })
+  if (!dbUser?.organization?.id) {
+    throw new Error("User not in organization")
+  }
+  console.log("dbUser", dbUser)
+  const job = await prisma.jobPost.findUnique({
+    where: { id: jobId, organizationId: dbUser?.organization?.id },
+    include: {
+      organization: {
+        include: {
+          city: {
+            include: {
+              country: true,
+            },
+          },
+        },
+      },
+      tags: {
+        include: {
+          tag: true,
+        },
+      },
+      questions: true,
+      ratings: true,
+    },
+  })
+  return job as JobPost
+}
+
+export const listJobs = async (): Promise<JobPost[]> => {
+  const { user } = await getUser()
+  if (!user?.id) {
+    throw new Error("User not authenticated")
+  }
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    include: { organization: true },
+  })
+  if (!dbUser?.organization?.id) {
+    throw new Error("User not in organization")
+  }
+  const results = await prisma.jobPost.findMany({
+    where: { organizationId: dbUser.organization.id },
+    include: {
+      organization: {
+        include: {
+          city: {
+            include: {
+              country: true,
+            },
+          },
+        },
+      },
+      tags: {
+        include: {
+          tag: true,
+        },
+      },
+      questions: true,
+      ratings: true,
+      packages: true,
+    },
+  })
+  return results as JobPost[]
+}
+
+export const updateJobPost = async ({
+  jobId,
+  data,
+}: {
+  jobId: string
+  data: JobPost
+}) => {
+  const { user } = await getUser()
+  if (!user?.id) {
+    throw new Error("User not authenticated")
+  }
+
+  console.log("data", data)
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    include: { organization: true },
+  })
+  if (!dbUser?.organization?.id) {
+    throw new Error("User not in organization")
+  }
+  const job = await prisma.jobPost.update({
+    where: { id: jobId, organizationId: dbUser.organization.id },
+    data: {
+      ...omit(
+        [
+          "id",
+          "organizationId",
+          "organization",
+          "createdAt",
+          "updatedAt",
+          "tags",
+          "questions",
+          "ratings",
+          "packages",
+        ],
+        data
+      ),
+      questions: {
+        upsert: data.questions?.map((question) => ({
+          where: { id: question.id },
+          create: { question: question.question, answer: question.answer },
+          update: { answer: question.answer },
+        })),
+      },
+      ratings: {
+        upsert: data.ratings?.map((rating) => ({
+          where: { id: rating.id },
+          create: { question: rating.question, rating: rating.rating },
+          update: { rating: rating.rating },
+        })),
+      },
+    },
+  })
+
+  redirect(`/home/jobs/${jobId}/edit`)
 }

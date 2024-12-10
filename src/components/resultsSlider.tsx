@@ -2,13 +2,21 @@
 
 import { Slider } from "@/components/ui/slider"
 import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card"
 import { motion, AnimatePresence } from "framer-motion"
 import { useState, useEffect } from "react"
-
-interface Result {
-  question: string
-  value: number
-}
+import { jobPostRatings } from "@prisma/client"
+import { is } from "ramda"
+// interface Result {
+//   id: string
+//   question: string
+//   rating: number
+// }
 
 const parseValue = (
   value: number
@@ -19,7 +27,7 @@ const parseValue = (
 } => {
   switch (value) {
     case 0:
-      return { text: "N/A", emoji: "😶‍🌫️", color: "text-gray-500" }
+      return { text: "N/A", emoji: "🫥", color: "text-gray-500" }
     case 25:
       return { text: "Beginner", emoji: "🤪", color: "text-green-500" }
     case 50:
@@ -34,72 +42,59 @@ const parseValue = (
 }
 
 const SliderStep = ({
-  question,
-  value,
+  rating,
   handleValueChange,
   index,
-  results,
 }: {
-  question: string
-  value: number
-  handleValueChange: (question: string, value: number) => void
+  rating: jobPostRatings
+  handleValueChange: (id: string, value: number) => void
   index: number
-  results: Result[]
 }) => {
-  const [sliderValue, setSliderValue] = useState(value)
-
-  const getValueColor = (value: number): string => {
-    switch (value) {
-      case 75:
-        return "text-rose-500"
-      case 50:
-        return "text-yellow-500"
-      case 25:
-        return "text-green-500"
-      case 0:
-        return "text-gray-500"
-      default:
-        return ""
-    }
-  }
-
-  const { text, emoji, color } = parseValue(sliderValue)
+  const [sliderValue, setSliderValue] = useState(
+    is(Number, rating.rating) ? rating.rating : 50
+  )
+  const { text, emoji, color } = parseValue(sliderValue ?? 0)
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      key={question}
-      className="flex flex-col my-8 gap-2 bg-base-300"
+      key={rating.id}
     >
-      <div className="text-sm italic">{question}</div>
-      <div className="flex items-center gap-2">
-        <Slider
-          min={0}
-          max={100}
-          step={25}
-          value={[sliderValue]}
-          onValueChange={(value) => {
-            handleValueChange(question, value[0] as number)
-            setSliderValue(value[0] as number)
-          }}
-          className={sliderValue === 75 ? "slider-rose" : ""}
-        />
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={sliderValue}
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -5 }}
-            transition={{ duration: 0.2 }}
-            className={`text-lg w-48 text-right flex items-center justify-end gap-2 ${color}`}
-          >
-            {text}
-            <span className="text-4xl">{emoji}</span>
-          </motion.div>
-        </AnimatePresence>
-      </div>
+      <Card className="w-full my-4">
+        <CardHeader>
+          <CardTitle className="text-sm italic">{rating.question}</CardTitle>
+          <CardDescription>
+            <div className="flex items-center gap-2">
+              <Slider
+                min={0}
+                max={100}
+                step={25}
+                value={[sliderValue]}
+                onValueChange={(value) => {
+                  handleValueChange(rating.id, value[0] as number)
+                  setSliderValue(value[0] as number)
+                }}
+                className={sliderValue === 75 ? "slider-rose" : ""}
+              />
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={sliderValue}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  transition={{ duration: 0.2 }}
+                  className={`text-md w-48 text-right flex items-center justify-end gap-2 ${color}`}
+                >
+                  {text}
+                  <span className="text-4xl">{emoji}</span>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </CardDescription>
+        </CardHeader>
+      </Card>
     </motion.div>
   )
 }
@@ -109,39 +104,35 @@ const ResultsSlider = ({
   onDone,
   activeStep,
 }: {
-  questions: string[] | undefined
-  onDone: (results: Result[]) => void
+  questions: jobPostRatings[]
+  onDone: (results: jobPostRatings[]) => void
   activeStep: number
 }) => {
-  const defaultResults = questions?.map((question) => ({ question, value: 50 }))
-  const [results, setResults] = useState<Result[]>(defaultResults || [])
+  const [results, setResults] = useState<jobPostRatings[]>([])
 
   useEffect(() => {
-    onDone(results)
-  }, [results])
+    setResults(questions)
+  }, [questions])
+
+  function handleValueChange(id: string, value: number) {
+    const newResults = results.map((rating) =>
+      rating.id === id ? { ...rating, rating: value } : rating
+    )
+    setResults(newResults)
+    onDone(newResults)
+  }
 
   if (!questions || activeStep !== 0) return null
-
-  function handleValueChange(question: string, value: number) {
-    console.log(question, value)
-    setResults((prevResults) => {
-      const updatedResults = prevResults.filter((r) => r.question !== question)
-      const results = [...updatedResults, { question, value }]
-      return results
-    })
-  }
 
   return (
     <div className="my-8">
       <div className="text-bold text-lg">
         How much should the candidate know about:
       </div>
-      {questions.map((question, index) => (
+      {results.map((rating, index) => (
         <SliderStep
-          key={question}
-          question={question}
-          results={results}
-          value={results.find((r) => r.question === question)?.value || 50}
+          key={rating.id}
+          rating={rating}
           handleValueChange={handleValueChange}
           index={index}
         />

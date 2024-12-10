@@ -14,6 +14,8 @@ import {
   Plus,
   X,
   PenBox,
+  LoaderCircle,
+  RotateCw,
 } from "lucide-react"
 
 const icons = {
@@ -26,12 +28,14 @@ const icons = {
   check: Check,
   home: Home,
   organization: Building2,
+  spinner: LoaderCircle,
   post: Captions,
   x: X,
   globe: Globe,
   logout: LogOut,
   plus: Plus,
   pen: PenBox,
+  rotate: RotateCw,
 }
 
 export default function Icon({
@@ -42,5 +46,8 @@ export default function Icon({
   className?: string
 }) {
   const Icon = icons[name]
-  return <Icon className={className} />
+
+  const additionalClass = name === "spinner" ? "animate-spin" : ""
+
+  return <Icon className={`${className} ${additionalClass}`} />
 }

@@ -6,6 +6,7 @@ const iconKeys = Object.keys(AppIcons)
 
 function AppIconsList({ items }: { items: string[] }) {
   if (!items) return null
+  console.log("items", items)
   const processedItems = items
     ?.map((item) => {
       const formattedItem = item.toLowerCase().replace(/\./g, "")
