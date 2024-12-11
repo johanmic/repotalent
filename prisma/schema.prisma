@@ -78,6 +78,7 @@ model jobPost {
     equity                Boolean                   @default(false)
     currencyId            String?
     currency              currency?                 @relation(fields: [currencyId], references: [id])
+    slug                  String                    @unique
 }
 
 model jobPostRatings {

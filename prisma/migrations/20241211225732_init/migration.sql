@@ -24,6 +24,7 @@ CREATE TABLE "organization" (
     "linkedin" TEXT,
     "twitter" TEXT,
     "facebook" TEXT,
+    "github" TEXT,
     "instagram" TEXT,
     "image" TEXT,
     "website" TEXT,
@@ -58,6 +59,12 @@ CREATE TABLE "jobPost" (
     "views" INTEGER NOT NULL DEFAULT 0,
     "hybrid" BOOLEAN NOT NULL DEFAULT false,
     "consulting" BOOLEAN NOT NULL DEFAULT false,
+    "tone" TEXT,
+    "additionalInfo" TEXT,
+    "applicationUrl" TEXT,
+    "equity" BOOLEAN NOT NULL DEFAULT false,
+    "currencyId" TEXT,
+    "slug" TEXT NOT NULL,
 
     CONSTRAINT "jobPost_pkey" PRIMARY KEY ("id")
 );
@@ -258,6 +265,9 @@ CREATE TABLE "continent" (
 CREATE UNIQUE INDEX "user_email_key" ON "user"("email");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "jobPost_slug_key" ON "jobPost"("slug");
+
+-- CreateIndex
 CREATE INDEX "jobPostToPackageVersion_jobPostId_idx" ON "jobPostToPackageVersion"("jobPostId");
 
 -- CreateIndex
@@ -313,6 +323,9 @@ ALTER TABLE "organization" ADD CONSTRAINT "organization_cityId_fkey" FOREIGN KEY
 
 -- AddForeignKey
 ALTER TABLE "jobPost" ADD CONSTRAINT "jobPost_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "organization"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "jobPost" ADD CONSTRAINT "jobPost_currencyId_fkey" FOREIGN KEY ("currencyId") REFERENCES "currency"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "jobPostRatings" ADD CONSTRAINT "jobPostRatings_jobPostId_fkey" FOREIGN KEY ("jobPostId") REFERENCES "jobPost"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -10,9 +10,9 @@ export default async function LoginPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (user) {
-    redirect("/home")
-  }
+  // if (user) {
+  //   redirect("/home")
+  // }
   return (
     <Page>
       <div className="flex items-center justify-center min-h-screen">

@@ -34,12 +34,12 @@ export const columns: ColumnDef<JobPost>[] = [
     ),
   },
   {
-    accessorKey: "publishedDateTime",
+    accessorKey: "published",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
     ),
     cell: ({ row }) => {
-      const publishedDate = row.getValue("publishedDateTime") as string
+      const publishedDate = row.getValue("published") as string
       return (
         <div
           className={`capitalize ${

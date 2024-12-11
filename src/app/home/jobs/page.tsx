@@ -6,14 +6,16 @@ import { DataTable } from "./data-table"
 
 const JobsPage = async () => {
   const user = await getUser()
-  if (!user.organization) {
+  if (!user) {
+    return redirect("/login")
+  }
+  if (!user?.organization) {
     redirect("/home/org")
   }
   const jobs = await listJobs()
 
   return (
     <div className="container mx-auto py-10">
-      jerbs
       <DataTable columns={columns} data={jobs} />
     </div>
   )

@@ -25,12 +25,6 @@ const NewPost = () => {
         await createJobPost(fileData)
       } catch (error) {
         console.error("Error processing file:", error)
-      } finally {
-        // Hide code parser after delay
-        setTimeout(() => {
-          setShowCodeParser(false)
-          setIsProcessing(false)
-        }, 3000)
       }
     }
 

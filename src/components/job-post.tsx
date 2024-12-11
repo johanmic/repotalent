@@ -71,21 +71,19 @@ export const JobPost = ({ job }: { job: JobPostType }) => {
                 {getSeniorityLabel((job?.seniority as number) || 0).key}
               </p>
             </div>
-            {job.minSalary && job.maxSalary ? (
+            {job.minSalary || job.maxSalary ? (
               <div className="flex items-center gap-2 mb-4">
-                <div className="text-sm font-semibold">Salary:</div>
+                <div className="text-sm font-semibold">
+                  {job.minSalary && job.maxSalary
+                    ? "Salary:"
+                    : job.minSalary
+                    ? "Salary from:"
+                    : "Salary:"}
+                </div>
                 <p className="text-sm font-medium">
-                  {formatCurrency(job.minSalary)} -{" "}
-                  {formatCurrency(job.maxSalary)}{" "}
-                  {getCurrencySymbol(job.currency?.code || "")}
-                </p>
-              </div>
-            ) : null}
-            {job.minSalary && !job.maxSalary ? (
-              <div className="flex items-center gap-2 mb-4">
-                <div className="text-sm font-semibold">Salary from:</div>
-                <p className="text-sm font-medium">
-                  {formatCurrency(job.minSalary)}{" "}
+                  {job.minSalary ? formatCurrency(job.minSalary) : null}
+                  {job.minSalary && job.maxSalary ? " - " : null}
+                  {job.maxSalary ? formatCurrency(job.maxSalary) : null}
                   {getCurrencySymbol(job.currency?.code || "")}
                 </p>
               </div>

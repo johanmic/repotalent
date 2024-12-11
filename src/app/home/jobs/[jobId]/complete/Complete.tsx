@@ -79,7 +79,9 @@ const CompleteJobPost = ({ jobPost }: { jobPost: JobPost }) => {
   return (
     <div>
       <div className="space-y-6 flex flex-col h-full min-h-screen">
-        <h1 className="text-2xl font-bold">Create a new post</h1>
+        <div className="flex items-center justify-center w-full">
+          <h1 className="text-2xl font-bold">Complete your job post</h1>
+        </div>
 
         <div className="flex flex-col gap-4 max-w-2xl mx-auto w-full">
           <AppIconsList

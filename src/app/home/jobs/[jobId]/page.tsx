@@ -1,27 +1,24 @@
 import { getJobPost } from "@/app/actions/jobpost"
+import { getUser } from "@/app/actions/user"
+import AppIconsList from "@/components/app-icons-list"
+import JobPostBadge from "@/components/job-post-badge"
+import TiptapRenderer from "@/components/tiptap-renderer"
+import { Title } from "@/components/title"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { redirect } from "next/navigation"
 
 type Params = Promise<{
   jobId: string
 }>
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card"
-import { Title } from "@/components/title"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import AppIconsList from "@/components/app-icons-list"
-import TiptapRenderer from "@/components/tiptap-renderer"
-import { Badge } from "@/components/ui/badge"
-import Icon from "@/components/icon"
-import { pick, map } from "ramda"
-import JobPostBadge from "@/components/job-post-badge"
-import { Progress } from "@/components/ui/progress"
 const JobPost = async ({ params }: { params: Params }) => {
   const { jobId } = await params
   const job = await getJobPost({ jobId })
+  const user = await getUser()
+  if (!user) {
+    return redirect("/login")
+  }
   console.log(job.ratings)
   return (
     <div className="max-w-4xl mt-8 mx-auto p-4 md:p-0 grid grid-cols-5 gap-4">

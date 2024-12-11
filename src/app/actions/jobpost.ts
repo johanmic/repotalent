@@ -7,6 +7,7 @@ import { redirect } from "next/navigation"
 import { omit } from "ramda"
 import { revalidatePath } from "next/cache"
 import { mapJS } from "@/utils/mapIcons"
+import { createSlug } from "@/utils/slug"
 import {
   jobPost,
   jobPostToPackageVersion,
@@ -324,4 +325,26 @@ export const setPublished = async ({
   })
   revalidatePath(`/home/jobs/${jobId}/preview`)
   revalidatePath(`/home/jobs/${jobId}`)
+}
+
+export const checkedSlug = async ({
+  name,
+  table,
+  inc = 0,
+}: {
+  name: string
+  table: "jobPost"
+  inc?: number
+}): Promise<string> => {
+  if (table === "jobPost") {
+    const slug = createSlug(name, inc)
+    const jobPost = await prisma.jobPost.findFirst({
+      where: {
+        slug,
+      },
+    })
+    return slug
+  }
+
+  throw new Error("Table not found")
 }

@@ -4,7 +4,10 @@ import { redirect } from "next/navigation"
 
 const NewPostPage = async () => {
   const user = await getUser()
-  if (!user.organization) {
+  if (!user) {
+    return redirect("/login")
+  }
+  if (!user?.organization) {
     redirect("/home/org")
   }
   return (
