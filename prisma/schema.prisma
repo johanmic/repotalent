@@ -76,6 +76,8 @@ model jobPost {
     additionalInfo        String?
     applicationUrl        String?
     equity                Boolean                   @default(false)
+    currencyId            String?
+    currency              currency?                 @relation(fields: [currencyId], references: [id])
 }
 
 model jobPostRatings {
@@ -236,6 +238,7 @@ model currency {
     id        String            @id @default(cuid())
     code      String            @unique
     countries countryCurrency[]
+    jobPost   jobPost[]
 }
 
 model countryCurrency {

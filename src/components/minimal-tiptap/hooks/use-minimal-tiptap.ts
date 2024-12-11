@@ -23,6 +23,7 @@ import { toast } from "sonner"
 
 export interface UseMinimalTiptapEditorProps extends UseEditorOptions {
   value?: Content
+  streamedValue?: Content
   output?: "html" | "json" | "text"
   placeholder?: string
   editorClassName?: string

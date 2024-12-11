@@ -136,8 +136,6 @@ export const prepareQuestions = async (data: {
       },
     })
 
-    console.log(prompt)
-
     return responseFixture
     // const { text } = await generateText({
     //   model: openai("gpt-4o"),

@@ -69,41 +69,53 @@ const Toolbar = ({ editor }: { editor: Editor }) => (
 export const MinimalTiptapEditor = React.forwardRef<
   HTMLDivElement,
   MinimalTiptapProps
->(({ value, onChange, className, editorContentClassName, ...props }, ref) => {
-  const editor = useMinimalTiptapEditor({
-    value,
-    onUpdate: onChange,
-    ...props,
-  })
-  useEffect(() => {
-    if (value && editor) {
-      editor.commands.setContent(value)
+>(
+  (
+    {
+      value,
+      streamedValue,
+      onChange,
+      className,
+      editorContentClassName,
+      ...props
+    },
+    ref
+  ) => {
+    const editor = useMinimalTiptapEditor({
+      value,
+      onUpdate: onChange,
+      ...props,
+    })
+    useEffect(() => {
+      if (streamedValue && editor) {
+        editor.commands.setContent(streamedValue)
+      }
+    }, [streamedValue, editor])
+
+    if (!editor) {
+      return null
     }
-  }, [value, editor])
 
-  if (!editor) {
-    return null
+    return (
+      <MeasuredContainer
+        as="div"
+        name="editor"
+        ref={ref}
+        className={cn(
+          "flex h-auto min-h-72 w-full flex-col rounded-md border border-input shadow-sm focus-within:border-primary",
+          className
+        )}
+      >
+        <Toolbar editor={editor} />
+        <EditorContent
+          editor={editor}
+          className={cn("minimal-tiptap-editor", editorContentClassName)}
+        />
+        <LinkBubbleMenu editor={editor} />
+      </MeasuredContainer>
+    )
   }
-
-  return (
-    <MeasuredContainer
-      as="div"
-      name="editor"
-      ref={ref}
-      className={cn(
-        "flex h-auto min-h-72 w-full flex-col rounded-md border border-input shadow-sm focus-within:border-primary",
-        className
-      )}
-    >
-      <Toolbar editor={editor} />
-      <EditorContent
-        editor={editor}
-        className={cn("minimal-tiptap-editor", editorContentClassName)}
-      />
-      <LinkBubbleMenu editor={editor} />
-    </MeasuredContainer>
-  )
-})
+)
 
 MinimalTiptapEditor.displayName = "MinimalTiptapEditor"
 

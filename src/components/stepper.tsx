@@ -15,16 +15,16 @@ const StepperHeader = ({
   activeStep: number
 }) => {
   return (
-    <div className="flex items-center justify-between w-full px-4 py-6">
+    <div className="flex items-center justify-around w-full px-4 py-6">
       {steps.map((step, index) => (
         <div
           className={`flex items-center space-x-2 ${
-            activeStep === index ? "opacity-100" : "opacity-50"
+            activeStep === index ? "opacity-100" : "opacity-20"
           }`}
           key={step.title}
         >
           <div
-            className={`w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-content font-bold text-black `}
+            className={`w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-bold  `}
           >
             {index + 1}
           </div>

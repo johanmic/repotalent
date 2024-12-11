@@ -3,10 +3,18 @@
 import prisma from "@/store/prisma"
 import { remove as diacritics } from "diacritics"
 import { raw } from "@/utils/deburr"
-import { city, country } from "@prisma/client"
+import { city, country, currency } from "@prisma/client"
 import { uniqBy } from "ramda"
 export type City = city & { country: country }
 import { getUser } from "@/utils/supabase/server"
+export type Currency = currency & {
+  countries: {
+    countryId: string
+    currencyCode: string
+    country: country
+  }[]
+}
+
 export const getCities = async (name: string): Promise<City[]> => {
   if (!name || (name && name.length <= 2)) {
     throw new Error("query too short")
@@ -63,4 +71,19 @@ export const getCity = async (id: string): Promise<City | null> => {
     },
   })
   return city
+}
+
+export const getCurrencies = async (): Promise<Currency[]> => {
+  const user = await getUser()
+  if (!user) throw new Error("user not found")
+
+  return prisma.currency.findMany({
+    include: {
+      countries: {
+        include: {
+          country: true,
+        },
+      },
+    },
+  })
 }

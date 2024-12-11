@@ -1,13 +1,17 @@
 "use client"
 
 import Icon from "@/components/icon"
-import { Button } from "@/components/ui/button"
-import { JobPost } from "@actions/jobpost"
-import { writeJobDescription } from "@actions/write"
-import { updateJobPost } from "@actions/jobpost"
-import { readStreamableValue } from "ai/rsc"
-import { useCallback, useState } from "react"
 import { TextEditor } from "@/components/text-editor"
+import { Title } from "@/components/title"
+import { Button } from "@/components/ui/button"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -17,26 +21,50 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-
-import * as zod from "zod"
-import { useForm } from "react-hook-form"
+import { generateJSONFromMarkdown } from "@/utils/tiptapUtils"
+import { JobPost, updateJobPost } from "@actions/jobpost"
+import { writeJobDescription } from "@actions/write"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { readStreamableValue } from "ai/rsc"
+import Link from "next/link"
+import { useCallback, useEffect, useState } from "react"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+import * as zod from "zod"
+import { useRouter } from "next/navigation"
+import { CurrencySelector } from "@/components/currency-selector"
+import { Currency } from "@/app/actions/city"
 
+const tagSchema = zod.object({
+  tag: zod.string(),
+  id: zod.string(),
+  createdAt: zod.date(),
+  updatedAt: zod.date(),
+})
+const currencySchema = zod.object({
+  id: zod.string(),
+  code: zod.string(),
+  countries: zod
+    .array(
+      zod.object({
+        countryId: zod.string(),
+        currencyCode: zod.string(),
+        country: zod.object({
+          id: zod.string(),
+          name: zod.string(),
+          // ... other fields can be optional
+        }),
+      })
+    )
+    .optional(),
+})
 const schema = zod.object({
   title: zod.string().min(5),
   description: zod.string().min(5),
-  tags: zod.array(zod.string()),
-  minSalary: zod.number().min(0),
-  maxSalary: zod.number().min(0),
+  currency: currencySchema,
+  //   tags: zod.array(tagSchema),
+  minSalary: zod.number().nullable().optional(),
+  maxSalary: zod.number().nullable().optional(),
   type: zod.string(),
   experience: zod.string(),
   remote: zod.boolean(),
@@ -57,7 +85,23 @@ const mapJobPostToForm = (job: JobPost) => {
     openSource: job.openSource || false,
     type: job.type || "full time",
     experience: job.experience || "",
-    tags: job?.tags?.map((tag) => tag.tag.tag) || [],
+    currency: job.currency
+      ? {
+          id: job.currency.id,
+          code: job.currency.code,
+          countries: [],
+        }
+      : undefined,
+    // tags:
+    //   job?.tags?.map((tag) => ({
+    //     tag: {
+    //       id: tag.tag.id,
+    //       createdAt: tag.tag.createdAt,
+    //       updatedAt: tag.tag.updatedAt,
+    //       tag: tag.tag.tag,
+    //       default: tag.tag.default || false,
+    //     },
+    //   })) || [],
     remote: job.remote || false,
     hybrid: job.hybrid || false,
     consulting: job.consulting || false,
@@ -69,18 +113,53 @@ const mapJobPostToForm = (job: JobPost) => {
 // import { MarkdownEditor } from "@/components/markdown-editor"
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30
-const EditJobPost = ({ job }: { job: JobPost }) => {
+const formatNumberInput = (value: number | undefined | null): string => {
+  if (!value) return ""
+  return value.toLocaleString("en-US", { maximumFractionDigits: 0 })
+}
+
+const parseFormattedNumber = (value: string): number | null => {
+  if (!value) return null
+  // Remove all commas before parsing
+  const cleanValue = value.replace(/,/g, "")
+  const parsed = Number(cleanValue)
+  return isNaN(parsed) ? null : parsed
+}
+
+interface FormErrors {
+  [key: string]: boolean
+}
+
+const EditJobPost = ({
+  job,
+  currencies,
+}: {
+  job: JobPost
+  currencies: Currency[]
+}) => {
   const form = useForm<zod.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: mapJobPostToForm(job),
   })
+  const router = useRouter()
 
   const jobId = job.id
-  const [description, setDescription] = useState("")
   const [generation, setGeneration] = useState<string>("")
 
   const [isLoading, setIsLoading] = useState(false)
-
+  const onStreamingDone = useCallback(
+    async (fullValue: string) => {
+      console.log("GENERATION", fullValue)
+      const json = await generateJSONFromMarkdown(fullValue)
+      toast.success("Generated")
+      await updateJobPost({
+        jobId: jobId as string,
+        data: { description: JSON.stringify(json) },
+        shouldRedirect: false,
+      })
+    },
+    [generation]
+  )
   const handleWrite = useCallback(async () => {
     try {
       setIsLoading(true)
@@ -89,40 +168,108 @@ const EditJobPost = ({ job }: { job: JobPost }) => {
       const { output } = await writeJobDescription({
         jobId: jobId as string,
       })
-
+      let out = ``
       for await (const delta of readStreamableValue(output)) {
-        setGeneration((currentGeneration) => `${currentGeneration}${delta}`)
+        out += delta
+        setGeneration(out)
+      }
+
+      if (out) {
+        await onStreamingDone(out)
       }
     } catch (error) {
       console.error("Error writing job description:", error)
     } finally {
       setIsLoading(false)
     }
-  }, [jobId])
+  }, [jobId, onStreamingDone])
 
-  const updateJob = useCallback(async () => {
-    console.log("Job description saved:", generation)
-    // await updateJobPost({
-    //   jobId: jobId as string,
-    //   data: {
-    //     description: generation,
-    //   },
-    // })
-  }, [generation, jobId])
+  useEffect(() => {
+    if (job && !job.description) {
+      handleWrite()
+    }
+  }, [job])
+
+  const [formErrors, setFormErrors] = useState<FormErrors>({})
+
+  const updateJob = useCallback(
+    async (data: zod.infer<typeof schema>) => {
+      try {
+        setFormErrors({})
+        await updateJobPost({
+          jobId: jobId as string,
+          data: data as Partial<JobPost>,
+          shouldRedirect: false,
+        })
+        toast.success("Job description saved")
+        // router.push(`/home/jobs/${jobId}/preview`)
+      } catch (error) {
+        console.log("Error saving job post:", error)
+        toast.error("Failed to save job post")
+        // Highlight fields with errors
+        const errorFields = Object.keys(form.formState.errors)
+        const newErrors = errorFields.reduce(
+          (acc, field) => ({
+            ...acc,
+            [field]: true,
+          }),
+          {}
+        )
+        setFormErrors(newErrors)
+      }
+    },
+    [generation, jobId, router, form.formState.errors]
+  )
   return (
     <div className="p-4 space-y-4 mb-48 max-w-6xl">
+      <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-2">
+          <Title>Complete the Job Post</Title>
+          <p className="text-sm text-gray-500">
+            Edit the job post to make it more attractive to candidates.
+          </p>
+        </div>
+
+        <Link href={`/home/jobs/${jobId}/preview`}>
+          <Button variant="outline" size="sm" asChild>
+            <div>
+              <Icon name="preview" />
+              Preview
+            </div>
+          </Button>
+        </Link>
+      </div>
       <Form {...form}>
         <form
           className="space-y-6 w-full"
-          onSubmit={form.handleSubmit(updateJob)}
+          onSubmit={form.handleSubmit(updateJob, (errors) => {
+            console.log("ERRORS", errors)
+            toast.error("Please fix the validation errors", {
+              description: Object.keys(errors)
+                .map((key) => errors[key as keyof typeof errors]?.message)
+                .join(", "),
+            })
+            // Convert errors to FormErrors format
+            const newErrors = Object.keys(errors).reduce(
+              (acc, key) => ({
+                ...acc,
+                [key]: true,
+              }),
+              {} as FormErrors
+            )
+            setFormErrors(newErrors)
+          })}
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-            <div className="mt-8 col-span-2">
+            <div className="mt-8 col-span-2 order-1 md:order-2">
               <TextEditor
                 className="max-w-2xl"
                 markdown={generation}
+                description={job.description}
                 onChange={(value) => {
-                  console.log(value)
+                  if (value) {
+                    form.setValue("description", JSON.stringify(value))
+                  }
                 }}
               />
             </div>
@@ -132,11 +279,20 @@ const EditJobPost = ({ job }: { job: JobPost }) => {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Job Title</FormLabel>
+                    <FormLabel className={formErrors.title ? "text-error" : ""}>
+                      Job Title
+                    </FormLabel>
                     <FormControl>
-                      <Input {...field} className="text-[24px] font-bold" />
+                      <Input
+                        {...field}
+                        className={`font-bold ${
+                          formErrors.title
+                            ? "border-error focus:border-error"
+                            : ""
+                        }`}
+                      />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-error text-sm" />
                   </FormItem>
                 )}
               />
@@ -178,23 +334,63 @@ const EditJobPost = ({ job }: { job: JobPost }) => {
                   </FormItem>
                 )}
               />
+              <div>
+                <FormLabel className={formErrors.currency ? "text-error" : ""}>
+                  Currency
+                </FormLabel>
+                <CurrencySelector
+                  currencies={currencies}
+                  defaultCurrency={form.getValues("currency")?.code}
+                  onSelect={(currency) => {
+                    form.setValue("currency", {
+                      id: currency.id,
+                      code: currency.code,
+                    })
+                    // Clear currency error when valid selection is made
+                    if (formErrors.currency) {
+                      setFormErrors((prev) => ({ ...prev, currency: false }))
+                    }
+                  }}
+                  className={formErrors.currency ? "border-destructive" : ""}
+                />
+                {formErrors.currency && (
+                  <p className="text-destructive text-sm mt-1">
+                    Please select a currency
+                  </p>
+                )}
+              </div>
+
               <div className="grid grid-cols-1 gap-2">
                 <div className="col-span-2 flex flex-col gap-2">
                   <FormField
                     control={form.control}
                     name="minSalary"
                     render={({ field }) => (
-                      <FormItem className="flex flex-col space-y-2">
+                      <FormItem className="flex flex-col space-y-2 pt-2">
                         <FormLabel>Minimum Salary</FormLabel>
                         <FormControl>
                           <Input
-                            type="number"
-                            className="input input-bordered w-full"
-                            value={field.value}
-                            onChange={field.onChange}
+                            type="text"
+                            className={`input input-bordered w-full ${
+                              formErrors.minSalary ||
+                              form.formState.errors.minSalary
+                                ? "border-error focus:border-error"
+                                : ""
+                            }`}
+                            value={
+                              field.value ? formatNumberInput(field.value) : ""
+                            }
+                            onChange={(e) => {
+                              const rawValue = e.target.value.replace(
+                                /[^\d,]/g,
+                                ""
+                              )
+                              field.onChange(parseFormattedNumber(rawValue))
+                            }}
                             placeholder="Enter minimum salary"
                           />
                         </FormControl>
+                        <FormMessage className="text-error text-sm" />
                       </FormItem>
                     )}
                   />
@@ -207,10 +403,18 @@ const EditJobPost = ({ job }: { job: JobPost }) => {
                         <FormLabel>Maximum Salary</FormLabel>
                         <FormControl>
                           <Input
-                            type="number"
+                            type="text"
                             className="input input-bordered w-full"
-                            value={field.value}
-                            onChange={field.onChange}
+                            value={
+                              field.value ? formatNumberInput(field.value) : ""
+                            }
+                            onChange={(e) => {
+                              const rawValue = e.target.value.replace(
+                                /[^\d,]/g,
+                                ""
+                              )
+                              field.onChange(parseFormattedNumber(rawValue))
+                            }}
                             placeholder="Enter maximum salary"
                           />
                         </FormControl>
@@ -218,19 +422,19 @@ const EditJobPost = ({ job }: { job: JobPost }) => {
                     )}
                   />
                 </div>
-                <div className="flex flex-col justify-between items-end flex-wrap">
+                <div className="flex flex-col gap-2 justify-between items-start flex-wrap">
                   <FormField
                     control={form.control}
                     name="remote"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-center space-x-4">
-                        <FormLabel className="mt-2">Remote Work</FormLabel>
-                        <FormControl>
+                      <FormItem className="flex flex-row justify-center items-center gap-2">
+                        <FormControl className="mt-2">
                           <Switch
                             checked={field.value}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
+                        <FormLabel className="">Remote Work</FormLabel>
                       </FormItem>
                     )}
                   />
@@ -239,14 +443,14 @@ const EditJobPost = ({ job }: { job: JobPost }) => {
                     control={form.control}
                     name="hybrid"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-center space-x-4">
-                        <FormLabel className="mt-2">Hybrid Work</FormLabel>
-                        <FormControl>
+                      <FormItem className="flex flex-row items-center gap-2">
+                        <FormControl className="mt-2">
                           <Switch
                             checked={field.value}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
+                        <FormLabel className="mt-0">Hybrid Work</FormLabel>
                       </FormItem>
                     )}
                   />
@@ -255,16 +459,16 @@ const EditJobPost = ({ job }: { job: JobPost }) => {
                     control={form.control}
                     name="consulting"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-center space-x-4">
-                        <FormLabel className="mt-2">
-                          Consulting Position
-                        </FormLabel>
-                        <FormControl>
+                      <FormItem className="flex flex-row items-center gap-2">
+                        <FormControl className="mt-2">
                           <Switch
                             checked={field.value}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
+                        <FormLabel className="mt-0">
+                          Consulting Position
+                        </FormLabel>
                       </FormItem>
                     )}
                   />
@@ -273,44 +477,74 @@ const EditJobPost = ({ job }: { job: JobPost }) => {
                     control={form.control}
                     name="openSource"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-center space-x-4">
-                        <FormLabel className="mt-2">
-                          Open Source Project
-                        </FormLabel>
-                        <FormControl>
+                      <FormItem className="flex flex-row items-center gap-2">
+                        <FormControl className="mt-2">
                           <Switch
                             checked={field.value}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
+                        <FormLabel className="mt-0">
+                          Open Source Project
+                        </FormLabel>
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={form.control}
                     name="equity"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-center space-x-4">
-                        <FormLabel className="mt-2">Equity</FormLabel>
-                        <FormControl>
+                      <FormItem className="flex flex-row items-center gap-2">
+                        <FormControl className="mt-2">
                           <Switch
                             checked={field.value}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
+                        <FormLabel className="mt-0">Equity</FormLabel>
                       </FormItem>
                     )}
                   />
                 </div>
               </div>
+              <div className="hidden md:flex flex-wrap flex-row gap-2 justify-start my-4 items-center">
+                {
+                  <Button
+                    onClick={handleWrite}
+                    disabled={isLoading}
+                    className="btn btn-primary"
+                    size="sm"
+                    variant={job.description ? "outline" : "default"}
+                  >
+                    {isLoading ? (
+                      <Icon name="spinner" />
+                    ) : (
+                      <Icon name="rotate" />
+                    )}
+                    {isLoading ? "Writing..." : "Rewrite Description"}
+                  </Button>
+                }
+
+                <Button
+                  role="submit"
+                  className="btn btn-secondary"
+                  disabled={isLoading}
+                  size="sm"
+                >
+                  <Icon name="save" />
+                  Save Description
+                </Button>
+              </div>
             </div>
           </div>
 
-          <div className="fixed bottom-0 right-0 left-0 md:ml-48 flex justify-center items-center gap-2 p-4 bg-sidebar-accent border  ">
+          <div className="md:hidden fixed bottom-0 right-0 left-0 md:ml-48 flex justify-center items-center gap-2 p-4 bg-sidebar-accent border  ">
             {
               <Button
                 onClick={handleWrite}
                 disabled={isLoading}
+                variant={job.description ? "outline" : "default"}
                 className="btn btn-primary"
               >
                 {isLoading ? <Icon name="spinner" /> : <Icon name="rotate" />}
@@ -321,8 +555,9 @@ const EditJobPost = ({ job }: { job: JobPost }) => {
             <Button
               role="submit"
               className="btn btn-secondary"
-              disabled={!generation || isLoading}
+              disabled={isLoading}
             >
+              <Icon name="save" />
               Save Description
             </Button>
           </div>

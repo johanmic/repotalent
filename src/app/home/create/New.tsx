@@ -8,6 +8,7 @@ import { useEffect, useState } from "react"
 const NewPost = () => {
   const [isProcessing, setIsProcessing] = useState(false)
   const [showCodeParser, setShowCodeParser] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [fileData, setFileData] = useState<{
     filename: string
     data: string
@@ -18,6 +19,7 @@ const NewPost = () => {
       if (!fileData?.filename || !fileData?.data || isProcessing) return
 
       try {
+        setIsLoading(true)
         setIsProcessing(true)
         setShowCodeParser(true)
         await createJobPost(fileData)
@@ -32,8 +34,10 @@ const NewPost = () => {
       }
     }
 
-    handleFileData()
-  }, [fileData, isProcessing])
+    if (!isLoading) {
+      handleFileData()
+    }
+  }, [fileData, isProcessing, isLoading])
 
   return (
     <div className="space-y-6 flex flex-col h-full min-h-screen">

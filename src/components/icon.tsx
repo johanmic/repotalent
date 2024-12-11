@@ -16,9 +16,23 @@ import {
   PenBox,
   LoaderCircle,
   RotateCw,
+  Save,
+  MapPin,
+  CircleCheck,
+  CircleX,
+  CircleDot,
+  CircleDollarSign,
+  Briefcase,
+  KeySquare,
+  ThumbsUp,
+  ThumbsDown,
+  Timer,
+  Blocks,
+  Eye,
+  MailPlus,
 } from "lucide-react"
 
-const icons = {
+export const icons = {
   file: FileCode,
   menu: Menu,
   atom: Atom,
@@ -36,6 +50,20 @@ const icons = {
   plus: Plus,
   pen: PenBox,
   rotate: RotateCw,
+  save: Save,
+  mapPin: MapPin,
+  circleCheck: CircleCheck,
+  circleX: CircleX,
+  circleDot: CircleDot,
+  circleDollarSign: CircleDollarSign,
+  briefcase: Briefcase,
+  keySquare: KeySquare,
+  thumbsUp: ThumbsUp,
+  thumbsDown: ThumbsDown,
+  timer: Timer,
+  blocks: Blocks,
+  preview: Eye,
+  mailPlus: MailPlus,
 }
 
 export default function Icon({

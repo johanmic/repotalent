@@ -10,7 +10,7 @@ const CompleteJobPost = async ({ params }: { params: Params }) => {
   if (!job) {
     return <NotFound />
   }
-  console.log("job", job)
+
   return (
     <div>
       <Complete jobPost={job} />

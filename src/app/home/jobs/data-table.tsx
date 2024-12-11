@@ -10,7 +10,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-
+import { useRouter } from "next/navigation"
 import {
   Table,
   TableBody,
@@ -31,7 +31,7 @@ export function DataTable<TData, TValue>({
   data,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
-
+  const router = useRouter()
   const table = useReactTable({
     data,
     columns,
@@ -72,6 +72,10 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className="cursor-pointer"
+                  onClick={() =>
+                    router.push(`/home/jobs/${row.original.id}/edit`)
+                  }
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

@@ -6,6 +6,7 @@ import { getUser } from "@/utils/supabase/server"
 import { redirect } from "next/navigation"
 import { omit } from "ramda"
 import { revalidatePath } from "next/cache"
+import { mapJS } from "@/utils/mapIcons"
 import {
   jobPost,
   jobPostToPackageVersion,
@@ -18,6 +19,7 @@ import {
   organization,
   city,
   country,
+  currency,
 } from "@prisma/client"
 
 export interface JobPostToPackageVersion {
@@ -28,6 +30,7 @@ export interface JobPost extends jobPost {
   tags?: { tag: jobPostTag }[]
   questions?: jobPostQuestion[]
   ratings?: jobPostRatings[]
+  currency?: currency
   packages?: {
     packageVersion?: {
       package: openSourcePackage
@@ -66,6 +69,7 @@ export const createJobPost = async (data: {
         title: promptReuslts.suggestedTitle,
         seniority: promptReuslts.seniority,
         source: data.filename,
+        published: null,
         organizationId,
         questions: {
           create: promptReuslts.questions.map((question) => ({
@@ -96,6 +100,32 @@ export const createJobPost = async (data: {
         ...packagesJson.dependencies,
         ...packagesJson.devDependencies,
       }).map(([name, version]) => ({ name, version: version as string }))
+      console.log("dependencies", dependencies)
+      const keys = dependencies.map(({ name }) => name) as string[]
+      console.log("keys", keys)
+      const tags = await mapJS({ packages: keys })
+      console.log("tags", tags)
+      const existingTags = new Set(
+        promptReuslts.tags.map((tag) => tag.toLowerCase())
+      )
+      const newTags = tags.filter((tag) => !existingTags.has(tag.toLowerCase()))
+
+      await $tx.jobPost.update({
+        where: { id: job.id },
+        data: {
+          tags: {
+            create: newTags.map((tag) => ({
+              tag: {
+                connectOrCreate: {
+                  where: { tag },
+                  create: { tag },
+                },
+              },
+            })),
+          },
+        },
+      })
+
       // Process all packages in parallel
       await Promise.all(
         dependencies.map(async ({ name, version }) => {
@@ -133,7 +163,7 @@ export const createJobPost = async (data: {
     }
     return job
   })
-  console.log("job", job)
+
   redirect(`/home/jobs/${job.id}/complete`)
 }
 
@@ -151,9 +181,10 @@ export const getJobPost = async ({
     include: { organization: true },
   })
   if (!dbUser?.organization?.id) {
-    throw new Error("User not in organization")
+    // throw new Error("User not in organization")
+    redirect("/home")
   }
-  console.log("dbUser", dbUser)
+
   const job = await prisma.jobPost.findUnique({
     where: { id: jobId, organizationId: dbUser?.organization?.id },
     include: {
@@ -171,6 +202,7 @@ export const getJobPost = async ({
           tag: true,
         },
       },
+      currency: true,
       questions: true,
       ratings: true,
     },
@@ -218,16 +250,17 @@ export const listJobs = async (): Promise<JobPost[]> => {
 export const updateJobPost = async ({
   jobId,
   data,
+  shouldRedirect = true,
 }: {
   jobId: string
-  data: JobPost
+  data: Partial<JobPost>
+  shouldRedirect?: boolean
 }) => {
   const { user } = await getUser()
   if (!user?.id) {
     throw new Error("User not authenticated")
   }
 
-  console.log("data", data)
   const dbUser = await prisma.user.findUnique({
     where: { id: user.id },
     include: { organization: true },
@@ -249,6 +282,7 @@ export const updateJobPost = async ({
           "questions",
           "ratings",
           "packages",
+          "currency",
         ],
         data
       ),
@@ -266,8 +300,28 @@ export const updateJobPost = async ({
           update: { rating: rating.rating },
         })),
       },
+      currencyId: data.currency?.id || null,
     },
   })
 
-  redirect(`/home/jobs/${jobId}/edit`)
+  if (shouldRedirect) {
+    redirect(`/home/jobs/${jobId}/edit`)
+  }
+  revalidatePath(`/home/jobs/${jobId}/edit`)
+  return job
+}
+
+export const setPublished = async ({
+  jobId,
+  published,
+}: {
+  jobId: string
+  published: boolean
+}) => {
+  await prisma.jobPost.update({
+    where: { id: jobId },
+    data: { published: published ? new Date() : null },
+  })
+  revalidatePath(`/home/jobs/${jobId}/preview`)
+  revalidatePath(`/home/jobs/${jobId}`)
 }

@@ -31,7 +31,7 @@ export const Title = ({
   const HtmlTag = getSizeHtml(size)
   return (
     <HtmlTag
-      className={`font-bold tracking-tight text-gray-900 dark:text-white ${sizeClass} ${className}`}
+      className={`font-semibold tracking-tight text-gray-900 dark:text-white ${sizeClass} ${className}`}
     >
       {children}
     </HtmlTag>

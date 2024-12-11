@@ -4,7 +4,7 @@ import Dropzone from "shadcn-dropzone"
 import { Button } from "@/components/ui/button"
 import Icon from "@/components/icon"
 interface ImageUploadProps {
-  image: string
+  image: string | null
   onUpload: (image: string) => void
 }
 

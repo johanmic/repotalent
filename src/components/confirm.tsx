@@ -13,7 +13,7 @@ import { PencilIcon, CheckIcon } from "lucide-react"
 import Text from "@/components/text"
 import { Label } from "@/components/ui/label"
 import type { JobPost } from "@actions/jobpost"
-
+import { getSeniorityLabel, experienceLevels } from "@/utils/seniorityMapper"
 import {
   Card,
   CardHeader,
@@ -28,27 +28,12 @@ const toneOptions = [
   { value: "formal", label: "Formal" },
 ]
 
-const experienceLevels = [
-  { value: 0.3, label: "Junior (1-2 years)" },
-  { value: 0.6, label: "Mid-level (3-5 years)" },
-  { value: 0.8, label: "Senior (6-8 years)" },
-  { value: 1, label: "Lead (8+ years)" },
-]
-
-const getSeniorityLabel = (seniority: number): string => {
-  if (seniority <= 0.3) return "Junior (1-2 years)"
-  if (seniority <= 0.6) return "Mid-level (3-5 years)"
-  if (seniority <= 0.8) return "Senior (6-8 years)"
-  if (seniority <= 1) return "Lead (8+ years)"
-  return "Lead (8+ years)"
-}
-
 interface EditableFieldProps {
   value: string
   isEditing: boolean
   onToggleEdit: () => void
-  onValueChange?: (value: string) => void
-  options?: Array<{ value: string | number; label: string }>
+  onValueChange?: (value: string | number) => void
+  options?: Array<{ value: number; label: string }>
 }
 
 const EditableField = ({
@@ -58,6 +43,10 @@ const EditableField = ({
   onValueChange,
   options,
 }: EditableFieldProps) => {
+  const currentValue = options
+    ?.find((opt) => opt.label === value)
+    ?.value.toString()
+
   if (!isEditing) {
     return (
       <div className="flex items-center w-full">
@@ -75,16 +64,23 @@ const EditableField = ({
     <div className="flex items-center w-full">
       {options ? (
         <Select
-          value={value}
-          onValueChange={(v) => onValueChange?.(v)}
-          className="w-full"
+          value={options.find((opt) => opt.label === value)?.value.toString()}
+          onValueChange={(v) => {
+            const numericValue = parseFloat(v)
+            const selectedOption = options.find(
+              (opt) => opt.value === numericValue
+            )
+            if (selectedOption) {
+              onValueChange?.(numericValue)
+            }
+          }}
         >
-          <SelectTrigger>
+          <SelectTrigger className="w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {options.map((option) => (
-              <SelectItem key={option.value} value={option.label}>
+              <SelectItem key={option.value} value={option.value.toString()}>
                 {option.label}
               </SelectItem>
             ))}
@@ -97,6 +93,9 @@ const EditableField = ({
           className="w-full"
         />
       )}
+      <Button variant="ghost" size="sm" onClick={onToggleEdit}>
+        <CheckIcon className="h-4 w-4" />
+      </Button>
     </div>
   )
 }
@@ -107,16 +106,18 @@ export default function Confirm({
   setAdditionalInfo,
   tone,
   additionalInfo,
+  setExperienceLevel,
 }: {
   jobPost: JobPost
   tone: string
   additionalInfo: string
   setTone: (tone: string) => void
   setAdditionalInfo: (additionalInfo: string) => void
+  setExperienceLevel: (experienceLevel: number) => void
 }) {
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [isEditingLevel, setIsEditingLevel] = useState(false)
-
+  const [seniority, setSeniority] = useState(jobPost.seniority || 0.3)
   return (
     <div className="w-full">
       {jobPost && (
@@ -152,10 +153,15 @@ export default function Confirm({
                     </Text>
                   </Label>
                   <EditableField
-                    value={getSeniorityLabel(jobPost.seniority || 0)}
+                    value={getSeniorityLabel(seniority).key}
                     isEditing={isEditingLevel}
                     onToggleEdit={() => setIsEditingLevel(!isEditingLevel)}
                     options={experienceLevels}
+                    onValueChange={(value) => {
+                      const numericValue = parseFloat(value.toString())
+                      setSeniority(numericValue)
+                      setExperienceLevel(numericValue)
+                    }}
                   />
                 </div>
               </div>
@@ -177,7 +183,6 @@ export default function Confirm({
                 </SelectContent>
               </Select>
             </div>
-
             <div>
               <Label className="flex items-center gap-2">
                 Additional Information

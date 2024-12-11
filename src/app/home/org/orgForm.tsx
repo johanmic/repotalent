@@ -21,6 +21,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useCallback } from "react"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
+import { getImageUrl } from "@/utils/image"
 
 const citySchema = z.object({
   id: z.string(),
@@ -81,7 +82,9 @@ const CreateOrgForm = ({
     },
     [organization]
   )
-
+  const imageUrl = organization?.image
+    ? getImageUrl(organization?.image || "")
+    : null
   return (
     <Form {...form}>
       <form
@@ -93,7 +96,7 @@ const CreateOrgForm = ({
         <div className="grid md:grid-cols-3 gap-4">
           <div className="gap-2 flex flex-col items-center justify-center">
             <ImageUpload
-              image={organization?.image || ""}
+              image={imageUrl}
               onUpload={(path) => {
                 console.log("path", path)
                 form.setValue("image", path)

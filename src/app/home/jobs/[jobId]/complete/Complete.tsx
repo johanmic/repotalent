@@ -1,5 +1,5 @@
 "use client"
-import AppIconsList from "@/components/appIconsList"
+import AppIconsList from "@/components/app-icons-list"
 import Confirm from "@/components/confirm"
 import Questions from "@/components/questions"
 import ResultsSlider from "@/components/resultsSlider"
@@ -19,7 +19,11 @@ const PrepQuestionStepper = ({ jobPost }: { jobPost: JobPost }) => {
 
   const [tone, setTone] = useState<string>("")
   const [additionalInfo, setAdditionalInfo] = useState<string>("")
+  const [experienceLevel, setExperienceLevel] = useState<number>(
+    jobPost?.seniority || 0.5
+  )
 
+  console.log("experienceLevel", experienceLevel)
   const onDone = useCallback(() => {
     updateJobPost({
       jobId: jobPost.id,
@@ -27,11 +31,10 @@ const PrepQuestionStepper = ({ jobPost }: { jobPost: JobPost }) => {
         ...jobPost,
         questions: questionResults,
         ratings: sliderResults,
+        seniority: experienceLevel,
       },
     })
-  }, [jobPost, questionResults, sliderResults])
-
-  console.log("setQuestionResults", questionResults)
+  }, [jobPost, questionResults, sliderResults, experienceLevel])
 
   const steps = [
     {
@@ -63,6 +66,7 @@ const PrepQuestionStepper = ({ jobPost }: { jobPost: JobPost }) => {
           additionalInfo={additionalInfo}
           setTone={setTone}
           setAdditionalInfo={setAdditionalInfo}
+          setExperienceLevel={setExperienceLevel}
         />
       ),
     },
@@ -74,7 +78,6 @@ const PrepQuestionStepper = ({ jobPost }: { jobPost: JobPost }) => {
 const CompleteJobPost = ({ jobPost }: { jobPost: JobPost }) => {
   return (
     <div>
-      return (
       <div className="space-y-6 flex flex-col h-full min-h-screen">
         <h1 className="text-2xl font-bold">Create a new post</h1>
 
