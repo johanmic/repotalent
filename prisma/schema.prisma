@@ -11,16 +11,21 @@ generator client {
 }
 
 model user {
-    id             String        @id @default(cuid())
-    email          String        @unique
-    name           String?
-    avatar         String?
-    createdAt      DateTime      @default(now())
-    updatedAt      DateTime      @updatedAt
-    organization   organization? @relation(fields: [organizationId], references: [id])
-    organizationId String?
-    city           city?         @relation(fields: [cityId], references: [id])
-    cityId         String?
+    id                String              @id @default(cuid())
+    email             String              @unique
+    name              String?
+    avatar            String?
+    createdAt         DateTime            @default(now())
+    updatedAt         DateTime            @updatedAt
+    organization      organization?       @relation(fields: [organizationId], references: [id])
+    organizationId    String?
+    city              city?               @relation(fields: [cityId], references: [id])
+    cityId            String?
+    credits           Int                 @default(0)
+    jobPostTokenUsage jobPostTokenUsage[]
+    creditPurchase    creditPurchase[]
+    creditUsage       creditUsage[]
+    promoCodeUsage    promoCodeUsage[]
 }
 
 model organization {
@@ -48,37 +53,49 @@ model organization {
 }
 
 model jobPost {
-    id                    String                    @id @default(cuid())
-    published             DateTime?                 @default(now())
-    title                 String?
-    description           String?
-    source                String
-    createdAt             DateTime                  @default(now())
-    updatedAt             DateTime                  @updatedAt
-    minSalary             Int?
-    maxSalary             Int?
-    type                  String?
-    experience            String?
-    seniority             Float?
-    remote                Boolean?
-    organization          organization?             @relation(fields: [organizationId], references: [id])
-    organizationId        String?
-    packages              jobPostToPackageVersion[]
-    questions             jobPostQuestion[]
-    tags                  jobPostToTag[]
-    openSource            Boolean                   @default(false)
-    views                 Int                       @default(0)
-    hybrid                Boolean                   @default(false)
-    consulting            Boolean                   @default(false)
-    jobPostPricingPackage jobPostPricingPackage[]
-    ratings               jobPostRatings[]
-    tone                  String?
-    additionalInfo        String?
-    applicationUrl        String?
-    equity                Boolean                   @default(false)
-    currencyId            String?
-    currency              currency?                 @relation(fields: [currencyId], references: [id])
-    slug                  String                    @unique
+    id                String                    @id @default(cuid())
+    published         DateTime?                 @default(now())
+    title             String?
+    description       String?
+    source            String
+    createdAt         DateTime                  @default(now())
+    updatedAt         DateTime                  @updatedAt
+    minSalary         Int?
+    maxSalary         Int?
+    type              String?
+    experience        String?
+    seniority         Float?
+    remote            Boolean?
+    organization      organization?             @relation(fields: [organizationId], references: [id])
+    organizationId    String?
+    packages          jobPostToPackageVersion[]
+    questions         jobPostQuestion[]
+    tags              jobPostToTag[]
+    openSource        Boolean                   @default(false)
+    views             Int                       @default(0)
+    hybrid            Boolean                   @default(false)
+    consulting        Boolean                   @default(false)
+    ratings           jobPostRatings[]
+    tone              String?
+    additionalInfo    String?
+    applicationUrl    String?
+    equity            Boolean                   @default(false)
+    currencyId        String?
+    currency          currency?                 @relation(fields: [currencyId], references: [id])
+    slug              String                    @unique
+    jobPostTokenUsage jobPostTokenUsage[]
+    creditUsage       creditUsage[]
+}
+
+model jobPostTokenUsage {
+    id         String   @id @default(cuid())
+    jobPost    jobPost  @relation(fields: [jobPostId], references: [id])
+    jobPostId  String
+    userId     String
+    user       user     @relation(fields: [userId], references: [id])
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
+    tokensUsed Int      @default(0)
 }
 
 model jobPostRatings {
@@ -123,35 +140,6 @@ model openSourcePackageVersion {
     createdAt DateTime                  @default(now())
 
     @@unique([packageId, version])
-}
-
-model pricing {
-    id          String                  @id @default(cuid())
-    name        String
-    description String?
-    price       Int
-    duration    Int
-    isRecurring Boolean                 @default(false)
-    createdAt   DateTime                @default(now())
-    updatedAt   DateTime                @updatedAt
-    jobPosts    jobPostPricingPackage[]
-}
-
-model jobPostPricingPackage {
-    id        String  @id @default(cuid())
-    jobPost   jobPost @relation(fields: [jobPostId], references: [id])
-    jobPostId String
-
-    pricing   pricing  @relation(fields: [pricingId], references: [id])
-    pricingId String
-    startDate DateTime @default(now())
-    endDate   DateTime
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-    stripeId  String?
-
-    @@index([jobPostId])
-    @@index([pricingId])
 }
 
 model jobPostQuestion {
@@ -271,4 +259,58 @@ model continent {
     name      String
     code      String    @unique
     countries country[]
+}
+
+model creditPurchase {
+    id               String         @id @default(cuid())
+    userId           String
+    user             user           @relation(fields: [userId], references: [id])
+    stripePurchaseId String         @unique
+    creditsBought    Int
+    createdAt        DateTime       @default(now())
+    promoCodeId      String?
+    promoCode        promoCode?     @relation(fields: [promoCodeId], references: [id])
+    creditPackage    creditPackage? @relation(fields: [creditPackageId], references: [id])
+    creditPackageId  String?
+}
+
+model creditUsage {
+    id          String   @id @default(cuid())
+    userId      String
+    user        user     @relation(fields: [userId], references: [id])
+    jobPostId   String
+    jobPost     jobPost  @relation(fields: [jobPostId], references: [id])
+    creditsUsed Int      @default(1)
+    createdAt   DateTime @default(now())
+}
+
+model promoCode {
+    id             String           @id @default(cuid())
+    code           String           @unique
+    credits        Int
+    createdAt      DateTime         @default(now())
+    updatedAt      DateTime         @updatedAt
+    expiresAt      DateTime?        @default(dbgenerated("(NOW() + '30 days'::interval)"))
+    oneTime        Boolean          @default(false)
+    promoCodeUsage promoCodeUsage[]
+    creditPurchase creditPurchase[]
+}
+
+model promoCodeUsage {
+    id          String    @id @default(cuid())
+    promoCodeId String
+    promoCode   promoCode @relation(fields: [promoCodeId], references: [id])
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+    userId      String
+    user        user      @relation(fields: [userId], references: [id])
+}
+
+model creditPackage {
+    id             String           @id @default(cuid())
+    credits        Int
+    stripeId       String           @unique
+    createdAt      DateTime         @default(now())
+    updatedAt      DateTime         @updatedAt
+    creditPurchase creditPurchase[]
 }

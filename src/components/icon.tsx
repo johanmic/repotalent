@@ -30,6 +30,7 @@ import {
   Blocks,
   Eye,
   MailPlus,
+  Coins,
 } from "lucide-react"
 
 export const icons = {
@@ -64,18 +65,21 @@ export const icons = {
   blocks: Blocks,
   preview: Eye,
   mailPlus: MailPlus,
+  coins: Coins,
 }
 
-export default function Icon({
+export const Icon = ({
   name,
   className,
 }: {
   name: keyof typeof icons
   className?: string
-}) {
+}) => {
   const Icon = icons[name]
 
   const additionalClass = name === "spinner" ? "animate-spin" : ""
 
   return <Icon className={`${className} ${additionalClass}`} />
 }
+
+export default Icon

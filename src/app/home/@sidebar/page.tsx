@@ -12,6 +12,8 @@ import Logo from "@/components/logo"
 import Icon from "@/components/icon"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { getUser } from "@actions/user"
+import { SidebarUser } from "@/components/sidebar-user"
 const items = [
   {
     label: "Home",
@@ -29,7 +31,8 @@ const items = [
     href: "/home/org",
   },
 ]
-const SidebarComponent = () => {
+const SidebarComponent = async () => {
+  const user = await getUser()
   return (
     <div>
       <Sidebar>
@@ -60,6 +63,7 @@ const SidebarComponent = () => {
           </SidebarGroup>
         </SidebarContent>
         <SidebarFooter>
+          <SidebarUser user={user} />
           <Button variant="outline" asChild>
             <Link href="/home/logout">
               <Icon name="logout" /> Logout

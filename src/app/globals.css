@@ -11,7 +11,7 @@ body {
     text-wrap: balance;
   }
 }
-/* 
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -82,8 +82,8 @@ body {
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
-} */
-
+}
+/* 
 @layer base {
   :root {
     --background: 0 0% 98%;
@@ -146,7 +146,7 @@ body {
     --input: 135 4% 18%;
     --ring: 138 83% 40%;
   }
-}
+} */
 
 
 @layer base {
