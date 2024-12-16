@@ -1,0 +1,74 @@
+{
+    "id": "evt_3QW5FeCaUnyp6TqP1YxUSLCn",
+    "object": "event",
+    "api_version": "2024-11-20.acacia",
+    "created": 1734220809,
+    "data": {
+        "object": {
+            "id": "py_3QW5FeCaUnyp6TqP1fVIVbw5",
+            "object": "charge",
+            "amount": 500,
+            "amount_captured": 500,
+            "amount_refunded": 0,
+            "application": null,
+            "application_fee": null,
+            "application_fee_amount": null,
+            "balance_transaction": "txn_3QW5FeCaUnyp6TqP1hjkAWft",
+            "billing_details": [
+                null
+            ],
+            "calculated_statement_descriptor": null,
+            "captured": true,
+            "created": 1734220804,
+            "currency": "usd",
+            "customer": null,
+            "description": null,
+            "destination": null,
+            "dispute": null,
+            "disputed": false,
+            "failure_balance_transaction": null,
+            "failure_code": null,
+            "failure_message": null,
+            "fraud_details": {},
+            "invoice": null,
+            "livemode": false,
+            "metadata": {},
+            "on_behalf_of": null,
+            "order": null,
+            "outcome": [
+                null
+            ],
+            "paid": true,
+            "payment_intent": "pi_3QW5FeCaUnyp6TqP1YUL0QKo",
+            "payment_method": "pm_1QW5FdCaUnyp6TqPRWj5ieWf",
+            "payment_method_details": [
+                null
+            ],
+            "radar_options": {},
+            "receipt_email": null,
+            "receipt_number": null,
+            "receipt_url": "https: //pay.stripe.com/receipts/payment/CAcaFwoVYWNjdF8xUVV5TDRDYVVueXA2VHFQKIm4-LoGMgZ3O1u7_yk6LBbwfcJ8WBXXjra9p6Iu8CjxMxuE48k1tnXB3wJWBhI2U_WVUxjJ-ZAgv9-z",
+            "refunded": false,
+            "review": null,
+            "shipping": null,
+            "source": null,
+            "source_transfer": null,
+            "statement_descriptor": null,
+            "statement_descriptor_suffix": null,
+            "status": "succeeded",
+            "transfer_data": null,
+            "transfer_group": null
+        },
+        "previous_attributes": {
+            "balance_transaction": null,
+            "receipt_url": "https: //pay.stripe.com/receipts/payment/CAcaFwoVYWNjdF8xUVV5TDRDYVVueXA2VHFQKIm4-LoGMgZMyiEY-f06LBa6gfH4ncQSU-lQ2P_vzA0oKwPUixzGdZETBBXYYoncIitHxrEiWNkCTBis"
+        }
+    },
+    "livemode": false,
+    "pending_webhooks": 2,
+    "request": {
+        "id": null,
+        "idempotency_key": null
+    },
+    "type": "charge.updated"
+}

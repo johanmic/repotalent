@@ -1,6 +1,9 @@
 "use client"
 
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { CheckoutForm } from "@/components/checkout"
+import { Icon } from "@/components/icon"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -9,14 +12,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { CheckCircle2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import React, { useState, useCallback } from "react"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
-import { CheckoutForm } from "@/components/checkout"
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
-import { Icon } from "@/components/icon"
+import { CheckCircle2 } from "lucide-react"
+import { useCallback, useState } from "react"
 type PricingSwitchProps = {
   onSwitch: (value: string) => void
 }

@@ -214,7 +214,7 @@ export const writeJobDescription = async ({ jobId }: { jobId: string }) => {
     }
 
     const prompt = makePrompt(job as JobPost)
-    const { textStream } = await streamText({
+    const { textStream, usage } = await streamText({
       model: openai("gpt-4o-mini"),
       messages: [
         {
@@ -233,6 +233,16 @@ export const writeJobDescription = async ({ jobId }: { jobId: string }) => {
     }
 
     stream.done()
+    const tokenUsage = await usage
+    if (tokenUsage) {
+      await prisma.jobPostTokenUsage.create({
+        data: {
+          jobPostId: jobId,
+          tokensUsed: tokenUsage.totalTokens,
+          userId: user.id,
+        },
+      })
+    }
   })()
 
   return { output: stream.value }

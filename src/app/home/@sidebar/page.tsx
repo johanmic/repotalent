@@ -30,6 +30,11 @@ const items = [
     icon: <Icon name="organization" />,
     href: "/home/org",
   },
+  {
+    label: "Profile",
+    icon: <Icon name="user" />,
+    href: "/home/profile",
+  },
 ]
 const SidebarComponent = async () => {
   const user = await getUser()

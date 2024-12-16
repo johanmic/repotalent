@@ -31,6 +31,9 @@ import {
   Eye,
   MailPlus,
   Coins,
+  User,
+  Tag,
+  CreditCard,
 } from "lucide-react"
 
 export const icons = {
@@ -66,6 +69,9 @@ export const icons = {
   preview: Eye,
   mailPlus: MailPlus,
   coins: Coins,
+  user: User,
+  tag: Tag,
+  creditCard: CreditCard,
 }
 
 export const Icon = ({

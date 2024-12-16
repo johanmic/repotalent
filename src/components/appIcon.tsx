@@ -237,14 +237,16 @@ export const AppIcons = {
 const Icon = ({
   name,
   color,
+  className,
   size = 18,
 }: {
   name: keyof typeof AppIcons
   color?: string
+  className?: string
   size?: number
 }) => {
   const Icon = AppIcons[name]
-  return <Icon className={cn(color)} size={size} />
+  return <Icon className={cn(color, className)} size={size} />
 }
 
 export default Icon

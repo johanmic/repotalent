@@ -3,9 +3,9 @@
 import { Stripe } from "stripe"
 import prisma from "@/store/prisma"
 const apiKey = process.env.STRIPE_SECRET_KEY as string
-console.log("apiKey", apiKey)
 const stripe = new Stripe(apiKey)
-
+import { getUser } from "@actions/user"
+import { dbAddCredits } from "@actions/credits"
 interface NewSessionOptions {
   productId: string
   isSubscription: boolean
@@ -13,29 +13,45 @@ interface NewSessionOptions {
 
 export const postStripeSession = async ({ productId }: NewSessionOptions) => {
   try {
+    const user = await getUser()
+    let stripeCustomerId = user.stripeCustomerId
+    if (!stripeCustomerId) {
+      const stripeCustomer = await stripe.customers.create({
+        email: user.email,
+      })
+      stripeCustomerId = stripeCustomer.id
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { stripeCustomerId },
+      })
+    }
     const returnUrl =
       "http://localhost:3000/home/checkout-return?session_id={CHECKOUT_SESSION_ID}"
     const product = await stripe.products.retrieve(productId)
-    console.log("product", product)
+
     if (!product.default_price) throw new Error("Product has no default price")
     const price = await stripe.prices.retrieve(product.default_price as string)
-    console.log("price", price)
-    const creditPackage = await prisma.creditPackage.findFirst({
+
+    const product = await prisma.product.findFirst({
       where: {
-        stripeId: product.default_price as string,
+        stripeId: product.id as string,
       },
     })
-    if (!creditPackage) throw new Error("Credit package not found")
+    if (!product) throw new Error("Credit package not found")
     if (price.recurring) {
       // Create a session for a subscription
       const session = await stripe.checkout.sessions.create({
         ui_mode: "embedded",
+        customer: stripeCustomerId || undefined,
         line_items: [
           {
             price: product.default_price as string,
             quantity: 1,
           },
         ],
+        metadata: {
+          productId,
+        },
         mode: "subscription",
         return_url: returnUrl,
       })
@@ -53,12 +69,16 @@ export const postStripeSession = async ({ productId }: NewSessionOptions) => {
       // Create a session for a one-time payment
       const session = await stripe.checkout.sessions.create({
         ui_mode: "embedded",
+        customer: stripeCustomerId || undefined,
         line_items: [
           {
             price: product.default_price as string,
             quantity: 1,
           },
         ],
+        metadata: {
+          productId,
+        },
         mode: "payment",
         return_url: returnUrl,
       })
@@ -77,4 +97,38 @@ export const postStripeSession = async ({ productId }: NewSessionOptions) => {
     console.error("Error creating Stripe session:", error)
     throw new Error("Error creating Stripe session")
   }
+}
+
+export const getCustomerSubscription = async () => {
+  const user = await getUser()
+  if (!user.stripeCustomerId) return null
+  const subscriptions = await stripe.subscriptions.list({
+    customer: user.stripeCustomerId,
+  })
+  return subscriptions
+}
+
+export const removeSubscription = async (subscriptionId: string) => {
+  const subscription = await stripe.subscriptions.cancel(subscriptionId)
+  return subscription
+}
+
+export const addSubscriptionCredits = async (event: Stripe.Event) => {
+  const stripeInvoice = event.data.object as Stripe.Invoice
+  const data = stripeInvoice.lines.data[0]
+  const user = await prisma.user.findFirst({
+    where: {
+      stripeCustomerId: stripeInvoice.customer as string,
+    },
+  })
+  if (!user) throw new Error("User not found")
+  const productId = data.plan?.product as string
+  const subscriptionId = data.subscription as string
+  await dbAddCredits({
+    productId,
+    stripeId: stripeInvoice.id,
+    subscriptionId,
+    userId: user.id,
+    idType: "invoiceId",
+  })
 }

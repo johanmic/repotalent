@@ -2,7 +2,7 @@
 import { generateText } from "ai"
 import { openai } from "@ai-sdk/openai"
 import prisma from "@/store/prisma"
-
+import { getUser } from "@/utils/supabase/server"
 const packageJSONDescription = `
   look for design systems, build systems, react, next, node, typescript, etc.
   also look for any other technologies that are not mentioned in the code but are used in the project.
@@ -73,6 +73,10 @@ export const prepareQuestions = async (data: {
   data: string
 }): Promise<PrepQuestionsResponse> => {
   try {
+    const { user } = await getUser()
+    if (!user) {
+      throw new Error("User not found")
+    }
     const filename = data.filename
     const dataString = data.data
     const languagePrompt = getPrompt(filename)
@@ -123,47 +127,58 @@ export const prepareQuestions = async (data: {
 
 
 `
-    const cleanedText = responseFixture
-    const results = await prisma.jobPost.create({
-      data: {
-        title: cleanedText.suggestedTitle,
-        seniority: cleanedText.seniority,
-        source: filename,
-      },
-    })
+    // const cleanedText = responseFixture
 
     console.log(prompt)
 
+    // const job = await prisma.jobPost.create({
+    //   data: {
+    //     title: cleanedText.suggestedTitle,
+    //     seniority: cleanedText.seniority,
+    //     source: filename,
+    //     packages: {},
+    //   },
+    // })
+
+    // return responseFixture
+    const res = await generateText({
+      model: openai("gpt-4o"),
+      system: "You are a friendly assistant!",
+      prompt: `Create a post about ${prompt}`,
+    })
+
+    const usage = res.usage.totalTokens
+
+    // Add validation and cleanup of the response
+    const cleanedText = res.text
+      .trim()
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+    console.log(cleanedText)
+    const parsedResponse = JSON.parse(cleanedText)
+
     const job = await prisma.jobPost.create({
       data: {
-        title: cleanedText.suggestedTitle,
-        seniority: cleanedText.seniority,
+        title: parsedResponse.suggestedTitle,
+        seniority: parsedResponse.seniority,
         source: filename,
-        packages: {},
+        slug: `${user.id}-${filename}-${Date.now()}`,
+      },
+    })
+    await prisma.jobPostTokenUsage.create({
+      data: {
+        jobPostId: job.id,
+        tokensUsed: usage,
+        userId: user.id,
       },
     })
 
-    return responseFixture
-    // const { text } = await generateText({
-    //   model: openai("gpt-4o"),
-    //   system: "You are a friendly assistant!",
-    //   prompt: `Create a post about ${prompt}`,
-    // })
+    // Validate the response structure
+    if (!parsedResponse || typeof parsedResponse !== "object") {
+      throw new Error("Invalid response format")
+    }
 
-    // // Add validation and cleanup of the response
-    // const cleanedText = text
-    //   .trim()
-    //   .replace(/```json/g, "")
-    //   .replace(/```/g, "")
-    // console.log(cleanedText)
-    // const parsedResponse = JSON.parse(cleanedText)
-
-    // // Validate the response structure
-    // if (!parsedResponse || typeof parsedResponse !== "object") {
-    //   throw new Error("Invalid response format")
-    // }
-
-    // return parsedResponse as PrepQuestionsResponse
+    return parsedResponse as PrepQuestionsResponse
   } catch (error) {
     console.error("Error processing questions:", error)
     // Fallback to fixture data in case of error

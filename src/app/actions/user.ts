@@ -1,7 +1,8 @@
+"use server"
 import prisma from "@/store/prisma"
-import { createClient } from "@/utils/supabase/server"
 import { redirect } from "next/navigation"
 import { user, organization } from "@prisma/client"
+import { getUser as getUserFromSupabase } from "@/utils/supabase/server"
 export interface User extends user {
   organization: organization
   creditsInfo?: {
@@ -11,7 +12,7 @@ export interface User extends user {
   }
 }
 
-const getAvailableTokens = async (
+export const getAvailableTokens = async (
   userId: string
 ): Promise<{
   creditsBought: number
@@ -19,7 +20,7 @@ const getAvailableTokens = async (
   creditsAvailable: number
 }> => {
   const credits = await prisma.$transaction([
-    prisma.creditPurchase.aggregate({
+    prisma.purchase.aggregate({
       where: { userId },
       _sum: { creditsBought: true },
     }),
@@ -40,36 +41,54 @@ const getAvailableTokens = async (
 }
 
 export const getUser = async (): Promise<User> => {
-  const supabase = await createClient()
-  const supUser = await supabase.auth.getUser()
-
-  if (!supUser.data.user) {
+  const { user } = await getUserFromSupabase()
+  if (!user) {
     redirect("/login")
   }
 
-  const creditsAvailable = await getAvailableTokens(supUser.data.user.id)
+  const creditsAvailable = await getAvailableTokens(user.id)
 
-  const user = await prisma.user.findUnique({
-    where: { id: supUser.data.user.id },
+  const results = await prisma.user.findUnique({
+    where: { id: user.id },
     include: { organization: true },
   })
 
-  return { ...user, creditsInfo: creditsAvailable } as User
+  return { ...results, creditsInfo: creditsAvailable } as User
 }
 
 export const updateUser = async (
-  userId: string,
+  id: string,
   data: {
     name?: string
     avatar?: string
+    bio?: string | null
   }
 ): Promise<User> => {
-  const user = await prisma.user.update({
-    where: { id: userId },
+  const { user } = await getUserFromSupabase()
+  if (!user) {
+    throw new Error("User not found")
+  }
+  const results = await prisma.user.update({
+    where: { id: user.id },
     data: {
       name: data.name,
       avatar: data.avatar,
+      bio: data.bio || null,
     },
   })
-  return user as User
+  return results as User
+}
+
+export const setStripeCustomerId = async (stripeCustomerId: string) => {
+  const user = await getUser()
+  if (user.stripeCustomerId) {
+    return
+  }
+  if (!user) {
+    throw new Error("User not found")
+  }
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { stripeCustomerId },
+  })
 }

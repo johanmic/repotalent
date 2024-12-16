@@ -22,10 +22,18 @@ model user {
     city              city?               @relation(fields: [cityId], references: [id])
     cityId            String?
     credits           Int                 @default(0)
+    stripeCustomerId  String?
     jobPostTokenUsage jobPostTokenUsage[]
-    creditPurchase    creditPurchase[]
+    purchase          purchase[]
     creditUsage       creditUsage[]
     promoCodeUsage    promoCodeUsage[]
+    bio               String?
+    linkedin          String?
+    twitter           String?
+    facebook          String?
+    github            String?
+    instagram         String?
+    subscription      subscription?
 }
 
 model organization {
@@ -85,6 +93,13 @@ model jobPost {
     slug              String                    @unique
     jobPostTokenUsage jobPostTokenUsage[]
     creditUsage       creditUsage[]
+    showAuthor        Boolean                   @default(true)
+    showOrganization  Boolean                   @default(true)
+    showSalary        Boolean                   @default(true)
+    showLocation      Boolean                   @default(true)
+    showTags          Boolean                   @default(true)
+    showPackages      Boolean                   @default(true)
+    showQuestions     Boolean                   @default(true)
 }
 
 model jobPostTokenUsage {
@@ -113,6 +128,9 @@ model jobPostToPackageVersion {
     jobPostId        String
     packageVersion   openSourcePackageVersion @relation(fields: [packageVersionId], references: [id])
     packageVersionId String
+    createdAt        DateTime                 @default(now())
+    updatedAt        DateTime                 @updatedAt
+    includeInPost    Boolean                  @default(false)
 
     @@id([jobPostId, packageVersionId])
     @@index([jobPostId])
@@ -261,7 +279,7 @@ model continent {
     countries country[]
 }
 
-model creditPurchase {
+model purchase {
     id               String         @id @default(cuid())
     userId           String
     user             user           @relation(fields: [userId], references: [id])
@@ -270,8 +288,10 @@ model creditPurchase {
     createdAt        DateTime       @default(now())
     promoCodeId      String?
     promoCode        promoCode?     @relation(fields: [promoCodeId], references: [id])
-    creditPackage    creditPackage? @relation(fields: [creditPackageId], references: [id])
-    creditPackageId  String?
+    product          product?       @relation(fields: [productId], references: [id])
+    productId        String?
+    subscription     subscription[]
+    idType           String?
 }
 
 model creditUsage {
@@ -293,7 +313,7 @@ model promoCode {
     expiresAt      DateTime?        @default(dbgenerated("(NOW() + '30 days'::interval)"))
     oneTime        Boolean          @default(false)
     promoCodeUsage promoCodeUsage[]
-    creditPurchase creditPurchase[]
+    purchase       purchase[]
 }
 
 model promoCodeUsage {
@@ -306,11 +326,27 @@ model promoCodeUsage {
     user        user      @relation(fields: [userId], references: [id])
 }
 
-model creditPackage {
-    id             String           @id @default(cuid())
-    credits        Int
-    stripeId       String           @unique
-    createdAt      DateTime         @default(now())
-    updatedAt      DateTime         @updatedAt
-    creditPurchase creditPurchase[]
+model product {
+    id           String         @id @default(cuid())
+    credits      Int
+    stripeId     String         @unique
+    createdAt    DateTime       @default(now())
+    updatedAt    DateTime       @updatedAt
+    purchases    purchase[]
+    subscription subscription[]
+}
+
+model subscription {
+    id         String    @id @default(cuid())
+    userId     String    @unique
+    user       user      @relation(fields: [userId], references: [id])
+    createdAt  DateTime  @default(now())
+    updatedAt  DateTime  @updatedAt
+    stripeId   String    @unique
+    productId  String
+    product    product   @relation(fields: [productId], references: [id])
+    purchaseId String?
+    purchase   purchase? @relation(fields: [purchaseId], references: [id])
+    active     Boolean   @default(true)
+    recurring  String    @default("month")
 }

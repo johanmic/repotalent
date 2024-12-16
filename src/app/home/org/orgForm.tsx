@@ -127,24 +127,24 @@ const CreateOrgForm = ({
                 }}
               />
             </div>
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem className="col-span-3">
-                  <FormLabel className="mb-2">Description</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      {...field}
-                      value={field.value ?? ""}
-                      placeholder="A brief description of the organization"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
           </div>
+
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem className="col-span-3">
+                <FormLabel className="mb-2">Description</FormLabel>
+                <FormControl>
+                  <Textarea
+                    {...field}
+                    value={field.value ?? ""}
+                    placeholder="A brief description of the organization"
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
 
           <div className="col-span-3"></div>
         </div>
@@ -157,7 +157,7 @@ const CreateOrgForm = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="mb-2 flex items-center gap-2">
-                  <Icon name="globe" />
+                  <Icon className="w-4 h-4" name="globe" />
                   *Website
                 </FormLabel>
                 <FormControl>
@@ -176,7 +176,7 @@ const CreateOrgForm = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="mb-2 flex items-center gap-2">
-                  <AppIcon name="instagram" /> Instagram
+                  <AppIcon size={14} name="instagram" /> Instagram
                 </FormLabel>
                 <FormControl>
                   <Input {...field} value={field.value ?? ""} />
@@ -190,7 +190,7 @@ const CreateOrgForm = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="mb-2 flex items-center gap-2">
-                  <AppIcon name="facebook" /> Facebook
+                  <AppIcon size={14} name="facebook" /> Facebook
                 </FormLabel>
                 <FormControl>
                   <Input {...field} value={field.value ?? ""} />
@@ -204,7 +204,7 @@ const CreateOrgForm = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="mb-2 flex items-center gap-2">
-                  <AppIcon name="linkedin" /> Linkedin
+                  <AppIcon size={14} name="linkedin" /> Linkedin
                 </FormLabel>
                 <FormControl>
                   <Input {...field} value={field.value ?? ""} />

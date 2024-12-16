@@ -2,42 +2,22 @@
 
 import prisma from "@/store/prisma"
 import { getUser } from "@/utils/supabase/server"
-
+import { promoCode } from "@prisma/client"
 export const usePromoCode = async ({ code }: { code: string }) => {
   const { user } = await getUser()
   if (!user) {
     throw new Error("User not found")
   }
 
-  const promoCode = await prisma.promoCode.findUniqueOrThrow({
-    where: {
-      code,
-    },
-  })
-
-  if (promoCode.oneTime) {
-    const promoCodeUsed = await prisma.promoCodeUsage.findFirst({
-      where: {
-        userId: user.id,
-        promoCodeId: promoCode.id,
-      },
-    })
-    if (promoCodeUsed) {
-      throw new Error("promo code already used")
-    }
-  } else {
-    const userHasUsedPromoCode = await prisma.promoCodeUsage.findFirst({
-      where: {
-        userId: user.id,
-        promoCodeId: promoCode.id,
-      },
-    })
-    if (userHasUsedPromoCode) {
-      throw new Error("you already used this promo code")
-    }
+  const { valid, message, promoCode } = await validatePromoCode({ code })
+  if (!valid) {
+    throw new Error(message)
+  }
+  if (!promoCode) {
+    throw new Error("Promo code not found")
   }
 
-  const creditPurchase = await prisma.creditPurchase.create({
+  const creditPurchase = await prisma.purchase.create({
     data: {
       user: {
         connect: {
@@ -75,7 +55,11 @@ export const validatePromoCode = async ({
   code,
 }: {
   code: string
-}): Promise<{ valid: boolean; message: string }> => {
+}): Promise<{
+  valid: boolean
+  message: string
+  promoCode?: promoCode
+}> => {
   const { user } = await getUser()
   if (!user) {
     throw new Error("User not found")
@@ -99,7 +83,7 @@ export const validatePromoCode = async ({
     message = "promo code expired"
     return { valid, message }
   }
-  if (promoCode.oneTime && promoCode.creditPurchase.length > 0) {
+  if (promoCode.oneTime && promoCode.purchase.length > 0) {
     message = "promo code already used"
     return { valid, message }
   }
@@ -109,5 +93,5 @@ export const validatePromoCode = async ({
   }
   valid = true
   message = "promo code is valid"
-  return { valid, message }
+  return { valid, message, promoCode }
 }

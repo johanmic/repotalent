@@ -11,6 +11,14 @@ CREATE TABLE "user" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "organizationId" TEXT,
     "cityId" TEXT,
+    "credits" INTEGER NOT NULL DEFAULT 0,
+    "stripeCustomerId" TEXT,
+    "bio" TEXT,
+    "linkedin" TEXT,
+    "twitter" TEXT,
+    "facebook" TEXT,
+    "github" TEXT,
+    "instagram" TEXT,
 
     CONSTRAINT "user_pkey" PRIMARY KEY ("id")
 );
@@ -65,8 +73,27 @@ CREATE TABLE "jobPost" (
     "equity" BOOLEAN NOT NULL DEFAULT false,
     "currencyId" TEXT,
     "slug" TEXT NOT NULL,
+    "showAuthor" BOOLEAN NOT NULL DEFAULT true,
+    "showOrganization" BOOLEAN NOT NULL DEFAULT true,
+    "showSalary" BOOLEAN NOT NULL DEFAULT true,
+    "showLocation" BOOLEAN NOT NULL DEFAULT true,
+    "showTags" BOOLEAN NOT NULL DEFAULT true,
+    "showPackages" BOOLEAN NOT NULL DEFAULT true,
+    "showQuestions" BOOLEAN NOT NULL DEFAULT true,
 
     CONSTRAINT "jobPost_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "jobPostTokenUsage" (
+    "id" TEXT NOT NULL,
+    "jobPostId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "tokensUsed" INTEGER NOT NULL DEFAULT 0,
+
+    CONSTRAINT "jobPostTokenUsage_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -85,6 +112,9 @@ CREATE TABLE "jobPostRatings" (
 CREATE TABLE "jobPostToPackageVersion" (
     "jobPostId" TEXT NOT NULL,
     "packageVersionId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "includeInPost" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "jobPostToPackageVersion_pkey" PRIMARY KEY ("jobPostId","packageVersionId")
 );
@@ -111,34 +141,6 @@ CREATE TABLE "openSourcePackageVersion" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "openSourcePackageVersion_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "pricing" (
-    "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "description" TEXT,
-    "price" INTEGER NOT NULL,
-    "duration" INTEGER NOT NULL,
-    "isRecurring" BOOLEAN NOT NULL DEFAULT false,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "pricing_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "jobPostPricingPackage" (
-    "id" TEXT NOT NULL,
-    "jobPostId" TEXT NOT NULL,
-    "pricingId" TEXT NOT NULL,
-    "startDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "endDate" TIMESTAMP(3) NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-    "stripeId" TEXT,
-
-    CONSTRAINT "jobPostPricingPackage_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -261,6 +263,81 @@ CREATE TABLE "continent" (
     CONSTRAINT "continent_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "purchase" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "stripePurchaseId" TEXT NOT NULL,
+    "creditsBought" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "promoCodeId" TEXT,
+    "productId" TEXT,
+    "idType" TEXT,
+
+    CONSTRAINT "purchase_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "creditUsage" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "jobPostId" TEXT NOT NULL,
+    "creditsUsed" INTEGER NOT NULL DEFAULT 1,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "creditUsage_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "promoCode" (
+    "id" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
+    "credits" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "expiresAt" TIMESTAMP(3) DEFAULT (NOW() + '30 days'::interval),
+    "oneTime" BOOLEAN NOT NULL DEFAULT false,
+
+    CONSTRAINT "promoCode_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "promoCodeUsage" (
+    "id" TEXT NOT NULL,
+    "promoCodeId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "userId" TEXT NOT NULL,
+
+    CONSTRAINT "promoCodeUsage_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "product" (
+    "id" TEXT NOT NULL,
+    "credits" INTEGER NOT NULL,
+    "stripeId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "product_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "subscription" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "stripeId" TEXT NOT NULL,
+    "productId" TEXT NOT NULL,
+    "purchaseId" TEXT,
+    "active" BOOLEAN NOT NULL DEFAULT true,
+    "recurring" TEXT NOT NULL DEFAULT 'month',
+
+    CONSTRAINT "subscription_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "user_email_key" ON "user"("email");
 
@@ -278,12 +355,6 @@ CREATE UNIQUE INDEX "openSourcePackage_name_key" ON "openSourcePackage"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "openSourcePackageVersion_packageId_version_key" ON "openSourcePackageVersion"("packageId", "version");
-
--- CreateIndex
-CREATE INDEX "jobPostPricingPackage_jobPostId_idx" ON "jobPostPricingPackage"("jobPostId");
-
--- CreateIndex
-CREATE INDEX "jobPostPricingPackage_pricingId_idx" ON "jobPostPricingPackage"("pricingId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "jobPostTag_tag_key" ON "jobPostTag"("tag");
@@ -312,6 +383,21 @@ CREATE UNIQUE INDEX "language_code_key" ON "language"("code");
 -- CreateIndex
 CREATE UNIQUE INDEX "continent_code_key" ON "continent"("code");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "purchase_stripePurchaseId_key" ON "purchase"("stripePurchaseId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "promoCode_code_key" ON "promoCode"("code");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "product_stripeId_key" ON "product"("stripeId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "subscription_userId_key" ON "subscription"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "subscription_stripeId_key" ON "subscription"("stripeId");
+
 -- AddForeignKey
 ALTER TABLE "user" ADD CONSTRAINT "user_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "organization"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
@@ -328,6 +414,12 @@ ALTER TABLE "jobPost" ADD CONSTRAINT "jobPost_organizationId_fkey" FOREIGN KEY (
 ALTER TABLE "jobPost" ADD CONSTRAINT "jobPost_currencyId_fkey" FOREIGN KEY ("currencyId") REFERENCES "currency"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "jobPostTokenUsage" ADD CONSTRAINT "jobPostTokenUsage_jobPostId_fkey" FOREIGN KEY ("jobPostId") REFERENCES "jobPost"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "jobPostTokenUsage" ADD CONSTRAINT "jobPostTokenUsage_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "jobPostRatings" ADD CONSTRAINT "jobPostRatings_jobPostId_fkey" FOREIGN KEY ("jobPostId") REFERENCES "jobPost"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -338,12 +430,6 @@ ALTER TABLE "jobPostToPackageVersion" ADD CONSTRAINT "jobPostToPackageVersion_pa
 
 -- AddForeignKey
 ALTER TABLE "openSourcePackageVersion" ADD CONSTRAINT "openSourcePackageVersion_packageId_fkey" FOREIGN KEY ("packageId") REFERENCES "openSourcePackage"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "jobPostPricingPackage" ADD CONSTRAINT "jobPostPricingPackage_jobPostId_fkey" FOREIGN KEY ("jobPostId") REFERENCES "jobPost"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "jobPostPricingPackage" ADD CONSTRAINT "jobPostPricingPackage_pricingId_fkey" FOREIGN KEY ("pricingId") REFERENCES "pricing"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "jobPostQuestion" ADD CONSTRAINT "jobPostQuestion_jobPostId_fkey" FOREIGN KEY ("jobPostId") REFERENCES "jobPost"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -374,3 +460,33 @@ ALTER TABLE "countryLanguage" ADD CONSTRAINT "countryLanguage_countryId_fkey" FO
 
 -- AddForeignKey
 ALTER TABLE "countryLanguage" ADD CONSTRAINT "countryLanguage_languageCode_fkey" FOREIGN KEY ("languageCode") REFERENCES "language"("code") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "purchase" ADD CONSTRAINT "purchase_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "purchase" ADD CONSTRAINT "purchase_promoCodeId_fkey" FOREIGN KEY ("promoCodeId") REFERENCES "promoCode"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "purchase" ADD CONSTRAINT "purchase_productId_fkey" FOREIGN KEY ("productId") REFERENCES "product"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "creditUsage" ADD CONSTRAINT "creditUsage_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "creditUsage" ADD CONSTRAINT "creditUsage_jobPostId_fkey" FOREIGN KEY ("jobPostId") REFERENCES "jobPost"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "promoCodeUsage" ADD CONSTRAINT "promoCodeUsage_promoCodeId_fkey" FOREIGN KEY ("promoCodeId") REFERENCES "promoCode"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "promoCodeUsage" ADD CONSTRAINT "promoCodeUsage_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "subscription" ADD CONSTRAINT "subscription_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "subscription" ADD CONSTRAINT "subscription_productId_fkey" FOREIGN KEY ("productId") REFERENCES "product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "subscription" ADD CONSTRAINT "subscription_purchaseId_fkey" FOREIGN KEY ("purchaseId") REFERENCES "purchase"("id") ON DELETE SET NULL ON UPDATE CASCADE;
