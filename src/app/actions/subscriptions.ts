@@ -6,15 +6,15 @@ import {
   getUserSubscription as getUserSubscriptionFromStripe,
   cancelUserSubscription as cancelUserSubscriptionFromStripe,
 } from "@/utils/stripe"
-import { subscription, product, creditPurchase } from "@prisma/client"
-
+import { subscription, product, purchase } from "@prisma/client"
+import { revalidatePath } from "next/cache"
 export interface Subscription extends subscription {
   product: product
-  creditPurchase?: creditPurchase
+  purchase?: purchase
 }
 
 export async function handleSubscriptionChange(event: Stripe.Event) {
-  console.log("handleSubscriptionChange", event.data.object)
+  console.log("handleSubscriptionChange", event.type)
 
   const subscription = event.data.object as Stripe.Subscription
   const customerId = subscription.customer as string
@@ -50,10 +50,11 @@ const handleSubscriptionPurchase = async ({
   subscription: Stripe.Subscription
   userId: string
 }) => {
-  console.log("handleSubscriptionPurchase", subscription, userId)
+  console.log("handleSubscriptionPurchase")
 
   const lineItem = subscription.items.data[0]
   const productId = lineItem.price.product as string
+  console.log("productId", productId)
   const product = await prisma.product.findFirst({
     where: {
       stripeId: productId,
@@ -62,14 +63,25 @@ const handleSubscriptionPurchase = async ({
   if (!product) {
     throw new Error("Credit package not found")
   }
+  const recurring = lineItem.price.recurring?.interval as string
+  console.log("product", { productId, userId, recurring })
 
-  console.log("product", product, lineItem, productId)
-
-  const dbSub = await prisma.subscription.create({
-    data: {
+  const dbSub = await prisma.subscription.upsert({
+    where: { userId },
+    update: {
       stripeId: subscription.id,
       active: true,
-      recurring: lineItem.price.recurring?.interval as string,
+      recurring,
+      product: {
+        connect: {
+          id: product.id,
+        },
+      },
+    },
+    create: {
+      stripeId: subscription.id,
+      active: true,
+      recurring,
       product: {
         connect: {
           id: product.id,
@@ -92,7 +104,7 @@ export const handleSubscriptionDeletion = async ({
   subscription: Stripe.Subscription
   userId: string
 }) => {
-  console.log("handleSubscriptionDeletion", subscription, userId)
+  console.log("handleSubscriptionDeletion")
   await prisma.subscription.update({
     where: {
       id: subscription.id,
@@ -109,9 +121,9 @@ export const getUserSubscription = async () => {
     throw new Error("User not found")
   }
   const subscription = await prisma.subscription.findFirst({
-    where: { userId: user.id, active: true },
+    where: { userId: user.id },
     include: {
-      creditPurchase: {
+      purchases: {
         include: {
           product: true,
         },
@@ -140,6 +152,7 @@ export const cancelUserSubscription = async (stripeSubscriptionId: string) => {
       where: { id: subscription.id },
       data: { active: false },
     })
+    revalidatePath("/home/profile", "page")
     return res
   }
 }

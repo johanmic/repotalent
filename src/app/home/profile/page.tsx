@@ -15,7 +15,7 @@ const ProfilePage = async () => {
   const user = await getUser()
   const { purchases, creditUsage } = await getUserUsageStats()
   const subscription = await getUserSubscription()
-  console.log("subscription", subscription)
+
   return (
     <div className="mx-auto max-w-xl">
       <Title size="xl">Profile</Title>
@@ -46,8 +46,8 @@ const ProfilePage = async () => {
                 </div>
               ) : (
                 <div className="flex flex-row gap-2 items-center">
-                  {purchase.idType === "subscriptionId" ? (
-                    "Stripe"
+                  {purchase.idType === "invoiceId" ? (
+                    "Subscription"
                   ) : (
                     <div className="flex flex-row gap-2 items-center">
                       <Icon name="creditCard" className="w-4 h-4" />
@@ -64,12 +64,18 @@ const ProfilePage = async () => {
       </div>
       <div className="flex flex-col gap-4 bg-muted p-4 mt-4 rounded-md">
         <Title>Usage</Title>
-        {creditUsage.map((usage) => (
-          <div key={usage.id}>
-            <p>{usage.jobPostId}</p>
-            <p>{usage.tokensUsed}</p>
+        {creditUsage?.length > 0 ? (
+          creditUsage.map((usage) => (
+            <div key={usage.id}>
+              <p>{usage.jobPostId}</p>
+              <p>{usage.tokensUsed}</p>
+            </div>
+          ))
+        ) : (
+          <div className="text-sm italic text-muted-foreground">
+            No usage yet
           </div>
-        ))}
+        )}
       </div>
       <Subscription subscription={Object.assign({}, subscription)} />
       <div>

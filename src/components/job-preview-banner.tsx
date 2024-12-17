@@ -14,6 +14,13 @@ export const JobPreviewBanner = ({
 }) => {
   return (
     <div className="flex justify-end  gap-2 bg-muted p-4">
+      <Link href={`/api/pdf/render?job=${job.id}`}>
+        {" "}
+        <Button size="sm" variant="outline">
+          <Icon name="pdf" />
+          Export to PDF
+        </Button>
+      </Link>
       <div>
         <Button
           size="sm"
@@ -25,7 +32,7 @@ export const JobPreviewBanner = ({
             })
           }}
         >
-          <Icon name={job.published ? "circleX" : "circleCheck"} />
+          <Icon name={job.published ? "eyeOff" : "eye"} />
           {job.published ? "Unpublish" : "Publish"}
         </Button>
       </div>

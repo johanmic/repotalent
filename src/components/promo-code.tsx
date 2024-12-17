@@ -20,8 +20,8 @@ export const PromoCode = () => {
   const handleUsePromoCode = useCallback(async () => {
     setLoading(true)
     try {
-      const creditPurchase = await usePromoCode({ code })
-      setPurchased(creditPurchase)
+      const purchase = await usePromoCode({ code })
+      setPurchased(purchase)
       setMessage("Promo code applied successfully!")
       setError(null)
     } catch (err: any) {

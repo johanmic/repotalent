@@ -70,9 +70,13 @@ export interface PrepQuestionsResponse {
   tags: string[]
 }
 
-export const prepareQuestions = async (data: {
-  filename: string
-  data: string
+export const prepareQuestions = async ({
+  data,
+}: {
+  data: {
+    filename: string
+    data: string
+  }
 }): Promise<PrepQuestionsResponse> => {
   try {
     const filename = data.filename
@@ -127,36 +131,45 @@ export const prepareQuestions = async (data: {
 
 
 `
-    const cleanedText = responseFixture
-    const results = await prisma.jobPost.create({
-      data: {
-        title: cleanedText.suggestedTitle,
-        seniority: cleanedText.seniority,
-        source: filename,
-      },
-    })
-
-    return responseFixture
-    // const { text } = await generateText({
-    //   model: openai("gpt-4o"),
-    //   system: "You are a friendly assistant!",
-    //   prompt: `Create a post about ${prompt}`,
+    // const cleanedText = responseFixture
+    // const results = await prisma.jobPost.create({
+    //   data: {
+    //     title: cleanedText.suggestedTitle,
+    //     seniority: cleanedText.seniority,
+    //     source: filename,
+    //   },
     // })
 
-    // // Add validation and cleanup of the response
-    // const cleanedText = text
-    //   .trim()
-    //   .replace(/```json/g, "")
-    //   .replace(/```/g, "")
-    // console.log(cleanedText)
-    // const parsedResponse = JSON.parse(cleanedText)
+    // return responseFixture
 
-    // // Validate the response structure
-    // if (!parsedResponse || typeof parsedResponse !== "object") {
-    //   throw new Error("Invalid response format")
-    // }
+    const { text } = await generateText({
+      model: openai("gpt-4o"),
+      system: "You are a friendly assistant!",
+      prompt: `Create a post about ${prompt}`,
+    })
 
-    // return parsedResponse as PrepQuestionsResponse
+    // Add validation and cleanup of the response
+    const cleanedText = text
+      .trim()
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+    console.log(cleanedText)
+    const parsedResponse = JSON.parse(cleanedText)
+
+    // Validate the response structure
+    if (!parsedResponse || typeof parsedResponse !== "object") {
+      throw new Error("Invalid response format")
+    }
+    // const results = await prisma.jobPost.create({
+    //   data: {
+    //     title: parsedResponse.suggestedTitle,
+    //     seniority: parsedResponse.seniority,
+    //     source: filename,
+    //     slug: `${parsedResponse.suggestedTitle}-${organizationName}`,
+    //   },
+    // })
+
+    return parsedResponse as PrepQuestionsResponse
   } catch (error) {
     console.error("Error processing questions:", error)
     // Fallback to fixture data in case of error

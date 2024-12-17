@@ -5,7 +5,7 @@ const JobPostBadge = ({
   icon,
   text,
   value,
-  bg = "muted",
+  bg = "",
   booleanValue,
 }: {
   icon: keyof typeof icons

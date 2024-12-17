@@ -11,7 +11,7 @@ const subscriptionEvents = new Set([
 ])
 
 const paymentEvents = new Set([
-  "customer.invoice.payment_succeeded",
+  "invoice.payment_succeeded",
   //   "payment_intent.succeeded",
   //   "payment_intent.payment_failed",
 ])
@@ -21,7 +21,6 @@ export async function POST(req: Request) {
     const bodyBuffer = await req.arrayBuffer()
     const signature = req.headers.get("stripe-signature")
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET as string
-
     if (!signature) {
       return Response.json(
         { error: "Missing stripe-signature header" },

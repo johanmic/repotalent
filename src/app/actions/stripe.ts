@@ -27,14 +27,17 @@ export const postStripeSession = async ({ productId }: NewSessionOptions) => {
     }
     const returnUrl =
       "http://localhost:3000/home/checkout-return?session_id={CHECKOUT_SESSION_ID}"
-    const product = await stripe.products.retrieve(productId)
+    const stripeProduct = await stripe.products.retrieve(productId)
 
-    if (!product.default_price) throw new Error("Product has no default price")
-    const price = await stripe.prices.retrieve(product.default_price as string)
+    if (!stripeProduct.default_price)
+      throw new Error("Product has no default price")
+    const price = await stripe.prices.retrieve(
+      stripeProduct.default_price as string
+    )
 
     const product = await prisma.product.findFirst({
       where: {
-        stripeId: product.id as string,
+        stripeId: stripeProduct.id as string,
       },
     })
     if (!product) throw new Error("Credit package not found")
@@ -45,7 +48,7 @@ export const postStripeSession = async ({ productId }: NewSessionOptions) => {
         customer: stripeCustomerId || undefined,
         line_items: [
           {
-            price: product.default_price as string,
+            price: stripeProduct.default_price as string,
             quantity: 1,
           },
         ],
@@ -72,7 +75,7 @@ export const postStripeSession = async ({ productId }: NewSessionOptions) => {
         customer: stripeCustomerId || undefined,
         line_items: [
           {
-            price: product.default_price as string,
+            price: stripeProduct.default_price as string,
             quantity: 1,
           },
         ],
@@ -122,6 +125,7 @@ export const addSubscriptionCredits = async (event: Stripe.Event) => {
     },
   })
   if (!user) throw new Error("User not found")
+
   const productId = data.plan?.product as string
   const subscriptionId = data.subscription as string
   await dbAddCredits({

@@ -40,7 +40,6 @@ const JobPost = async ({ params }: { params: Params }) => {
         </div>
 
         <Title size="lg">{job?.title}</Title>
-
         <AppIconsList
           items={job?.tags?.map((tag) => tag.tag.tag) || []}
           maxItems={5}

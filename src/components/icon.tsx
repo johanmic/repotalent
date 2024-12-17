@@ -29,11 +29,13 @@ import {
   Timer,
   Blocks,
   Eye,
+  EyeOff,
   MailPlus,
   Coins,
   User,
   Tag,
   CreditCard,
+  FileText,
 } from "lucide-react"
 
 export const icons = {
@@ -72,6 +74,9 @@ export const icons = {
   user: User,
   tag: Tag,
   creditCard: CreditCard,
+  pdf: FileText,
+  eyeOff: EyeOff,
+  eye: Eye,
 }
 
 export const Icon = ({

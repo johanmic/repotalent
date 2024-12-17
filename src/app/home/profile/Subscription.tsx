@@ -55,14 +55,25 @@ export const Subscription = ({
           <div className="flex flex-col gap-2">
             <div>
               status:{" "}
-              <Badge className="bg-teal-400 text-white border-none">
+              <Badge
+                className={
+                  subscription.status === "active"
+                    ? "bg-teal-400 text-white border-none"
+                    : "bg-gray-400 text-white border-none"
+                }
+              >
                 <Icon name="check" className="w-3 h-3 mr-2" />
                 {subscription?.status}
               </Badge>
             </div>
             <div className="text-sm text-muted-foreground">
               <p>Cost: {formattedAmount}/month</p>
-              <p>Next billing date: {nextBillingDate}</p>
+              <p>
+                {subscription.status === "active"
+                  ? "Next billing date:"
+                  : "Active until:"}{" "}
+                {nextBillingDate}
+              </p>
             </div>
           </div>
           <div>

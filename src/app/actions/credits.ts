@@ -15,9 +15,9 @@ export const dbAddCredits = async ({
   stripeId: string
   subscriptionId?: string
   userId: string
-  idType: "invoiceId" | "subscriptionId"
+  idType: "invoiceId" | "purchaseId"
 }) => {
-  console.log("dbAddCredits", { productId, stripeId, userId, idType })
+  console.log("!!!!dbAddCredits", { productId, stripeId, userId, idType })
   const product = await prisma.product.findUniqueOrThrow({
     where: {
       stripeId: productId,
@@ -35,7 +35,7 @@ export const dbAddCredits = async ({
     return null
   }
 
-  const creditPurchase = await prisma.purchase.create({
+  const purchase = await prisma.purchase.create({
     data: {
       user: {
         connect: {
@@ -60,7 +60,7 @@ export const dbAddCredits = async ({
     },
   })
 
-  return creditPurchase
+  return purchase
 }
 
 export const addCredits = async ({
@@ -70,21 +70,21 @@ export const addCredits = async ({
 }: {
   productId: string
   stripeId: string
-  idType: "invoiceId" | "subscriptionId"
+  idType: "invoiceId" | "purchaseId"
 }) => {
   const { user } = await getUser()
   if (!user) {
     throw new Error("User not found")
   }
 
-  const creditPurchase = await dbAddCredits({
+  const purchase = await dbAddCredits({
     productId,
     stripeId,
     userId: user.id,
     idType,
   })
   revalidatePath("/home", "layout")
-  return creditPurchase
+  return purchase
 }
 
 export const getproduct = async (stripeProductId: string) => {

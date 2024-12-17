@@ -212,9 +212,9 @@ export const formatCurrency = (amount: string | number): string => {
   const numericAmount = Number(amount)
   if (isNaN(numericAmount)) return "0"
 
-  // Format with thousand separators and 2 decimal places
+  // Format with thousand separators and no decimal places
   return new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(numericAmount)
 }

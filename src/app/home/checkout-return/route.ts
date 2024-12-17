@@ -29,15 +29,15 @@ export const GET = async (request: NextRequest) => {
         const productId = session.metadata?.productId
         console.log("productId", productId)
         if (productId) {
-          const creditPurchase = await addCredits({
+          const purchase = await addCredits({
             productId: productId,
             stripeId: session.id,
-            idType: "stripePurchaseId",
+            idType: "purchaseId",
           })
-          if (creditPurchase) {
+          if (purchase) {
             return NextResponse.redirect(
               new URL(
-                "/home/checkout/success?purchaseId=" + creditPurchase.id,
+                "/home/checkout/success?purchaseId=" + purchase.id,
                 request.url
               )
             )

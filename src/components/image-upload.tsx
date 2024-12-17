@@ -3,6 +3,7 @@ import { useCallback, useState } from "react"
 import Dropzone from "shadcn-dropzone"
 import { Button } from "@/components/ui/button"
 import Icon from "@/components/icon"
+
 interface ImageUploadProps {
   image: string | null
   onUpload: (image: string) => void
@@ -10,10 +11,12 @@ interface ImageUploadProps {
 
 export const ImageUpload = ({ image, onUpload }: ImageUploadProps) => {
   const [tmpImage, setTmpImage] = useState(image)
+  const [isPickerActive, setIsPickerActive] = useState(false)
+
   const uploadHandler = useCallback(
     async (file: File) => {
       try {
-        const signedUrl = await signImageUrl()
+        const signedUrl = await signImageUrl({ mimeType: file.type })
         console.log("Signed URL:", signedUrl)
 
         const response = await fetch(signedUrl.signedUrl, {
@@ -31,6 +34,8 @@ export const ImageUpload = ({ image, onUpload }: ImageUploadProps) => {
         onUpload(signedUrl.path)
       } catch (error) {
         console.error("Upload error:", error)
+      } finally {
+        setIsPickerActive(false)
       }
     },
     [onUpload]
@@ -44,6 +49,7 @@ export const ImageUpload = ({ image, onUpload }: ImageUploadProps) => {
         if (files.length === 0) return
         const file = files[0]
         setTmpImage(URL.createObjectURL(file))
+        setIsPickerActive(true)
         uploadHandler(file)
       }}
     >
@@ -65,7 +71,7 @@ export const ImageUpload = ({ image, onUpload }: ImageUploadProps) => {
           ) : (
             <div className="flex flex-col items-center justify-center text-center gap-2 p-2">
               <p className="text-xs">Drag here or upload</p>
-              <Button size="sm" variant="outline">
+              <Button size="sm" variant="outline" disabled={isPickerActive}>
                 Upload
               </Button>
             </div>

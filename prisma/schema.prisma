@@ -33,7 +33,7 @@ model user {
     facebook          String?
     github            String?
     instagram         String?
-    subscription      subscription?
+    subscription      subscription[]
 }
 
 model organization {
@@ -337,16 +337,15 @@ model product {
 }
 
 model subscription {
-    id         String    @id @default(cuid())
-    userId     String    @unique
-    user       user      @relation(fields: [userId], references: [id])
-    createdAt  DateTime  @default(now())
-    updatedAt  DateTime  @updatedAt
-    stripeId   String    @unique
-    productId  String
-    product    product   @relation(fields: [productId], references: [id])
-    purchaseId String?
-    purchase   purchase? @relation(fields: [purchaseId], references: [id])
-    active     Boolean   @default(true)
-    recurring  String    @default("month")
+    id        String     @id @default(cuid())
+    userId    String     @unique
+    user      user       @relation(fields: [userId], references: [id])
+    createdAt DateTime   @default(now())
+    updatedAt DateTime   @updatedAt
+    stripeId  String     @unique
+    productId String
+    product   product    @relation(fields: [productId], references: [id])
+    purchases purchase[]
+    active    Boolean    @default(true)
+    recurring String     @default("month")
 }

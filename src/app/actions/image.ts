@@ -2,11 +2,15 @@
 import { createClient } from "@/utils/supabase/server"
 import cuid from "cuid"
 const basePath = "images"
-export const signImageUrl = async (): Promise<{
+export const signImageUrl = async ({
+  mimeType,
+}: {
+  mimeType: string
+}): Promise<{
   signedUrl: string
   path: string
 }> => {
-  const filename = cuid()
+  const filename = `${cuid()}.${mimeType.split("/")[1]}`
   const supabase = await createClient()
   const user = await supabase.auth.getUser()
   if (!user) throw new Error("User not found")
@@ -16,7 +20,7 @@ export const signImageUrl = async (): Promise<{
     .createSignedUploadUrl(filename)
 
   if (error) {
-    console.error("Errorcreating signed upload URL:", error)
+    console.error("Error creating signed upload URL:", error)
     throw error
   }
 

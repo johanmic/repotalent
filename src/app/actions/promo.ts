@@ -17,7 +17,7 @@ export const usePromoCode = async ({ code }: { code: string }) => {
     throw new Error("Promo code not found")
   }
 
-  const creditPurchase = await prisma.purchase.create({
+  const purchase = await prisma.purchase.create({
     data: {
       user: {
         connect: {
@@ -48,7 +48,7 @@ export const usePromoCode = async ({ code }: { code: string }) => {
       },
     },
   })
-  return creditPurchase
+  return purchase
 }
 
 export const validatePromoCode = async ({
@@ -71,7 +71,7 @@ export const validatePromoCode = async ({
       code,
     },
     include: {
-      creditPurchase: true,
+      purchase: true,
       promoCodeUsage: true,
     },
   })

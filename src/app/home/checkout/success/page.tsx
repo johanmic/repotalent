@@ -19,9 +19,9 @@ interface SearchParams {
 const CheckoutSuccessPage = async ({
   searchParams,
 }: {
-  searchParams: SearchParams
+  searchParams: Promise<SearchParams>
 }) => {
-  const { purchaseId, subscriptionId } = searchParams
+  const { purchaseId, subscriptionId } = await searchParams
 
   if (purchaseId) {
     const purchase = await getPurchase(purchaseId)

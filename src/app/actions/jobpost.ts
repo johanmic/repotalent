@@ -65,7 +65,9 @@ export const createJobPost = async (data: {
     throw new Error("User not in organization")
   }
 
-  const promptReuslts = await prepareQuestions(data)
+  const promptReuslts = await prepareQuestions({
+    data,
+  })
   const slug = await checkedSlug({
     name: `${promptReuslts.suggestedTitle}-${dbUser.organization?.name}`,
     table: "jobPost",
@@ -270,6 +272,7 @@ export const updateJobPost = async ({
   data: Partial<JobPost>
   shouldRedirect?: boolean
 }) => {
+  console.log("updateJobPost", data)
   const { user } = await getUser()
   if (!user?.id) {
     throw new Error("User not authenticated")

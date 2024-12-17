@@ -9,6 +9,11 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      screens: {
+        print: {
+          raw: "print",
+        },
+      },
       keyframes: {
         "caret-blink": {
           "0%,70%,100%": {

@@ -21,7 +21,7 @@ const items = [
     href: "/home",
   },
   {
-    label: "Job Listings",
+    label: "Jobs",
     icon: <Icon name="post" />,
     href: "/home/jobs",
   },
@@ -62,7 +62,7 @@ const SidebarComponent = async () => {
           <SidebarGroup>
             <Button variant="outline" asChild>
               <Link href="/home/create">
-                <Icon name="plus" /> Create Job Listing
+                <Icon name="plus" /> Create Job Description
               </Link>
             </Button>
           </SidebarGroup>
