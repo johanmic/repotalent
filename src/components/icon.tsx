@@ -6,6 +6,7 @@ import {
   Menu,
   Atom,
   Hexagon,
+  ChevronRight,
   MoveRight,
   MoveLeft,
   Check,
@@ -36,6 +37,7 @@ import {
   Tag,
   CreditCard,
   FileText,
+  Copy,
 } from "lucide-react"
 
 export const icons = {
@@ -58,6 +60,7 @@ export const icons = {
   rotate: RotateCw,
   save: Save,
   mapPin: MapPin,
+  chevronRight: ChevronRight,
   circleCheck: CircleCheck,
   circleX: CircleX,
   circleDot: CircleDot,
@@ -77,6 +80,7 @@ export const icons = {
   pdf: FileText,
   eyeOff: EyeOff,
   eye: Eye,
+  copy: Copy,
 }
 
 export const Icon = ({

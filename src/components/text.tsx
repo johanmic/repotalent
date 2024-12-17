@@ -5,15 +5,17 @@ interface TextProps {
   children: React.ReactNode
   variant?: "body" | "caption" | "small"
   className?: string
+  light?: boolean
 }
 
-const Text = ({
+export const Text = ({
   as: Component = "div",
   children,
   variant = "body",
   className = "",
+  light = false,
 }: TextProps) => {
-  const baseStyles = "text-gray-900 dark:text-gray-100"
+  const baseStyles = "opacity-70  text-gray-900 dark:text-gray-100"
 
   const variantStyles = {
     body: "text-base",
@@ -21,7 +23,9 @@ const Text = ({
     small: "text-xs",
   }
 
-  const combinedStyles = `${baseStyles} ${variantStyles[variant]} ${className}`
+  const combinedStyles = `${baseStyles} ${
+    variantStyles[variant]
+  } ${className} ${light ? "opacity-50" : ""}`
 
   return <Component className={combinedStyles}>{children}</Component>
 }

@@ -69,7 +69,9 @@ export const createJobPost = async (data: {
     data,
   })
   const slug = await checkedSlug({
-    name: `${promptReuslts.suggestedTitle}-${dbUser.organization?.name}`,
+    name: `${promptReuslts.suggestedTitle || "job"}-${
+      dbUser.organization?.name
+    }`,
     table: "jobPost",
   })
   const job = await prisma.$transaction(async ($tx) => {
@@ -183,6 +185,31 @@ export const createJobPost = async (data: {
   redirect(`/home/jobs/${job.id}/complete`)
 }
 
+export const getPublishedJobPost = async ({ slug }: { slug: string }) => {
+  const job = await prisma.jobPost.findFirst({
+    where: { slug, published: { not: null } },
+    include: {
+      organization: {
+        include: {
+          city: {
+            include: {
+              country: true,
+            },
+          },
+        },
+      },
+      tags: {
+        include: {
+          tag: true,
+        },
+      },
+      questions: true,
+      ratings: true,
+      currency: true,
+    },
+  })
+  return job as JobPost
+}
 export const getJobPost = async ({
   jobId,
 }: {
@@ -292,7 +319,7 @@ export const updateJobPost = async ({
 
   if (prevTitle !== data.title) {
     slug = await checkedSlug({
-      name: `${data.title}-${dbUser.organization?.name}`,
+      name: `${data.title || prevTitle}-${dbUser.organization?.name}`,
       table: "jobPost",
     })
     data.slug = slug
@@ -381,4 +408,126 @@ export const checkedSlug = async ({
   }
 
   throw new Error("Table not found")
+}
+
+export const getJobGeo = async () => {
+  const geoStats = await prisma.jobPost.groupBy({
+    by: ["organizationId"],
+    where: {
+      published: { not: null },
+      organization: {
+        cityId: { not: null },
+      },
+    },
+    _count: {
+      _all: true,
+    },
+    having: {
+      organizationId: {
+        _count: {
+          gt: 0,
+        },
+      },
+    },
+  })
+
+  const locations = await prisma.organization.findMany({
+    where: {
+      id: {
+        in: geoStats
+          .map((stat) => stat.organizationId)
+          .filter((id): id is string => id !== null),
+      },
+    },
+    include: {
+      city: {
+        include: {
+          country: true,
+        },
+      },
+    },
+  })
+
+  return locations
+    .map((loc) => ({
+      country: loc.city?.country.name,
+      city: loc.city?.name,
+      count:
+        geoStats.find((stat) => stat.organizationId === loc.id)?._count._all ||
+        0,
+    }))
+    .filter((loc) => loc.country && loc.city)
+}
+
+export const listPublishedJobs = async ({
+  country,
+  tags,
+  seniority,
+}: {
+  country?: string
+  tags?: string[]
+  seniority?: string
+}) => {
+  const jobs = await prisma.jobPost.findMany({
+    where: {
+      published: { not: null },
+      ...(country && {
+        organization: {
+          city: {
+            country: {
+              name: country,
+            },
+          },
+        },
+      }),
+      ...(tags &&
+        tags.length > 0 && {
+          tags: {
+            some: {
+              tag: {
+                tag: {
+                  in: tags,
+                },
+              },
+            },
+          },
+        }),
+      ...(seniority && {
+        seniority: parseFloat(seniority),
+      }),
+    },
+    include: {
+      organization: {
+        include: {
+          city: {
+            include: {
+              country: true,
+            },
+          },
+        },
+      },
+      tags: {
+        include: {
+          tag: true,
+        },
+      },
+      questions: true,
+      ratings: true,
+      currency: true,
+      packages: {
+        include: {
+          packageVersion: {
+            include: {
+              package: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      published: "desc",
+    },
+  })
+
+  return jobs as JobPost[]
 }

@@ -28,9 +28,9 @@ const JobPostBadge = ({
         {booleanValue ? (
           <Icon
             className={`h-4 w-4 ${
-              value ? "text-success" : "opacity-80 text-destructive"
+              value ? "text-success" : "opacity-80 text-rose-300"
             }`}
-            name={value ? "thumbsUp" : "thumbsDown"}
+            name={value ? "circleCheck" : "circleX"}
           />
         ) : (
           <p className="text-sm">{value || "n/a"}</p>

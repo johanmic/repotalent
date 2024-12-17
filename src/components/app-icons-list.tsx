@@ -6,15 +6,17 @@ import { uniqBy, identity } from "ramda"
 const iconKeys = Object.keys(AppIcons)
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
-function AppIconsList({
+export const AppIconsList = ({
   items,
   maxItems,
+  iconSize,
   href,
 }: {
   items: string[]
   maxItems?: number
+  iconSize?: number
   href?: string
-}) {
+}) => {
   if (!items) return null
   const [showAll, setShowAll] = useState(false)
   const processedItems = useMemo(() => {
@@ -43,7 +45,7 @@ function AppIconsList({
       {displayedItems.map((item, index) => (
         <motion.div
           key={item}
-          className="flex items-center gap-2"
+          className="flex items-center gap-1"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}
@@ -54,7 +56,7 @@ function AppIconsList({
             delay: index * 0.04,
           }}
         >
-          <AppIcon name={item as keyof typeof AppIcons} />
+          <AppIcon name={item as keyof typeof AppIcons} size={iconSize} />
           <span className="text-xs">{item}</span>
         </motion.div>
       ))}
