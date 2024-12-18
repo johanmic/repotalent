@@ -3,6 +3,7 @@ import prisma from "@/store/prisma"
 import { redirect } from "next/navigation"
 import { user, organization } from "@prisma/client"
 import { getUser as getUserFromSupabase } from "@/utils/supabase/server"
+import { createClient } from "@/utils/supabase/server"
 export interface User extends user {
   organization: organization
   creditsInfo?: {

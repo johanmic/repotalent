@@ -1,16 +1,17 @@
+import Jobs from "./Jobs"
 import { listPublishedJobs } from "@actions/jobpost"
-import { JobPostListItem } from "@/components/job-post-list-item"
-import { JobsMenu } from "@/components/jobs-menu"
+import { Logo } from "@/components/logo"
+import { DotBackground } from "@/components/ui/dot-background"
 export default async function JobsPage() {
-  const jobs = await listPublishedJobs({})
+  const publishedJobs = await listPublishedJobs({})
   return (
-    <div className=" max-auto">
-      <div className="max-w-4xl mx-auto">
-        <JobsMenu />
-        {jobs.map((job) => (
-          <JobPostListItem key={job.id} job={job} />
-        ))}
-      </div>
+    <div className="max-auto">
+      <DotBackground>
+        <div className="flex flex-col items-center justify-center">
+          <Logo size="lg" />
+          <Jobs publishedJobs={publishedJobs} />
+        </div>
+      </DotBackground>
     </div>
   )
 }

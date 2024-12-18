@@ -32,12 +32,21 @@ const NewPost = () => {
       handleFileData()
     }
   }, [fileData, isProcessing, isLoading])
-
   return (
     <div className="space-y-6 flex flex-col h-full min-h-screen">
       <h1 className="text-2xl font-bold">Create a new post</h1>
       {!fileData && <UploadForm onUpdate={setFileData} />}
-      {showCodeParser && <CodeParser />}
+      {showCodeParser && fileData && (
+        <CodeParser
+          data={fileData?.data}
+          filename={
+            fileData?.filename as
+              | "package.json"
+              | "requirements.txt"
+              | "Podfile.lock"
+          }
+        />
+      )}
     </div>
   )
 }

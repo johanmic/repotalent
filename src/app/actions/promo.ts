@@ -3,7 +3,7 @@
 import prisma from "@/store/prisma"
 import { getUser } from "@/utils/supabase/server"
 import { promoCode } from "@prisma/client"
-export const usePromoCode = async ({ code }: { code: string }) => {
+export const redeemPromoCode = async ({ code }: { code: string }) => {
   const { user } = await getUser()
   if (!user) {
     throw new Error("User not found")

@@ -1,5 +1,5 @@
 import Image from "next/image"
-
+import Link from "next/link"
 interface LogoSizes {
   xs: { width: 50; height: 50 }
   sm: { width: 100; height: 100 }
@@ -18,14 +18,15 @@ export const Logo = ({
   size,
   className,
   icon = false,
+  noLink = false,
 }: {
   size: keyof LogoSizes
   className?: string
   icon?: boolean
+  noLink?: boolean
 }) => {
   const dimensions = logoSizes[size]
-
-  return (
+  const logo = (
     <Image
       src={icon ? "/logoIcon.png" : "/logo.png"}
       alt="Logo"
@@ -34,6 +35,10 @@ export const Logo = ({
       priority
     />
   )
+  if (noLink) {
+    return logo
+  }
+  return <Link href="/">{logo}</Link>
 }
 
 export default Logo

@@ -1,7 +1,6 @@
 "use server"
-import { generateText } from "ai"
 import { openai } from "@ai-sdk/openai"
-import prisma from "@/store/prisma"
+import { generateText } from "ai"
 
 const packageJSONDescription = `
   look for design systems, build systems, react, next, node, typescript, etc.

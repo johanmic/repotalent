@@ -38,6 +38,8 @@ import {
   CreditCard,
   FileText,
   Copy,
+  RefreshCw,
+  Package,
 } from "lucide-react"
 
 export const icons = {
@@ -81,6 +83,8 @@ export const icons = {
   eyeOff: EyeOff,
   eye: Eye,
   copy: Copy,
+  refresh: RefreshCw,
+  package: Package,
 }
 
 export const Icon = ({

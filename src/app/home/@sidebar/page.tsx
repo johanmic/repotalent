@@ -13,7 +13,8 @@ import Icon from "@/components/icon"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { getUser } from "@actions/user"
-import { SidebarUser } from "@/components/sidebar-user"
+// import { SidebarUser } from "@/components/sidebar-user"
+import { NavUser } from "@/components/ui/nav-user"
 const items = [
   {
     label: "Home",
@@ -68,12 +69,12 @@ const SidebarComponent = async () => {
           </SidebarGroup>
         </SidebarContent>
         <SidebarFooter>
-          <SidebarUser user={user} />
-          <Button variant="outline" asChild>
+          <NavUser user={user} />
+          {/* <Button variant="outline" asChild>
             <Link href="/home/logout">
               <Icon name="logout" /> Logout
             </Link>
-          </Button>
+          </Button> */}
         </SidebarFooter>
       </Sidebar>
     </div>

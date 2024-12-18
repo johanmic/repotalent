@@ -1,16 +1,12 @@
-import { getUser, updateUser } from "@actions/user"
-import { User } from "@actions/user"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import UserForm from "./UserForm"
 import { Icon } from "@/components/icon"
-import dayjs from "dayjs"
-import { getUserUsageStats } from "@actions/credits"
-import { Title } from "@/components/title"
 import { PromoCode } from "@/components/promo-code"
+import { Title } from "@/components/title"
+import { getUserUsageStats } from "@actions/credits"
 import { getUserSubscription } from "@actions/subscriptions"
-import { Subscription } from "./Subscription"
-
+import { getUser } from "@actions/user"
+import dayjs from "dayjs"
+import UserForm from "./UserForm"
+import { Text } from "@/components/text"
 const ProfilePage = async () => {
   const user = await getUser()
   const { purchases, creditUsage } = await getUserUsageStats()
@@ -66,9 +62,10 @@ const ProfilePage = async () => {
         <Title>Usage</Title>
         {creditUsage?.length > 0 ? (
           creditUsage.map((usage) => (
-            <div key={usage.id}>
-              <p>{usage.jobPostId}</p>
-              <p>{usage.tokensUsed}</p>
+            <div key={usage.id} className="flex flex-row gap-2 items-center">
+              <Icon name="coins" className="w-4 h-4" />
+              <Text variant="sm">-1</Text>
+              <Text variant="sm">{usage.jobPost.title}</Text>
             </div>
           ))
         ) : (
@@ -76,10 +73,6 @@ const ProfilePage = async () => {
             No usage yet
           </div>
         )}
-      </div>
-      <Subscription subscription={Object.assign({}, subscription)} />
-      <div>
-        <PromoCode />
       </div>
     </div>
   )

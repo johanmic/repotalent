@@ -17,7 +17,6 @@ export const AppIconsList = ({
   iconSize?: number
   href?: string
 }) => {
-  if (!items) return null
   const [showAll, setShowAll] = useState(false)
   const processedItems = useMemo(() => {
     const out = items
@@ -32,7 +31,7 @@ export const AppIconsList = ({
       .filter(Boolean) as string[]
     return uniqBy((item) => item.toLowerCase(), out)
   }, [items])
-
+  if (!items) return null
   const displayedItems = maxItems
     ? showAll
       ? processedItems

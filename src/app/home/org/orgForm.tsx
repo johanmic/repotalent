@@ -60,8 +60,7 @@ const CreateOrgForm = ({
       instagram: organization?.instagram || null,
       linkedin: organization?.linkedin || null,
       description: organization?.description || null,
-      city:
-        { name: organization?.city?.name, id: organization?.city?.id } || null,
+      city: { name: organization?.city?.name, id: organization?.city?.id },
     },
   })
 

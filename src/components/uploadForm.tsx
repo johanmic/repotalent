@@ -1,16 +1,7 @@
 "use client"
-import Dropzone, { DropzoneState } from "shadcn-dropzone"
-import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
 import AppIcon from "@/components/appIcon"
 import Icon from "@/components/icon"
-const acceptedFileNames = [
-  "package.json",
-  "requirements.txt",
-  "Makefile",
-  "Podfile",
-]
-import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
 import {
   Select,
   SelectContent,
@@ -18,63 +9,44 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import * as z from "zod"
+import { Textarea } from "@/components/ui/textarea"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Form, useForm } from "react-hook-form"
-
-const fixture = `{
-  "name": "repotalent",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev --turbo",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
-  "dependencies": {
-    "@ai-sdk/openai": "^1.0.6",
-    "@hookform/resolvers": "^3.9.1",
-    "@radix-ui/react-checkbox": "^1.1.2",
-    "@radix-ui/react-dialog": "^1.1.2",
-    "@radix-ui/react-label": "^2.1.0",
-    "@radix-ui/react-select": "^2.1.2",
-    "@radix-ui/react-slot": "^1.1.0",
-    "@supabase/ssr": "^0.5.2",
-    "@supabase/supabase-js": "^2.46.2",
-    "ai": "^4.0.11",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "framer-motion": "^11.13.1",
-    "input-otp": "^1.4.1",
-    "lucide-react": "^0.465.0",
-    "next": "15.0.3",
-    "next-themes": "^0.4.3",
-    "react": "^18",
-    "react-dom": "^18",
-    "react-hook-form": "^7.53.2",
-    "react-icons": "^5.4.0",
-    "shadcn-dropzone": "^0.2.1",
-    "sonner": "^1.7.0",
-    "tailwind-merge": "^2.5.5",
-    "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.23.8"
-  },
-  "devDependencies": {
-    "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "eslint": "^8",
-    "eslint-config-next": "14.2.16",
-    "postcss": "^8",
-    "tailwindcss": "^3.4.16",
-    "typescript": "^5"
-  }
-}`
+import { useEffect } from "react"
+import { useForm } from "react-hook-form"
+import Dropzone, { DropzoneState } from "shadcn-dropzone"
+import { toast } from "sonner"
+import * as z from "zod"
+const acceptedFileNames = [
+  "package.json",
+  "requirements.txt",
+  "Makefile",
+  "Podfile.lock",
+]
 const schema = z.object({
   filename: z.string(),
   data: z.string(),
 })
+
+const detectFileType = (content: string): string => {
+  if (
+    content.includes('"dependencies":{') ||
+    content.includes('"dependencies": {')
+  ) {
+    return "package.json"
+  }
+  if (/^[a-zA-Z0-9\-_.]+==[\d.]+$/m.test(content)) {
+    // Matches patterns like "package==1.0.0"
+    return "requirements.txt"
+  }
+  if (content.includes("COCOAPODS: ") || content.includes("target ")) {
+    return "Podfile.lock"
+  }
+  if (content.includes(".PHONY:") || /^[\w\-]+:/m.test(content)) {
+    // Matches Makefile targets
+    return "Makefile"
+  }
+  return "package.json" // default fallback
+}
 
 const UploadForm = ({
   onUpdate,
@@ -85,14 +57,71 @@ const UploadForm = ({
     resolver: zodResolver(schema),
     defaultValues: {
       filename: "package.json",
-      data: fixture,
+      data: "",
     },
   })
   const handleSubmit = form.handleSubmit((data) => {
     onUpdate({ filename: data.filename, data: data.data })
   })
+
+  useEffect(() => {
+    const data = form.watch("data")
+    if (data) {
+      const detectedType = detectFileType(data)
+      if (detectedType !== form.watch("filename")) {
+        form.setValue("filename", detectedType)
+      }
+    }
+  }, [form.watch("data")])
+
   return (
     <div className="gap-4 flex flex-col h-full">
+      <form onSubmit={handleSubmit} className="gap-2 flex flex-col">
+        <Select
+          defaultValue="package.json"
+          onValueChange={(value) => form.setValue("filename", value)}
+          value={form.watch("filename")}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Filename" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="package.json">
+              <div className="flex items-center gap-2">
+                <AppIcon name="typescript" />
+                <span>package.json</span>
+              </div>
+            </SelectItem>
+            <SelectItem
+              value="requirements.txt"
+              className="flex items-center gap-2"
+            >
+              <div className="flex items-center gap-2">
+                <AppIcon name="python" />
+                <span>requirements.txt</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="Makefile">
+              <div className="flex items-center gap-2">
+                <AppIcon name="makefile" />
+                <span>Makefile</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="Podfile.lock">
+              <div className="flex items-center gap-2">
+                <AppIcon name="podfile" />
+                <span>Podfile.lock</span>
+              </div>
+            </SelectItem>
+          </SelectContent>
+        </Select>
+        <Textarea
+          placeholder="Enter your package.json / requirements.txt / Makefile / Podfile content here..."
+          className="lg:min-h-[500px]   text-xs text-white bg-zinc-800 w-full font-mono"
+          {...form.register("data")}
+        ></Textarea>
+        <Button type="submit">Create Post</Button>
+      </form>
       <Dropzone
         noClick
         containerClassName="border-none"
@@ -129,48 +158,6 @@ const UploadForm = ({
           </div>
         )}
       </Dropzone>
-      <form onSubmit={handleSubmit} className="gap-2 flex flex-col">
-        <Select defaultValue="package.json" {...form.register("filename")}>
-          <SelectTrigger>
-            <SelectValue placeholder="Filename" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="package.json">
-              <div className="flex items-center gap-2">
-                <AppIcon name="typescript" />
-                <span>package.json</span>
-              </div>
-            </SelectItem>
-            <SelectItem
-              value="requirements.txt"
-              className="flex items-center gap-2"
-            >
-              <div className="flex items-center gap-2">
-                <AppIcon name="python" />
-                <span>requirements.txt</span>
-              </div>
-            </SelectItem>
-            <SelectItem value="Makefile">
-              <div className="flex items-center gap-2">
-                <AppIcon name="makefile" />
-                <span>Makefile</span>
-              </div>
-            </SelectItem>
-            <SelectItem value="Podfile">
-              <div className="flex items-center gap-2">
-                <AppIcon name="podfile" />
-                <span>Podfile</span>
-              </div>
-            </SelectItem>
-          </SelectContent>
-        </Select>
-        <Textarea
-          placeholder="Write your post here..."
-          className="min-h-96 text-xs w-full font-mono"
-          {...form.register("data")}
-        ></Textarea>
-        <Button type="submit">Create Post</Button>
-      </form>
     </div>
   )
 }

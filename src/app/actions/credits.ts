@@ -125,8 +125,11 @@ export const getUserUsageStats = async () => {
       promoCode: true,
     },
   })
-  const creditUsage = await prisma.jobPostTokenUsage.findMany({
+  const creditUsage = await prisma.creditUsage.findMany({
     where: { userId: user.id },
+    include: {
+      jobPost: true,
+    },
   })
 
   return { purchases, creditUsage }

@@ -16,6 +16,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 import { CheckCircle2 } from "lucide-react"
 import { useCallback, useState } from "react"
+import { Text } from "@/components/text"
+import { Title } from "@/components/title"
 type PricingSwitchProps = {
   onSwitch: (value: string) => void
 }
@@ -43,9 +45,11 @@ const PricingHeader = ({
   title: string
   subtitle: string
 }) => (
-  <section className="text-center">
-    <h2 className="text-3xl font-bold">{title}</h2>
-    <p className="text-xl pt-1">{subtitle}</p>
+  <section className="text-center flex flex-col gap-2 items-center">
+    <Title size="3xl" className=" font-bold">
+      {title}
+    </Title>
+    <Text className="text-xl pt-1">{subtitle}</Text>
     <br />
   </section>
 )
@@ -101,9 +105,9 @@ const PricingCard = (props: PricingCardProps) => {
               </Badge>
             </div>
           ) : (
-            <CardTitle className="text dark:text-secondary-dark text-lg">
+            <Text as="h2" className="text-lg">
               {title}
-            </CardTitle>
+            </Text>
           )}
           <div className="flex gap-0.5">
             <h3 className="text-3xl font-black">
@@ -239,7 +243,7 @@ export const Pricing = ({ mode }: { mode: "landing" | "purchase" }) => {
               key={plan.title}
               {...plan}
               isYearly={isYearly}
-              onSelect={handleSelectPlan}
+              onSelect={mode === "purchase" ? handleSelectPlan : () => {}}
             />
           )
         })}

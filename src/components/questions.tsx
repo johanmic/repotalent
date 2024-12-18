@@ -28,7 +28,7 @@ const Question = ({
       transition={{ duration: 0.5, delay: index * 0.1 }}
       className="my-4 max-w-2xl mx-auto"
     >
-      <Card className="w-full">
+      <Card className="w-full mx-2">
         <CardHeader className="flex flex-col md:flex-row items-center justify-between space-y-0 pb-2">
           <div className="flex-1">
             {/* <CardTitle className="text-lg font-semibold mb-2">

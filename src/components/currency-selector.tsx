@@ -48,10 +48,10 @@ export const CurrencySelector = ({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-full", className)}
+          className={cn("w-full justify-start text-left", className)}
         >
           {selectedCurrency ? `${selectedCurrency.code}` : "Select currency..."}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent

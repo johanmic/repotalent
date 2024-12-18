@@ -1,10 +1,9 @@
 "use client"
-import { useState, useCallback } from "react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { useDebounce } from "@/hooks/use-debounce"
-import { usePromoCode } from "@/app/actions/promo"
+import { redeemPromoCode } from "@/app/actions/promo"
 import { Icon } from "@/components/icon"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { useCallback, useState } from "react"
 
 export const PromoCode = () => {
   const [code, setCode] = useState("")
@@ -15,17 +14,17 @@ export const PromoCode = () => {
     creditsBought: number
   } | null>(null)
 
-  const debouncedCode = useDebounce(code, 1000)
-
   const handleUsePromoCode = useCallback(async () => {
     setLoading(true)
     try {
-      const purchase = await usePromoCode({ code })
+      const purchase = await redeemPromoCode({ code })
       setPurchased(purchase)
       setMessage("Promo code applied successfully!")
       setError(null)
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "An unexpected error occurred"
+      )
       setMessage(null)
     } finally {
       setLoading(false)

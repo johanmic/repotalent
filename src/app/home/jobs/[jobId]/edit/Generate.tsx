@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -152,6 +153,7 @@ const EditJobPost = ({
       console.log("GENERATION", fullValue)
       const json = await generateJSONFromMarkdown(fullValue)
       toast.success("Generated")
+
       await updateJobPost({
         jobId: jobId as string,
         data: { description: JSON.stringify(json) },
@@ -260,6 +262,26 @@ const EditJobPost = ({
             setFormErrors(newErrors)
           })}
         >
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className={formErrors.title ? "text-error" : ""}>
+                  Job Title
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    className={`font-bold text-xl ${
+                      formErrors.title ? "border-error focus:border-error" : ""
+                    }`}
+                  />
+                </FormControl>
+                <FormMessage className="text-error text-sm" />
+              </FormItem>
+            )}
+          />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             <div className="mt-8 col-span-2 order-1 md:order-2">
               <TextEditor
@@ -273,30 +295,7 @@ const EditJobPost = ({
                 }}
               />
             </div>
-            <div>
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className={formErrors.title ? "text-error" : ""}>
-                      Job Title
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        className={`font-bold ${
-                          formErrors.title
-                            ? "border-error focus:border-error"
-                            : ""
-                        }`}
-                      />
-                    </FormControl>
-                    <FormMessage className="text-error text-sm" />
-                  </FormItem>
-                )}
-              />
-
+            <div className="col-span-1 order-2 gap-2 flex flex-col md:order-1">
               <FormField
                 control={form.control}
                 name="type"
@@ -427,14 +426,20 @@ const EditJobPost = ({
                     control={form.control}
                     name="remote"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row justify-center items-center gap-2">
+                      <FormItem className="flex  w-full flex-row justify-between items-center gap-2">
+                        <div className="max-w-64">
+                          <FormLabel>Remote Work</FormLabel>
+                          <FormDescription>
+                            Remote work is a great way to work from anywhere in
+                            the world.
+                          </FormDescription>
+                        </div>
                         <FormControl className="mt-2">
                           <Switch
                             checked={field.value}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
-                        <FormLabel className="">Remote Work</FormLabel>
                       </FormItem>
                     )}
                   />
@@ -443,14 +448,20 @@ const EditJobPost = ({
                     control={form.control}
                     name="hybrid"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-center gap-2">
+                      <FormItem className="flex  w-full flex-row justify-between items-center gap-2">
+                        <div className="max-w-64">
+                          <FormLabel className="mt-0">Hybrid Work</FormLabel>
+                          <FormDescription>
+                            Hybrid work is a great way to work from anywhere in
+                            the world.
+                          </FormDescription>
+                        </div>
                         <FormControl className="mt-2">
                           <Switch
                             checked={field.value}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
-                        <FormLabel className="mt-0">Hybrid Work</FormLabel>
                       </FormItem>
                     )}
                   />
@@ -459,16 +470,22 @@ const EditJobPost = ({
                     control={form.control}
                     name="consulting"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-center gap-2">
+                      <FormItem className="flex  w-full flex-row justify-between items-center gap-2">
+                        <div className="max-w-64">
+                          <FormLabel className="mt-0">
+                            Consulting Position
+                          </FormLabel>
+                          <FormDescription>
+                            Consulting positions are great for people who want
+                            to work from anywhere in the world.
+                          </FormDescription>
+                        </div>
                         <FormControl className="mt-2">
                           <Switch
                             checked={field.value}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
-                        <FormLabel className="mt-0">
-                          Consulting Position
-                        </FormLabel>
                       </FormItem>
                     )}
                   />
@@ -477,16 +494,22 @@ const EditJobPost = ({
                     control={form.control}
                     name="openSource"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-center gap-2">
+                      <FormItem className="flex  w-full flex-row justify-between items-center gap-2">
+                        <div className="max-w-64">
+                          <FormLabel className="mt-0">
+                            Open Source Project
+                          </FormLabel>
+                          <FormDescription>
+                            Is the project open source? some developers value
+                            this.
+                          </FormDescription>
+                        </div>
                         <FormControl className="mt-2">
                           <Switch
                             checked={field.value}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
-                        <FormLabel className="mt-0">
-                          Open Source Project
-                        </FormLabel>
                       </FormItem>
                     )}
                   />
@@ -495,14 +518,20 @@ const EditJobPost = ({
                     control={form.control}
                     name="equity"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-center gap-2">
+                      <FormItem className="flex  w-full flex-row justify-between items-center gap-2">
+                        <div className="max-w-64">
+                          <FormLabel className="mt-0">Equity</FormLabel>
+                          <FormDescription>
+                            Equity is a great way to work from anywhere in the
+                            world.
+                          </FormDescription>
+                        </div>
                         <FormControl className="mt-2">
                           <Switch
                             checked={field.value}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
-                        <FormLabel className="mt-0">Equity</FormLabel>
                       </FormItem>
                     )}
                   />

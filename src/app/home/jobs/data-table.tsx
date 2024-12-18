@@ -21,12 +21,16 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 
+interface BaseData {
+  id: string | number
+}
+
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
 }
 
-export function DataTable<TData, TValue>({
+export function DataTable<TData extends BaseData, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {

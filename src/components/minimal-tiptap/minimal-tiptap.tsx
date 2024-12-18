@@ -14,7 +14,7 @@ import { SectionFive } from "./components/section/five"
 import { LinkBubbleMenu } from "./components/bubble-menu/link-bubble-menu"
 import { useMinimalTiptapEditor } from "./hooks/use-minimal-tiptap"
 import { MeasuredContainer } from "./components/measured-container"
-
+import { useDebounce } from "@uidotdev/usehooks"
 export interface MinimalTiptapProps
   extends Omit<UseMinimalTiptapEditorProps, "onUpdate"> {
   value?: Content
@@ -81,6 +81,7 @@ export const MinimalTiptapEditor = React.forwardRef<
     },
     ref
   ) => {
+    const debouncedValue = useDebounce(streamedValue, 1000)
     const editor = useMinimalTiptapEditor({
       value,
       onUpdate: onChange,
@@ -91,7 +92,14 @@ export const MinimalTiptapEditor = React.forwardRef<
         editor.commands.setContent(streamedValue)
       }
     }, [streamedValue, editor])
-
+    useEffect(() => {
+      if (debouncedValue && editor) {
+        const content = editor.getJSON()
+        if (content) {
+          onChange?.(content)
+        }
+      }
+    }, [debouncedValue, editor])
     if (!editor) {
       return null
     }

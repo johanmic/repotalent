@@ -1,26 +1,29 @@
 "use server"
 
-import prisma from "@/store/prisma"
-import { prepareQuestions } from "@/utils/questionsPrompt"
-import { getUser } from "@/utils/supabase/server"
-import { redirect } from "next/navigation"
-import { omit } from "ramda"
-import { revalidatePath } from "next/cache"
-import { mapJS } from "@/utils/mapIcons"
-import { createSlug } from "@/utils/slug"
 import { getAvailableTokens } from "@/app/actions/user"
+import prisma from "@/store/prisma"
+import { Prisma } from "@prisma/client"
+import { mapJS } from "@/utils/mapIcons"
+import { parseRequirementsTxt } from "@/utils/parseRequirementsTXT"
+import { parsePodfileLock } from "@/utils/podfileLockParser"
+import { prepareQuestions } from "@/utils/questionsPrompt"
+import { createSlug } from "@/utils/slug"
+import { getUser } from "@/utils/supabase/server"
 import {
-  jobPost,
-  jobPostTag,
-  jobPostQuestion,
-  openSourcePackage,
-  openSourcePackageVersion,
-  jobPostRatings,
-  organization,
   city,
   country,
   currency,
+  jobPost,
+  jobPostQuestion,
+  jobPostRatings,
+  jobPostTag,
+  openSourcePackage,
+  openSourcePackageVersion,
+  organization,
 } from "@prisma/client"
+import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
+import { omit, uniq } from "ramda"
 
 export interface JobPostToPackageVersion {
   package: openSourcePackage
@@ -43,6 +46,76 @@ export interface JobPost extends jobPost {
     }
   }
 }
+
+// New helper function to process packages and tags
+const processPackagesAndTags = async ({
+  tx,
+  jobId,
+  dependencies,
+  existingTags,
+  defaultTags = [],
+}: {
+  tx: Prisma.TransactionClient
+  jobId: string
+  dependencies: { name: string; version: string }[]
+  existingTags: Set<string>
+  defaultTags?: string[]
+}) => {
+  const keys = dependencies.map(({ name }) => name)
+  const tags = await mapJS({ packages: keys })
+  const newTags = tags.filter((tag) => !existingTags.has(tag.toLowerCase()))
+  const allTags = uniq([...existingTags, ...defaultTags, ...newTags])
+
+  // Update job with new tags - FIXED VERSION
+  await tx.jobPost.update({
+    where: { id: jobId },
+    data: {
+      tags: {
+        create: allTags.map((tagName) => ({
+          tag: {
+            connectOrCreate: {
+              where: { tag: tagName },
+              create: { tag: tagName },
+            },
+          },
+        })),
+      },
+    },
+  })
+
+  // Process packages
+  await Promise.all(
+    dependencies.map(async ({ name, version }) => {
+      const pkg = await tx.openSourcePackage.upsert({
+        where: { name },
+        create: { name },
+        update: {},
+      })
+
+      const pkgVersion = await tx.openSourcePackageVersion.upsert({
+        where: {
+          packageId_version: {
+            packageId: pkg.id,
+            version,
+          },
+        },
+        create: {
+          version,
+          packageId: pkg.id,
+        },
+        update: {},
+      })
+
+      return tx.jobPostToPackageVersion.create({
+        data: {
+          jobPostId: jobId,
+          packageVersionId: pkgVersion.id,
+        },
+      })
+    })
+  )
+}
+
 export const createJobPost = async (data: {
   filename: string
   data: string
@@ -112,73 +185,54 @@ export const createJobPost = async (data: {
         jobPostId: job.id,
       },
     })
+    const existingTags = new Set(
+      promptReuslts.tags.map((tag) => tag.toLowerCase())
+    )
+
     if (data.filename === "package.json") {
       const packagesJson = JSON.parse(data.data)
       const dependencies = Object.entries({
         ...packagesJson.dependencies,
         ...packagesJson.devDependencies,
       }).map(([name, version]) => ({ name, version: version as string }))
-      console.log("dependencies", dependencies)
-      const keys = dependencies.map(({ name }) => name) as string[]
-      console.log("keys", keys)
-      const tags = await mapJS({ packages: keys })
-      console.log("tags", tags)
-      const existingTags = new Set(
-        promptReuslts.tags.map((tag) => tag.toLowerCase())
-      )
-      const newTags = tags.filter((tag) => !existingTags.has(tag.toLowerCase()))
-
-      await $tx.jobPost.update({
-        where: { id: job.id },
-        data: {
-          tags: {
-            create: newTags.map((tag) => ({
-              tag: {
-                connectOrCreate: {
-                  where: { tag },
-                  create: { tag },
-                },
-              },
-            })),
-          },
-        },
+      const defaultTags = ["javascript", "typescript", "nodejs"]
+      await processPackagesAndTags({
+        tx: $tx,
+        jobId: job.id,
+        dependencies,
+        existingTags,
+        defaultTags,
       })
-
-      // Process all packages in parallel
-      await Promise.all(
-        dependencies.map(async ({ name, version }) => {
-          // First, create or get the package
-          const pkg = await $tx.openSourcePackage.upsert({
-            where: { name },
-            create: { name },
-            update: {},
-          })
-
-          // Now create the version using the package's ID
-          const pkgVersion = await $tx.openSourcePackageVersion.upsert({
-            where: {
-              packageId_version: {
-                packageId: pkg.id,
-                version,
-              },
-            },
-            create: {
-              version,
-              packageId: pkg.id,
-            },
-            update: {},
-          })
-
-          // Link to job post
-          return $tx.jobPostToPackageVersion.create({
-            data: {
-              jobPostId: job.id,
-              packageVersionId: pkgVersion.id,
-            },
-          })
+    } else if (data.filename === "requirements.txt") {
+      const dependencies = Object.entries(parseRequirementsTxt(data.data)).map(
+        ([name, version]) => ({ name, version: version as string })
+      )
+      const defaultTags = ["python"]
+      await processPackagesAndTags({
+        tx: $tx,
+        jobId: job.id,
+        dependencies,
+        existingTags,
+        defaultTags,
+      })
+    } else if (data.filename === "Podfile.lock") {
+      const dependencies = Object.entries(parsePodfileLock(data.data)).map(
+        ([name, version]) => ({
+          name,
+          version,
         })
       )
+      const defaultTags = ["ios", "swift", "objective-c"]
+
+      await processPackagesAndTags({
+        tx: $tx,
+        jobId: job.id,
+        dependencies,
+        existingTags,
+        defaultTags,
+      })
     }
+
     return job
   })
 
@@ -457,6 +511,69 @@ export const getJobGeo = async () => {
         0,
     }))
     .filter((loc) => loc.country && loc.city)
+}
+
+export const searchJobs = async ({ query }: { query: string }) => {
+  const jobs = await prisma.jobPost.findMany({
+    where: {
+      OR: [
+        { title: { contains: query } },
+        { tags: { some: { tag: { tag: { contains: query } } } } },
+        { description: { contains: query } },
+        { questions: { some: { question: { contains: query } } } },
+        {
+          packages: {
+            some: {
+              packageVersion: { package: { name: { contains: query } } },
+            },
+          },
+        },
+        {
+          organization: {
+            city: {
+              name: { contains: query },
+            },
+          },
+        },
+        {
+          organization: {
+            city: {
+              country: {
+                name: { contains: query },
+              },
+            },
+          },
+        },
+      ],
+    },
+    include: {
+      organization: {
+        include: {
+          city: {
+            include: {
+              country: true,
+            },
+          },
+        },
+      },
+      tags: {
+        include: {
+          tag: true,
+        },
+      },
+      packages: {
+        include: {
+          packageVersion: {
+            include: {
+              package: true,
+            },
+          },
+        },
+      },
+    },
+    take: 100,
+  })
+  return jobs as JobPost[]
 }
 
 export const listPublishedJobs = async ({

@@ -10,13 +10,13 @@ export const JobPostListItem = ({ job }: { job: JobPost }) => {
   return (
     <Link
       href={`/jobs/${job.slug}`}
-      className="bg-muted/50 p-4 flex rounded-md my-2 cursor-pointer hover:bg-muted/50"
+      className="bg-muted/50 p-4 border border-muted flex rounded-md m-2 cursor-pointer hover:bg-muted"
     >
       <div className="flex flex-row w-full justify-between items-center">
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <Avatar>
-              <AvatarImage src={getImageUrl(job.organization?.image)} />
+              <AvatarImage src={getImageUrl(job?.organization?.image ?? "")} />
               <AvatarFallback>
                 {job.organization?.name.slice(0, 2)}
               </AvatarFallback>

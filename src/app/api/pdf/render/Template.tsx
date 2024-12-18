@@ -235,7 +235,7 @@ const OrganizationInfo = ({ organization }: { organization: Organization }) => {
 }
 
 const createTemplate = async ({ jobPost }: { jobPost: JobPost }) => {
-  const content = renderHTML({ json: jobPost.description, styling })
+  const content = renderHTML({ json: jobPost.description || "", styling })
   return (
     <Document>
       <Page size={"A4"} style={styles.page}>

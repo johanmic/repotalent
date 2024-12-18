@@ -2,7 +2,7 @@
 
 import { getUser } from "@/utils/supabase/server"
 import prisma from "@/store/prisma"
-import { organization, city } from "@prisma/client"
+import { organization, city, country } from "@prisma/client"
 import { redirect } from "next/navigation"
 import { schema } from "@/components/organization-form"
 import { z } from "zod"
@@ -11,7 +11,9 @@ type OrganizationForm = z.infer<typeof schema>
 import { revalidatePath } from "next/cache"
 
 export interface Organization extends organization {
-  city: city
+  city: city & {
+    country: country
+  }
 }
 export const getOrganization = async (): Promise<Organization> => {
   const { user } = await getUser()

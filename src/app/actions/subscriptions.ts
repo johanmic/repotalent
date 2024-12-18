@@ -38,7 +38,7 @@ export async function handleSubscriptionChange(event: Stripe.Event) {
       await handleSubscriptionPurchase({ subscription, userId: user.id })
       break
     case "customer.subscription.deleted":
-      await handleSubscriptionDeletion({ subscription, userId: user.id })
+      await handleSubscriptionDeletion({ subscription })
       break
   }
 }
@@ -99,10 +99,8 @@ const handleSubscriptionPurchase = async ({
 
 export const handleSubscriptionDeletion = async ({
   subscription,
-  userId,
 }: {
   subscription: Stripe.Subscription
-  userId: string
 }) => {
   console.log("handleSubscriptionDeletion")
   await prisma.subscription.update({

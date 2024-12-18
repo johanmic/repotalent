@@ -201,10 +201,12 @@ export const formatCurrencyWithSymbol = ({
   value: number
   currency: string
 }) => {
-  const formattedValue = formatCurrency(value)
-  const symbol =
-    currencySymbols[currency as keyof typeof currencySymbols] || currency
-  return `${symbol} ${formattedValue}`
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value)
 }
 
 export const formatCurrency = (amount: string | number): string => {

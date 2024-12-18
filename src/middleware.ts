@@ -5,7 +5,20 @@ import { updateSession } from "@/utils/supabase/middleware"
 //   return await updateSession(request)
 // }
 
+const excludePaths = ["/", "/api", "/jobs"]
+
 export async function middleware(request: NextRequest) {
+  // Check if the current path starts with any excludePath
+  if (
+    excludePaths.some(
+      (path) =>
+        request.nextUrl.pathname === path ||
+        (path === "/jobs" && request.nextUrl.pathname.startsWith("/jobs/"))
+    )
+  ) {
+    return NextResponse.next()
+  }
+
   // Skip middleware for API routes
   if (request.nextUrl.pathname.startsWith("/api/")) {
     return NextResponse.next()

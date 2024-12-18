@@ -9,11 +9,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Icon } from "@components/icon"
 import { useRouter } from "next/navigation"
-export default function CreditsPopup({
-  creditsAvailable,
-}: {
-  creditsAvailable: number
-}) {
+export default function CreditsPopup({}: { creditsAvailable?: number }) {
   const router = useRouter()
   return (
     <Dialog open={true} onOpenChange={() => router.push("/home")}>

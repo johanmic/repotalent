@@ -26,7 +26,7 @@ export const SidebarUser = async ({ user }: { user: User }) => {
       <Button asChild>
         <Link href="/home/purchase" className="flex items-center gap-1">
           <Icon name="plus" className="w-3 h-3" />
-          <span className="text-sm font-bold">buy tokens</span>
+          <span className="text-sm font-bold">add tokens</span>
         </Link>
       </Button>
     </div>

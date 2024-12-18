@@ -111,6 +111,14 @@ import {
   SiZapier,
   SiZod,
   SiZoho,
+  SiIos,
+  SiAndroid,
+  SiApple,
+  SiGoogle,
+  SiLinux,
+  SiMacos,
+  SiFirefox,
+  SiSafari,
 } from "react-icons/si"
 import { cn } from "@/lib/utils"
 export const AppIcons = {
@@ -232,6 +240,14 @@ export const AppIcons = {
   zapier: SiZapier,
   zod: SiZod,
   zoho: SiZoho,
+  ios: SiIos,
+  android: SiAndroid,
+  apple: SiApple,
+  google: SiGoogle,
+  linux: SiLinux,
+  macos: SiMacos,
+  firefox: SiFirefox,
+  safari: SiSafari,
 }
 
 const Icon = ({

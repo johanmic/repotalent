@@ -1,6 +1,4 @@
 import Icon, { icons } from "./icon"
-import { Badge } from "./ui/badge"
-const ICON_SIZE = 16
 const JobPostBadge = ({
   icon,
   text,

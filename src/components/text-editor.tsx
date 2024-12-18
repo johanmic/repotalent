@@ -1,7 +1,7 @@
 "use client"
-import { useRef, useEffect, useCallback, useState, useMemo } from "react"
-import * as marked from "marked"
 import { Content } from "@tiptap/react"
+import * as marked from "marked"
+import { useCallback, useEffect, useState } from "react"
 import { MinimalTiptapEditor } from "./minimal-tiptap"
 
 export const TextEditor = ({

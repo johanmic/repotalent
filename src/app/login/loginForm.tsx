@@ -67,13 +67,16 @@ const LoginForm = () => {
 
   return (
     <motion.div
-      className="w-full flex flex-col gap-4 items-center justify-center"
+      className="w-full flex flex-col gap-4"
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
       {!isOtpSent ? (
         <Form {...form}>
+          <div className="text-sm font-light text-center">
+            Email One Time Password
+          </div>
           <motion.form
             onSubmit={form.handleSubmit(onSubmitEmail)}
             className="space-y-6 gap-2"
@@ -89,9 +92,9 @@ const LoginForm = () => {
                   <FormControl>
                     <Input placeholder="example@example.com" {...field} />
                   </FormControl>
-                  <FormDescription>
+                  {/* <FormDescription>
                     Enter your email to receive an OTP.
-                  </FormDescription>
+                  </FormDescription> */}
                   <FormMessage />
                 </FormItem>
               )}
