@@ -7,11 +7,14 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "predeploy": "prisma migrate deploy",
+    "postinstall": "prisma generate",
     "db:seed": "./node_modules/.bin/prisma db seed"
   },
   "type": "module",
   "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts",
+    "schema": "prisma/schema.prisma"
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.0.6",
