@@ -1,7 +1,7 @@
-import NewPost from "./New"
 import { getUser } from "@/app/actions/user"
 import { redirect } from "next/navigation"
 import CreditsPopup from "@/components/credits-popup"
+import Create from "./Create"
 const NewPostPage = async () => {
   const user = await getUser()
   if (!user) {
@@ -12,7 +12,7 @@ const NewPostPage = async () => {
   }
   return (
     <div className="max-w-3xl mx-auto mt-10 space-y-6 min-h-screen h-full">
-      <NewPost />
+      <Create />
       {user.creditsInfo?.creditsAvailable === 0 && (
         <CreditsPopup creditsAvailable={0} />
       )}

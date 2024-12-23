@@ -47,27 +47,15 @@ export interface JobPost extends jobPost {
   }
 }
 
-// New helper function to process packages and tags
-const processPackagesAndTags = async ({
-  tx,
+// Separate function to update job tags
+const updateJobTags = async ({
   jobId,
-  dependencies,
-  existingTags,
-  defaultTags = [],
+  allTags,
 }: {
-  tx: Prisma.TransactionClient
   jobId: string
-  dependencies: { name: string; version: string }[]
-  existingTags: Set<string>
-  defaultTags?: string[]
+  allTags: string[]
 }) => {
-  const keys = dependencies.map(({ name }) => name)
-  const tags = await mapJS({ packages: keys })
-  const newTags = tags.filter((tag) => !existingTags.has(tag.toLowerCase()))
-  const allTags = uniq([...existingTags, ...defaultTags, ...newTags])
-
-  // Update job with new tags - FIXED VERSION
-  await tx.jobPost.update({
+  await prisma.jobPost.update({
     where: { id: jobId },
     data: {
       tags: {
@@ -82,17 +70,25 @@ const processPackagesAndTags = async ({
       },
     },
   })
+}
 
-  // Process packages
+// Separate function to process packages
+const processPackages = async ({
+  jobId,
+  dependencies,
+}: {
+  jobId: string
+  dependencies: { name: string; version: string }[]
+}) => {
   await Promise.all(
     dependencies.map(async ({ name, version }) => {
-      const pkg = await tx.openSourcePackage.upsert({
+      const pkg = await prisma.openSourcePackage.upsert({
         where: { name },
         create: { name },
         update: {},
       })
 
-      const pkgVersion = await tx.openSourcePackageVersion.upsert({
+      const pkgVersion = await prisma.openSourcePackageVersion.upsert({
         where: {
           packageId_version: {
             packageId: pkg.id,
@@ -106,7 +102,7 @@ const processPackagesAndTags = async ({
         update: {},
       })
 
-      return tx.jobPostToPackageVersion.create({
+      return prisma.jobPostToPackageVersion.create({
         data: {
           jobPostId: jobId,
           packageVersionId: pkgVersion.id,
@@ -114,6 +110,30 @@ const processPackagesAndTags = async ({
       })
     })
   )
+}
+
+// Updated processPackagesAndTags function
+const processPackagesAndTags = async ({
+  jobId,
+  dependencies,
+  existingTags,
+  defaultTags = [],
+}: {
+  jobId: string
+  dependencies: { name: string; version: string }[]
+  existingTags: Set<string>
+  defaultTags?: string[]
+}) => {
+  const keys = dependencies.map(({ name }) => name)
+  const tags = await mapJS({ packages: keys })
+  const newTags = tags.filter((tag) => !existingTags.has(tag.toLowerCase()))
+  const allTags = uniq([...existingTags, ...defaultTags, ...newTags])
+
+  // Update job tags in a separate transaction
+  await updateJobTags({ jobId, allTags })
+
+  // Process packages in a separate transaction
+  await processPackages({ jobId, dependencies })
 }
 
 export const createJobPost = async (data: {
@@ -185,56 +205,54 @@ export const createJobPost = async (data: {
         jobPostId: job.id,
       },
     })
-    const existingTags = new Set(
-      promptReuslts.tags.map((tag) => tag.toLowerCase())
-    )
-
-    if (data.filename === "package.json") {
-      const packagesJson = JSON.parse(data.data)
-      const dependencies = Object.entries({
-        ...packagesJson.dependencies,
-        ...packagesJson.devDependencies,
-      }).map(([name, version]) => ({ name, version: version as string }))
-      const defaultTags = ["javascript", "typescript", "nodejs"]
-      await processPackagesAndTags({
-        tx: $tx,
-        jobId: job.id,
-        dependencies,
-        existingTags,
-        defaultTags,
-      })
-    } else if (data.filename === "requirements.txt") {
-      const dependencies = Object.entries(parseRequirementsTxt(data.data)).map(
-        ([name, version]) => ({ name, version: version as string })
-      )
-      const defaultTags = ["python"]
-      await processPackagesAndTags({
-        tx: $tx,
-        jobId: job.id,
-        dependencies,
-        existingTags,
-        defaultTags,
-      })
-    } else if (data.filename === "Podfile.lock") {
-      const dependencies = Object.entries(parsePodfileLock(data.data)).map(
-        ([name, version]) => ({
-          name,
-          version,
-        })
-      )
-      const defaultTags = ["ios", "swift", "objective-c"]
-
-      await processPackagesAndTags({
-        tx: $tx,
-        jobId: job.id,
-        dependencies,
-        existingTags,
-        defaultTags,
-      })
-    }
 
     return job
   })
+
+  const existingTags = new Set(
+    promptReuslts.tags.map((tag) => tag.toLowerCase())
+  )
+
+  if (data.filename === "package.json") {
+    const packagesJson = JSON.parse(data.data)
+    const dependencies = Object.entries({
+      ...packagesJson.dependencies,
+      ...packagesJson.devDependencies,
+    }).map(([name, version]) => ({ name, version: version as string }))
+    const defaultTags = ["javascript", "typescript", "nodejs"]
+    await processPackagesAndTags({
+      jobId: job.id,
+      dependencies,
+      existingTags,
+      defaultTags,
+    })
+  } else if (data.filename === "requirements.txt") {
+    const dependencies = Object.entries(parseRequirementsTxt(data.data)).map(
+      ([name, version]) => ({ name, version: version as string })
+    )
+    const defaultTags = ["python"]
+    await processPackagesAndTags({
+      jobId: job.id,
+      dependencies,
+      existingTags,
+      defaultTags,
+    })
+  } else if (data.filename === "Podfile.lock") {
+    const dependencies = Object.entries(parsePodfileLock(data.data)).map(
+      ([name, version]) => ({
+        name,
+        version,
+      })
+    )
+    const defaultTags = ["ios", "swift", "objective-c"]
+
+    await processPackagesAndTags({
+      jobId: job.id,
+      dependencies,
+      existingTags,
+      defaultTags,
+    })
+  }
 
   redirect(`/home/jobs/${job.id}/complete`)
 }

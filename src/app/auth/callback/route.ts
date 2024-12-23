@@ -1,21 +1,39 @@
 import { NextResponse } from "next/server"
 // The client you created from the Server-Side Auth instructions
+import { registerGithubUser } from "@/app/actions/user"
 import { createClient } from "@/utils/supabase/server"
 
 export async function GET(request: Request) {
+  console.log("auth/callback")
   const { searchParams, origin } = new URL(request.url)
+
+  // Log all search parameters
+  searchParams.forEach((value, key) => {
+    console.log(`Search Param - ${key}: ${value}`)
+  })
+
   const code = searchParams.get("code")
-  // if "next" is in param, use it as the redirect URL
-  const next = searchParams.get("next") ?? "/"
+  if (!code) {
+    console.error("Authorization code is missing")
+    return NextResponse.redirect(
+      `${origin}/auth/auth-code-error?error=missing_code`
+    )
+  }
+
+  const next = searchParams.get("next") ?? "/home"
 
   if (code) {
     const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) {
-      const forwardedHost = request.headers.get("x-forwarded-host") // original origin before load balancer
+    const results = await supabase.auth.exchangeCodeForSession(code)
+
+    // console.log("results", JSON.stringify(results, null, 2))
+
+    if (!results.error) {
+      const forwardedHost = request.headers.get("x-forwarded-host")
       const isLocalEnv = process.env.NODE_ENV === "development"
+      const user = results.data.user
+      await registerGithubUser()
       if (isLocalEnv) {
-        // we can be sure that there is no load balancer in between, so no need to watch for X-Forwarded-Host
         return NextResponse.redirect(`${origin}${next}`)
       } else if (forwardedHost) {
         return NextResponse.redirect(`https://${forwardedHost}${next}`)
@@ -25,6 +43,5 @@ export async function GET(request: Request) {
     }
   }
 
-  // return the user to an error page with instructions
   return NextResponse.redirect(`${origin}/auth/auth-code-error`)
 }

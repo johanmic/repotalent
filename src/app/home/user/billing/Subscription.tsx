@@ -40,13 +40,14 @@ export const Subscription = ({
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        {subscription ? (
+        {subscription && subscription?.items?.data?.length > 0 ? (
           <>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Plan</span>
                 <span className="font-medium">
-                  {subscription.items.data[0].price.nickname || "Basic Plan"}
+                  {subscription?.items?.data?.[0].price.nickname ||
+                    "Basic Plan"}
                 </span>
               </div>
               <Separator />

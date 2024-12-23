@@ -7,6 +7,8 @@ import { getUser } from "@actions/user"
 import dayjs from "dayjs"
 import UserForm from "./UserForm"
 import { Text } from "@/components/text"
+
+import GithubSettings from "./GithubSettings"
 const ProfilePage = async () => {
   const user = await getUser()
   const { purchases, creditUsage } = await getUserUsageStats()
@@ -74,6 +76,7 @@ const ProfilePage = async () => {
           </div>
         )}
       </div>
+      <GithubSettings />
     </div>
   )
 }

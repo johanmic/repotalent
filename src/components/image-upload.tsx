@@ -60,7 +60,7 @@ export const ImageUpload = ({ image, onUpload }: ImageUploadProps) => {
               <img
                 src={tmpImage}
                 alt="Uploaded image"
-                className="w-64 h-64 object-cover rounded-full inset-0"
+                className="w-32 h-32 object-cover rounded-full inset-0"
               />
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="bg-white rounded-full p-3">

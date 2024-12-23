@@ -2,7 +2,7 @@
 import AppIconsList from "@/components/app-icons-list"
 import Confirm from "@/components/confirm"
 import Questions from "@/components/questions"
-import ResultsSlider from "@/components/resultsSlider"
+import ResultsSlider from "@/components/results-slider"
 import Stepper from "@/components/stepper"
 import { JobPost, updateJobPost } from "@actions/jobpost"
 import type { jobPostQuestion, jobPostRatings } from "@prisma/client"

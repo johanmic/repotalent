@@ -12,9 +12,11 @@ import Logo from "@/components/logo"
 import Icon from "@/components/icon"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { Badge } from "@/components/ui/badge"
 import { getUser } from "@actions/user"
 // import { SidebarUser } from "@/components/sidebar-user"
 import { NavUser } from "@/components/ui/nav-user"
+import { cn } from "@/lib/utils"
 const items = [
   {
     label: "Home",
@@ -32,9 +34,9 @@ const items = [
     href: "/home/org",
   },
   {
-    label: "Profile",
+    label: "Candidates",
     icon: <Icon name="user" />,
-    href: "/home/profile",
+    comingSoon: true,
   },
 ]
 const SidebarComponent = async () => {
@@ -49,11 +51,15 @@ const SidebarComponent = async () => {
           <SidebarGroup>
             <SidebarMenu>
               {items.map((item) => (
-                <SidebarMenuItem key={item.label}>
+                <SidebarMenuItem
+                  key={item.label}
+                  className={cn(item.comingSoon && "opacity-50")}
+                >
                   <SidebarMenuButton asChild>
-                    <a href={item.href}>
+                    <a href={item.comingSoon ? "#" : item.href}>
                       {item.icon}
                       <span>{item.label}</span>
+                      {item.comingSoon && <Badge>Coming Soon</Badge>}
                     </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

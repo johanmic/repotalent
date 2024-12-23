@@ -15,7 +15,7 @@ import { renderHTML } from "@components/tiptap-renderer"
 import Html from "react-pdf-html"
 import { getCurrencySymbol, formatCurrency } from "@/utils/formatCurrency"
 import { getSeniorityLabel } from "@/utils/seniorityMapper"
-import { Organization } from "@/app/home/org/actions"
+import { Organization } from "@actions/org"
 import { getImageUrl } from "@utils/image"
 // const geistSans = localFont({
 //   src: "./fonts/GeistVF.woff",

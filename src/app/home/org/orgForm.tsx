@@ -1,6 +1,10 @@
 "use client"
 
-import { createOrganization, updateOrganization, Organization } from "./actions"
+import {
+  createOrganization,
+  updateOrganization,
+  Organization,
+} from "@actions/org"
 import AppIcon from "@/components/appIcon"
 import CitySelector from "@/components/city-selector"
 import Icon from "@/components/icon"
@@ -66,7 +70,6 @@ const CreateOrgForm = ({
 
   const onSubmit = useCallback(
     async (data: z.infer<typeof schema>) => {
-      console.log(data)
       const organizationData = {
         ...data,
         website: data.website || "",
@@ -82,7 +85,9 @@ const CreateOrgForm = ({
     [organization]
   )
   const imageUrl = organization?.image
-    ? getImageUrl(organization?.image || "")
+    ? organization?.image.includes("https://")
+      ? organization?.image
+      : getImageUrl(organization?.image || "")
     : null
   return (
     <Form {...form}>

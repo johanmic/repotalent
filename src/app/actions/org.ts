@@ -1,14 +1,14 @@
 "use server"
 
-import { getUser } from "@/utils/supabase/server"
-import prisma from "@/store/prisma"
-import { organization, city, country } from "@prisma/client"
-import { redirect } from "next/navigation"
 import { schema } from "@/components/organization-form"
-import { z } from "zod"
-import { omit } from "ramda"
-type OrganizationForm = z.infer<typeof schema>
+import prisma from "@/store/prisma"
+import { getUser } from "@/utils/supabase/server"
+import { city, country, organization } from "@prisma/client"
 import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
+import { omit } from "ramda"
+import { z } from "zod"
+type OrganizationForm = z.infer<typeof schema>
 
 export interface Organization extends organization {
   city: city & {
@@ -41,11 +41,12 @@ export const createOrganization = async (data: OrganizationForm) => {
   const organization = await prisma.organization.create({
     data: {
       ...omit(["city", "id"], data),
-      city: { connect: { id: data.city.id } },
+      city: data.city ? { connect: { id: data.city.id } } : undefined,
       users: { connect: { id: user.id } },
     },
   })
   revalidatePath("/home", "layout")
+  revalidatePath("/home/org", "layout")
   return organization as Organization
 }
 
@@ -63,7 +64,7 @@ export const updateOrganization = async (data: OrganizationForm) => {
     where: { id: data.id },
     data: {
       ...omit(["city", "id"], data),
-      city: { connect: { id: data.city.id } },
+      city: data.city ? { connect: { id: data.city.id } } : undefined,
       users: { connect: { id: user.id } },
     },
     include: {

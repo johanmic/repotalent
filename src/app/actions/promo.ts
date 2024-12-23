@@ -3,6 +3,7 @@
 import prisma from "@/store/prisma"
 import { getUser } from "@/utils/supabase/server"
 import { promoCode } from "@prisma/client"
+import { revalidatePath } from "next/cache"
 export const redeemPromoCode = async ({ code }: { code: string }) => {
   const { user } = await getUser()
   if (!user) {
@@ -48,6 +49,7 @@ export const redeemPromoCode = async ({ code }: { code: string }) => {
       },
     },
   })
+  revalidatePath("/home", "layout")
   return purchase
 }
 

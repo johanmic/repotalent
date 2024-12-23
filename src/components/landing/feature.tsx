@@ -20,7 +20,7 @@ export const Feature = ({
   const ref = React.useRef(null)
   const isInView = useInView(ref, {
     once: true,
-    margin: "-200px",
+    margin: "0px",
   })
 
   return (

@@ -23,7 +23,7 @@ const ProfilePage = async () => {
           <CardTitle>Purchases</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <ScrollArea className="h-[300px] pr-4">
+          <ScrollArea className=" pr-4">
             {purchases.map((purchase) => (
               <div
                 key={purchase.id}
@@ -69,7 +69,7 @@ const ProfilePage = async () => {
           <CardTitle>Usage</CardTitle>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[200px]">
+          <ScrollArea className="min-h-16 pr-4">
             {creditUsage?.length > 0 ? (
               <div className="space-y-3">
                 {creditUsage.map((usage) => (

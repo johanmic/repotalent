@@ -11,6 +11,10 @@ const prisma =
       process.env.NODE_ENV === "development"
         ? ["query", "info", "warn", "error"]
         : [],
+    transactionOptions: {
+      maxWait: 60000,
+      timeout: 60000,
+    },
   })
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma

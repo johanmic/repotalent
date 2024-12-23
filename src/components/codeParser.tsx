@@ -124,18 +124,18 @@ const CodeParser = ({ data, filename = "package.json" }: CodeParserProps) => {
   }
 
   useEffect(() => {
-    if (intialAnimationDone && currentPaths.length > 0) {
+    if (fileData && intialAnimationDone && currentPaths.length > 0) {
       const highlightItems = () => {
         currentPaths.forEach((path, index) => {
           setTimeout(() => {
             setHighlightedItems((prev) => new Set([...prev, path]))
-          }, index * (fileData.length > 20 ? 100 : 200))
+          }, index * (fileData?.length > 20 ? 100 : 200))
         })
       }
 
       highlightItems()
     }
-  }, [intialAnimationDone, currentPaths, fileData.length])
+  }, [intialAnimationDone, currentPaths, fileData?.length])
   if (!data) return null
   const calculateTotalItems = (obj: Record<string, string>): number => {
     return Object.values(obj).reduce((count, value) => {

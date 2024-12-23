@@ -4,6 +4,8 @@ import { redirect } from "next/navigation"
 import { user, organization } from "@prisma/client"
 import { getUser as getUserFromSupabase } from "@/utils/supabase/server"
 import { createClient } from "@/utils/supabase/server"
+import { getGithubUser } from "@/app/actions/github"
+import { raw } from "@/utils/deburr"
 export interface User extends user {
   organization: organization
   creditsInfo?: {
@@ -91,5 +93,29 @@ export const setStripeCustomerId = async (stripeCustomerId: string) => {
   await prisma.user.update({
     where: { id: user.id },
     data: { stripeCustomerId },
+  })
+}
+
+export const registerGithubUser = async () => {
+  const { user } = await getUserFromSupabase()
+  if (!user) {
+    throw new Error("User not found")
+  }
+  // const userId = user.id
+  if (!user.email) {
+    throw new Error("User not found")
+  }
+
+  const query = {
+    email: user.email,
+    name: user.user_metadata.user_name,
+    avatar: user.user_metadata.avatar_url,
+    githubId: user.user_metadata.user_name,
+  }
+
+  await prisma.user.upsert({
+    where: { email: user.email },
+    update: query,
+    create: { ...query, id: user.id },
   })
 }

@@ -1,7 +1,7 @@
 "use client"
 
-import type { Organization } from "@/app/home/org/actions"
-import { createOrganization, updateOrganization } from "@/app/home/org/actions"
+import type { Organization } from "@actions/org"
+import { createOrganization, updateOrganization } from "@actions/org"
 import AppIcon from "@/components/appIcon"
 import CitySelector from "@/components/city-selector"
 import Icon from "@/components/icon"
@@ -31,7 +31,7 @@ export const schema = z.object({
   name: z.string().min(5),
   website: z.string().url(),
   contact: z.string().nullable(),
-  city: citySchema,
+  city: citySchema.optional(),
   image: z.string().nullable(),
   facebook: z.string().nullable(),
   twitter: z.string().nullable(),

@@ -5,24 +5,33 @@ import UploadForm from "@/components/uploadForm"
 import { createJobPost } from "@actions/jobpost"
 import { useEffect, useState } from "react"
 
-const NewPost = () => {
+interface NewPostProps {
+  initialFileData?: {
+    filename: string
+    data: string
+  }
+}
+
+const NewPost = ({ initialFileData }: NewPostProps) => {
+  console.log("initialFileData", initialFileData)
+
   const [isProcessing, setIsProcessing] = useState(false)
   const [showCodeParser, setShowCodeParser] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [fileData, setFileData] = useState<{
     filename: string
     data: string
-  } | null>(null)
+  } | null>(initialFileData || null)
 
   useEffect(() => {
     async function handleFileData() {
-      if (!fileData?.filename || !fileData?.data || isProcessing) return
+      if (!fileData?.filename || !fileData?.data?.length || isProcessing) return
 
       try {
         setIsLoading(true)
         setIsProcessing(true)
         setShowCodeParser(true)
-        await createJobPost(fileData)
+        // await createJobPost(fileData)
       } catch (error) {
         console.error("Error processing file:", error)
       }

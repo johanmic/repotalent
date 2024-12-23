@@ -250,7 +250,7 @@ export const AppIcons = {
   safari: SiSafari,
 }
 
-const Icon = ({
+export const Icon = ({
   name,
   color,
   className,
@@ -261,8 +261,10 @@ const Icon = ({
   className?: string
   size?: number
 }) => {
-  const Icon = AppIcons[name]
-  return <Icon className={cn(color, className)} size={size} />
+  const IconComponent = AppIcons[name]
+  if (!IconComponent) return null
+
+  return <IconComponent className={cn(color, className)} size={size} />
 }
 
 export default Icon

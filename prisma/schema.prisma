@@ -11,29 +11,31 @@ generator client {
 }
 
 model user {
-    id                String              @id @default(cuid())
-    email             String              @unique
-    name              String?
-    avatar            String?
-    createdAt         DateTime            @default(now())
-    updatedAt         DateTime            @updatedAt
-    organization      organization?       @relation(fields: [organizationId], references: [id])
-    organizationId    String?
-    city              city?               @relation(fields: [cityId], references: [id])
-    cityId            String?
-    credits           Int                 @default(0)
-    stripeCustomerId  String?
-    jobPostTokenUsage jobPostTokenUsage[]
-    purchase          purchase[]
-    creditUsage       creditUsage[]
-    promoCodeUsage    promoCodeUsage[]
-    bio               String?
-    linkedin          String?
-    twitter           String?
-    facebook          String?
-    github            String?
-    instagram         String?
-    subscription      subscription[]
+    id                   String              @id @default(cuid())
+    email                String              @unique
+    name                 String?
+    avatar               String?
+    createdAt            DateTime            @default(now())
+    updatedAt            DateTime            @updatedAt
+    organization         organization?       @relation(fields: [organizationId], references: [id])
+    organizationId       String?
+    city                 city?               @relation(fields: [cityId], references: [id])
+    cityId               String?
+    credits              Int                 @default(0)
+    stripeCustomerId     String?
+    jobPostTokenUsage    jobPostTokenUsage[]
+    purchase             purchase[]
+    creditUsage          creditUsage[]
+    promoCodeUsage       promoCodeUsage[]
+    bio                  String?
+    linkedin             String?
+    twitter              String?
+    facebook             String?
+    github               String?
+    instagram            String?
+    githubId             String?
+    subscription         subscription[]
+    githubInstallationId Int?
 }
 
 model organization {
