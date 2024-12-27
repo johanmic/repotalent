@@ -96,6 +96,8 @@ export const prepareQuestions = async ({
 
   questions:
   questions are for help tuning the job description. not to the applicant. ENSURE THE QUESTIONS ARE DISTINCT FROM THE PACKAGES.
+  ask questions to improve the quality of the job description.
+
   title: make it a good title and a little bit more descriptive than "Senior XX developer"
   ${languagePrompt}
 

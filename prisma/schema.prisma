@@ -102,6 +102,8 @@ model jobPost {
     showTags          Boolean                   @default(true)
     showPackages      Boolean                   @default(true)
     showQuestions     Boolean                   @default(true)
+    githubRepo        String?
+    githubPath        String?
 }
 
 model jobPostTokenUsage {

@@ -23,7 +23,6 @@ const PrepQuestionStepper = ({ jobPost }: { jobPost: JobPost }) => {
     jobPost?.seniority || 0.5
   )
 
-  console.log("experienceLevel", experienceLevel)
   const onDone = useCallback(() => {
     updateJobPost({
       jobId: jobPost.id,

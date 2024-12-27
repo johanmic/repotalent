@@ -64,11 +64,11 @@ const CitySelector = ({
             <ChevronsUpDown className="opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-full p-0 bg-blue-200">
-          <Command>
+        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+          <Command className="w-full">
             <CommandInput
-              placeholder="Search framework..."
-              className="h-9 w-full"
+              placeholder="Search city..."
+              className="h-9"
               value={search}
               onValueChange={(value) => setSearch(value)}
             />

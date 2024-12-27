@@ -81,17 +81,17 @@ export const MinimalTiptapEditor = React.forwardRef<
     },
     ref
   ) => {
-    const debouncedValue = useDebounce(streamedValue, 1000)
+    const debouncedValue = useDebounce(streamedValue, 10)
     const editor = useMinimalTiptapEditor({
       value,
       onUpdate: onChange,
       ...props,
     })
     useEffect(() => {
-      if (streamedValue && editor) {
-        editor.commands.setContent(streamedValue)
+      if (debouncedValue && editor) {
+        editor.commands.setContent(debouncedValue)
       }
-    }, [streamedValue, editor])
+    }, [debouncedValue, editor])
     useEffect(() => {
       if (debouncedValue && editor) {
         const content = editor.getJSON()

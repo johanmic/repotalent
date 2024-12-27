@@ -15,12 +15,12 @@ import {
 import { JobPost } from "@/app/actions/jobpost"
 
 export const columns: ColumnDef<JobPost>[] = [
-  {
-    accessorKey: "id",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="ID" />
-    ),
-  },
+  // {
+  //   accessorKey: "slug",
+  //   header: ({ column }) => (
+  //     <DataTableColumnHeader column={column} title="slug" />
+  //   ),
+  // },
   {
     accessorKey: "title",
     header: ({ column }) => (

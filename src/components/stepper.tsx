@@ -1,12 +1,11 @@
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
+import Icon from "./icon"
+import { Button } from "./ui/button"
 
 interface Step {
   title: string
   component: React.ReactNode
 }
-import { Button } from "./ui/button"
-import { motion } from "framer-motion"
-import Icon from "./icon"
 const StepperHeader = ({
   steps,
   activeStep,
@@ -24,7 +23,7 @@ const StepperHeader = ({
           key={step.title}
         >
           <div
-            className={`w-8 h-8 rounded-full text-xl bg-muted flex items-center justify-center text-primary-foreground font-bold  `}
+            className={`w-8 h-8 rounded-full text-xl bg-muted flex items-center justify-center font-bold  `}
           >
             {index + 1}
           </div>

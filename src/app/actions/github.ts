@@ -343,3 +343,20 @@ function decodeBase64ToString(base64String: string): string {
   const decodedString = Buffer.from(base64String, "base64").toString("utf-8")
   return decodedString
 }
+
+export const removeGithubApp = async () => {
+  const user = await getDBUser()
+  if (!user.githubInstallationId) {
+    throw new Error("No GitHub installation found")
+  }
+  const octokit = new Octokit({ auth: user.githubInstallationId })
+  await octokit.rest.apps.deleteInstallation({
+    installation_id: user.githubInstallationId,
+  })
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      githubInstallationId: null,
+    },
+  })
+}

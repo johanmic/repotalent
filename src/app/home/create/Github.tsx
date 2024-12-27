@@ -16,6 +16,12 @@ import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
 dayjs.extend(relativeTime)
 import Manual from "./Manual"
+
+interface GithubItem {
+  name: string
+  type: "dir" | "file"
+}
+
 const allowedFiles = [
   "package.json",
   "requirements.txt",
@@ -24,7 +30,7 @@ const allowedFiles = [
 ]
 
 const GithubPicker = () => {
-  const [repos, setRepos] = useState<any[]>([])
+  const [repos, setRepos] = useState<GithubRepo[]>([])
   const [folders, setFolders] = useState<string[]>([])
   const [selectedRepo, setSelectedRepo] = useState<GithubRepo | null>(null)
   const [currentPath, setCurrentPath] = useState<string>("")
@@ -38,7 +44,13 @@ const GithubPicker = () => {
   useEffect(() => {
     const fetchRepos = async () => {
       const repos = await listUserRepos()
-      setRepos(repos)
+      setRepos(
+        repos.map((repo) => ({
+          ...repo,
+          full_name: repo.fullName,
+          updated_at: repo.updated_at ?? new Date().toISOString(),
+        }))
+      )
     }
     fetchRepos()
   }, [])
@@ -50,14 +62,14 @@ const GithubPicker = () => {
     const fetchFolders = async () => {
       setIsLoading(true)
       try {
-        const items = await listRepoFolders({
+        const items = (await listRepoFolders({
           owner: selectedRepo.owner,
           repo: selectedRepo.name,
           path: currentPath,
-        })
+        })) as GithubItem[]
         console.log("Folder items:", items)
         setFolders(
-          items.map((item) =>
+          items.map((item: GithubItem) =>
             item.type === "dir" ? `${item.name}/` : item.name
           )
         )
@@ -102,7 +114,16 @@ const GithubPicker = () => {
     setCurrentPath(newPath)
   }
   if (selectedFile && fileData) {
-    return <Manual initialFileData={fileData} />
+    return (
+      <Manual
+        initialFileData={fileData}
+        showDropzone={false}
+        metadata={{
+          repo: selectedRepo?.name,
+          path: currentPath,
+        }}
+      />
+    )
   }
   return (
     <div className="space-y-4">
@@ -113,7 +134,7 @@ const GithubPicker = () => {
 
       {/* Repository Selection */}
       {!selectedRepo && (
-        <div className="grid grid-cols-1 gap-2">
+        <div className="grid grid-cols-1 gap-2 bg-sidebar p-4 rounded-lg">
           {repos.map((repo) => {
             const updated = dayjs(repo.updated_at)
             const isOld = updated.isBefore(dayjs().subtract(1, "month"))

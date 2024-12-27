@@ -252,11 +252,11 @@ const CodeParser = ({ data, filename = "package.json" }: CodeParserProps) => {
           }}
           transition={{
             delay: index * getAnimationDelay(obj),
-            duration: 0.3,
+            duration: 0.1,
           }}
           onAnimationComplete={handleAnimationComplete}
           style={{ marginLeft: depth * 20 }}
-          className={`text-xs rounded-sm text-white transition-colors duration-300 font-mono`}
+          className={`text-xs rounded-sm text-white transition-colors duration-100 font-mono`}
         >
           {typeof value === "object" ? (
             <div className="flex flex-col border-primary/20 rounded-md">

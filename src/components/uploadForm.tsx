@@ -48,11 +48,19 @@ const detectFileType = (content: string): string => {
   return "package.json" // default fallback
 }
 
+interface UploadFormProps {
+  onUpdate: (questions: { filename: string; data: string }) => void
+  onSubmit: () => void
+  fileData: { filename: string; data: string } | null
+  showDropzone?: boolean
+}
+
 const UploadForm = ({
   onUpdate,
-}: {
-  onUpdate: (questions: { filename: string; data: string }) => void
-}) => {
+  fileData,
+  showDropzone,
+  onSubmit,
+}: UploadFormProps) => {
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -60,9 +68,13 @@ const UploadForm = ({
       data: "",
     },
   })
-  const handleSubmit = form.handleSubmit((data) => {
-    onUpdate({ filename: data.filename, data: data.data })
-  })
+
+  useEffect(() => {
+    if (fileData) {
+      form.setValue("filename", fileData.filename)
+      form.setValue("data", fileData.data)
+    }
+  }, [fileData])
 
   useEffect(() => {
     const data = form.watch("data")
@@ -73,6 +85,14 @@ const UploadForm = ({
       }
     }
   }, [form.watch("data")])
+
+  const handleSubmit = form.handleSubmit((data) => {
+    if (data.data.trim() === "") {
+      toast.error("Please enter some content before submitting")
+      return
+    }
+    onUpdate({ filename: data.filename, data: data.data })
+  })
 
   return (
     <div className="gap-4 flex flex-col h-full">
@@ -117,47 +137,51 @@ const UploadForm = ({
         </Select>
         <Textarea
           placeholder="Enter your package.json / requirements.txt / Makefile / Podfile content here..."
-          className="lg:min-h-[500px]   text-xs text-white bg-zinc-800 w-full font-mono"
+          className="lg:min-h-[500px] text-xs text-white bg-zinc-800 w-full font-mono"
           {...form.register("data")}
         ></Textarea>
-        <Button type="submit">Create Post</Button>
+        <Button type="submit" onClick={onSubmit}>
+          Create Post
+        </Button>
       </form>
-      <Dropzone
-        noClick
-        containerClassName="border-none"
-        dropZoneClassName="hover:bg-transparent p-4 h-full flex flex-col  "
-        accept={{ "text/plain": [".txt", ".json"] }}
-        onDrop={async (files) => {
-          if (files.length === 0) return
-          const file = files[0]
-          if (!acceptedFileNames.includes(file.name)) {
-            toast.error(`File type not supported: ${file.name}`)
-            return
-          }
+      {showDropzone && (
+        <Dropzone
+          noClick
+          containerClassName="border-none"
+          dropZoneClassName="hover:bg-transparent p-4 h-full flex flex-col  "
+          accept={{ "text/plain": [".txt", ".json"] }}
+          onDrop={async (files) => {
+            if (files.length === 0) return
+            const file = files[0]
+            if (!acceptedFileNames.includes(file.name)) {
+              toast.error(`File type not supported: ${file.name}`)
+              return
+            }
 
-          //   onUpdate({ filename: file.name, data: await file.text() })
-          form.setValue("data", await file.text())
-          form.setValue("filename", file.name)
-        }}
-      >
-        {(dropzone: DropzoneState) => (
-          <div
-            // className="space-y-2 flex flex-col w-full hover:bg-transparent"
-            className="flex flex-col h-full w-full"
-          >
-            {dropzone.isDragAccept ? (
-              <div className="text-sm font-medium">Drop your files here!</div>
-            ) : (
-              <div className="flex items-center flex-col gap-1.5 h-32 justify-center">
-                <div className="flex items-center flex-row gap-0.5 text-sm font-medium">
-                  <Icon name="file" />
-                  <p>Drag a package file here</p>
+            //   onUpdate({ filename: file.name, data: await file.text() })
+            form.setValue("data", await file.text())
+            form.setValue("filename", file.name)
+          }}
+        >
+          {(dropzone: DropzoneState) => (
+            <div
+              // className="space-y-2 flex flex-col w-full hover:bg-transparent"
+              className="flex flex-col h-full w-full"
+            >
+              {dropzone.isDragAccept ? (
+                <div className="text-sm font-medium">Drop your files here!</div>
+              ) : (
+                <div className="flex items-center flex-col gap-1.5 h-32 justify-center">
+                  <div className="flex items-center flex-row gap-0.5 text-sm font-medium">
+                    <Icon name="file" />
+                    <p>Drag a package file here</p>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
-      </Dropzone>
+              )}
+            </div>
+          )}
+        </Dropzone>
+      )}
     </div>
   )
 }

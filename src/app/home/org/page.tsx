@@ -7,15 +7,10 @@ import { listUserRepos } from "@actions/github"
 import { getOrganization } from "@actions/org"
 import OrganizationForm from "./orgForm"
 const OrgPage = async () => {
-  const user = await getUser()
-  console.log("user222", user)
+  // const user = await getUser()
   const organization = await getOrganization()
-  const hasGithub = user?.githubInstallationId
-  console.log("hasGithub", hasGithub)
-  let orgs: GithubOrg[] = []
-  console.log("orgs", orgs)
-  const repos = await listUserRepos()
-  console.log("repos", repos)
+  // const hasGithub = user?.githubInstallationId
+  // const repos = await listUserRepos()
   return (
     <div className="flex">
       <div className="max-w-xl flex flex-col mx-auto w-full">

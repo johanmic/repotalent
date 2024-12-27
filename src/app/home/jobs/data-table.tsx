@@ -82,7 +82,7 @@ export function DataTable<TData extends BaseData, TValue>({
                   }
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="text-sm">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()

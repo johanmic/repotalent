@@ -10,6 +10,7 @@ import CitySelector from "@/components/city-selector"
 import Icon from "@/components/icon"
 import { ImageUpload } from "@/components/image-upload"
 import { Button } from "@/components/ui/button"
+import { Text } from "@/components/text"
 import { toast } from "sonner"
 import {
   Form,
@@ -149,6 +150,14 @@ const CreateOrgForm = ({
               </FormItem>
             )}
           />
+          {!form.getValues("description") && (
+            <div className="col-span-3 border p-4 rounded-lg border-orange-400">
+              <Text className="text-orange-400" variant="sm">
+                Adding a good description will help us generate job descriptions
+                for this organization.
+              </Text>
+            </div>
+          )}
 
           <div className="col-span-3"></div>
         </div>
