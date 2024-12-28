@@ -16,12 +16,12 @@ export const JobPreviewBanner = ({
 }) => {
   const [copied, copy] = useCopyToClipboard()
   return (
-    <div className="flex justify-between items-center  bg-muted p-4">
-      {job.published && (
+    <div className="flex justify-between items-center bg-muted p-4">
+      {job.published ? (
         <div className="flex items-center gap-2">
           <Link href={`/jobs/${job.slug}`}>
             <Text variant="small" className="italic">
-              www.repotalent.com/jobs/{job.slug}
+              repotalent.com/jobs/{job.slug.slice(0, 30)}...
             </Text>
           </Link>
           <Button
@@ -35,13 +35,22 @@ export const JobPreviewBanner = ({
             <Icon name={copied ? "circleCheck" : "copy"} />
           </Button>
         </div>
+      ) : (
+        <div />
       )}
-      <div className="flex justify-end gap-2 items-center">
+      <div className="flex justify-end gap-2 items-center self-end">
         <Link href={`/api/pdf/render?job=${job.id}`}>
           {" "}
           <Button size="sm" variant="outline">
             <Icon name="pdf" />
             Export to PDF
+          </Button>
+        </Link>
+        <Link href={`/api/markdown?job=${job.id}`}>
+          {" "}
+          <Button size="sm" variant="outline">
+            <Icon name="file" />
+            Export to Markdown
           </Button>
         </Link>
         <div>

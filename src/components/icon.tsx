@@ -18,7 +18,7 @@ import {
   Eye,
   EyeOff,
   FileCode,
-  FileText,
+  FileSpreadsheet,
   Folder,
   FolderUp,
   Globe,
@@ -78,7 +78,7 @@ export const icons = {
   moveRight: MoveRight,
   organization: Building2,
   package: Package,
-  pdf: FileText,
+  pdf: FileSpreadsheet,
   pen: PenBox,
   plus: Plus,
   post: Captions,
@@ -92,6 +92,7 @@ export const icons = {
   thumbsUp: ThumbsUp,
   timer: Timer,
   user: User,
+  markdown: FileCode,
   x: X,
 }
 

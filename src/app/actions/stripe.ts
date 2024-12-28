@@ -25,8 +25,7 @@ export const postStripeSession = async ({ productId }: NewSessionOptions) => {
         data: { stripeCustomerId },
       })
     }
-    const returnUrl =
-      "http://localhost:3000/home/checkout-return?session_id={CHECKOUT_SESSION_ID}"
+    const returnUrl = `${process.env.NEXT_PUBLIC_URL}/home/checkout-return?session_id={CHECKOUT_SESSION_ID}`
     const stripeProduct = await stripe.products.retrieve(productId)
 
     if (!stripeProduct.default_price)

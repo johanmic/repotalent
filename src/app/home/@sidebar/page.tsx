@@ -18,11 +18,11 @@ import { getUser } from "@actions/user"
 import { NavUser } from "@/components/ui/nav-user"
 import { cn } from "@/lib/utils"
 const items = [
-  {
-    label: "Home",
-    icon: <Icon name="home" />,
-    href: "/home",
-  },
+  // {
+  //   label: "Home",
+  //   icon: <Icon name="home" />,
+  //   href: "/home",
+  // },
   {
     label: "Jobs",
     icon: <Icon name="post" />,
@@ -35,6 +35,11 @@ const items = [
   },
   {
     label: "Candidates",
+    icon: <Icon name="user" />,
+    comingSoon: true,
+  },
+  {
+    label: "Leads",
     icon: <Icon name="user" />,
     comingSoon: true,
   },

@@ -18,28 +18,7 @@ import { is } from "ramda"
 //   rating: number
 // }
 
-const parseValue = (
-  value: number
-): {
-  text: string
-  emoji: string
-  color: string
-} => {
-  switch (value) {
-    case 0:
-      return { text: "N/A", emoji: "🫥", color: "text-gray-500" }
-    case 25:
-      return { text: "Beginner", emoji: "🤪", color: "text-green-500" }
-    case 50:
-      return { text: "Intermediate", emoji: "🙂", color: "text-yellow-500" }
-    case 75:
-      return { text: "Advanced", emoji: "😎", color: "text-rose-500" }
-    case 100:
-      return { text: "Expert", emoji: "🤓", color: "text-blue-500" }
-    default:
-      return { text: "N/A", emoji: "😶‍🌫️", color: "text-gray-500" }
-  }
-}
+import { parseValue } from "@/utils/seniorityMapper"
 
 const SliderStep = ({
   rating,
