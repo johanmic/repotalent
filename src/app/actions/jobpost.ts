@@ -196,6 +196,7 @@ export const createJobPost = async (data: {
     data,
     extra,
   })
+  console.log("promptReuslts")
   const slug = await checkedSlug({
     name: `${promptReuslts.suggestedTitle || "job"}-${
       dbUser.organization?.name
@@ -211,7 +212,7 @@ export const createJobPost = async (data: {
         source: data.filename,
         published: null,
         organizationId,
-        githubPath: data.meta?.path || null,
+        githubPath: data.meta?.path || undefined,
         githubRepo: data.meta?.repo || null,
         questions: {
           create: promptReuslts.questions.map((question) => ({
@@ -235,6 +236,7 @@ export const createJobPost = async (data: {
         },
       },
     })
+    console.log("job", job)
     const purchase = await $tx.purchase.findMany({
       where: { userId: user.id },
       include: {
@@ -252,6 +254,7 @@ export const createJobPost = async (data: {
       )
       return availableCredits < p.creditsBought
     })
+    console.log("firstPurchaseWithCredits")
     const firstPurchaseWithCreditsAndJobBoard = purchase.find((p) => {
       const availableCredits = p.creditUsage.reduce(
         (acc, curr) => acc + curr.creditsUsed,
@@ -259,11 +262,10 @@ export const createJobPost = async (data: {
       )
       return availableCredits < p.creditsBought && p.jobBoard
     })
-    if (!firstPurchaseWithCreditsAndJobBoard) {
-      throw new Error("No credits available")
-    }
+    console.log("firstPurchaseWithCreditsAndJobBoard")
+
     const purchaseId =
-      firstPurchaseWithCreditsAndJobBoard.id ||
+      firstPurchaseWithCreditsAndJobBoard?.id ||
       firstPurchaseWithCredits?.id ||
       null
     await $tx.creditUsage.create({
@@ -274,6 +276,7 @@ export const createJobPost = async (data: {
         purchaseId,
       },
     })
+    console.log("creditUsage")
 
     return job
   })
