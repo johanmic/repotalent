@@ -123,8 +123,6 @@ const importCities = async () => {
   // await prisma.city.deleteMany({})
 
   for (const [index, chunk] of chunks.entries()) {
-    console.log(`Processing chunk ${index + 1}/${totalChunks}`)
-
     const validCities = chunk.filter((city) => {
       const rawName = raw(city.name)
       return rawName && city.country && countryMap.has(city.country)

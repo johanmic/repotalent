@@ -119,3 +119,14 @@ export const registerGithubUser = async () => {
     create: { ...query, id: user.id },
   })
 }
+
+export const setSkipGithubSetup = async (skip: boolean) => {
+  const user = await getUser()
+  if (!user) {
+    throw new Error("User not found")
+  }
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { skipGithub: skip },
+  })
+}

@@ -230,7 +230,7 @@ export const Pricing = ({ mode }: { mode: "landing" | "purchase" }) => {
   }
 
   return (
-    <div className="py-8">
+    <div className="py-8" id="pricing">
       <PricingHeader
         title="Pricing Plans"
         subtitle="Choose the plan that's right for you"

@@ -25,7 +25,7 @@ export const getCities = async (name: string): Promise<City[]> => {
   }
 
   const cleanName = diacritics(name).toLowerCase().trim()
-  console.log(cleanName)
+
   const [exact, cities] = await Promise.all([
     prisma.city.findMany({
       where: {
@@ -53,7 +53,7 @@ export const getCities = async (name: string): Promise<City[]> => {
       },
     }),
   ])
-  console.log(exact, cities)
+
   return uniqBy((city: City) => city.id, [...exact, ...cities])
 }
 

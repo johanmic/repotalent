@@ -36,6 +36,7 @@ model user {
     githubId             String?
     subscription         subscription[]
     githubInstallationId Int?
+    skipGithub           Boolean?
 }
 
 model organization {
@@ -296,16 +297,20 @@ model purchase {
     productId        String?
     subscription     subscription[]
     idType           String?
+    jobBoard         Boolean        @default(true)
+    creditUsage      creditUsage[]
 }
 
 model creditUsage {
-    id          String   @id @default(cuid())
+    id          String    @id @default(cuid())
     userId      String
-    user        user     @relation(fields: [userId], references: [id])
+    user        user      @relation(fields: [userId], references: [id])
     jobPostId   String
-    jobPost     jobPost  @relation(fields: [jobPostId], references: [id])
-    creditsUsed Int      @default(1)
-    createdAt   DateTime @default(now())
+    jobPost     jobPost   @relation(fields: [jobPostId], references: [id])
+    creditsUsed Int       @default(1)
+    createdAt   DateTime  @default(now())
+    purchaseId  String?
+    purchase    purchase? @relation(fields: [purchaseId], references: [id])
 }
 
 model promoCode {
@@ -318,6 +323,7 @@ model promoCode {
     oneTime        Boolean          @default(false)
     promoCodeUsage promoCodeUsage[]
     purchase       purchase[]
+    limit          Int?
 }
 
 model promoCodeUsage {

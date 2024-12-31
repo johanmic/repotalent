@@ -150,7 +150,6 @@ const EditJobPost = ({
   const [isLoading, setIsLoading] = useState(false)
   const onStreamingDone = useCallback(
     async (fullValue: string) => {
-      console.log("GENERATION", fullValue)
       const json = await generateJSONFromMarkdown(fullValue)
       toast.success("Generated")
 
@@ -206,7 +205,6 @@ const EditJobPost = ({
         toast.success("Job description saved")
         // router.push(`/home/jobs/${jobId}/preview`)
       } catch (error) {
-        console.log("Error saving job post:", error)
         toast.error("Failed to save job post")
         // Highlight fields with errors
         const errorFields = Object.keys(form.formState.errors)
@@ -245,7 +243,6 @@ const EditJobPost = ({
         <form
           className="space-y-6 w-full"
           onSubmit={form.handleSubmit(updateJob, (errors) => {
-            console.log("ERRORS", errors)
             toast.error("Please fix the validation errors", {
               description: Object.keys(errors)
                 .map((key) => errors[key as keyof typeof errors]?.message)

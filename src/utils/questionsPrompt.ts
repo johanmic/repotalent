@@ -71,11 +71,13 @@ export interface PrepQuestionsResponse {
 
 export const prepareQuestions = async ({
   data,
+  extra,
 }: {
   data: {
     filename: string
     data: string
   }
+  extra?: string
 }): Promise<PrepQuestionsResponse> => {
   try {
     const filename = data.filename
@@ -86,6 +88,8 @@ export const prepareQuestions = async ({
   we are basing it from the project ${filename} 
   here is the content :
   ${dataString}
+
+  ${extra ? `here is the extra content: ${extra}` : ""}
 
   make them no more than 4. make them yes or no questions.
 
@@ -100,14 +104,12 @@ export const prepareQuestions = async ({
 
   title: make it a good title and a little bit more descriptive than "Senior XX developer"
   ${languagePrompt}
+  
 
   always return the following json format:
   based on the project, what is the seniority level of the candidate? from 0 to 1, 0 being the lowest and 1 being the highest.
   it can never be 0, but it can be 1. Base the seniority on the mix of the packages, technologies and platforms used.
   suggest a title for the job description based on the project.
-
-  
-
 
   {
     suggestedTitle: "Senior Next.js Developer",
@@ -130,7 +132,7 @@ export const prepareQuestions = async ({
       ]
   }
 
-
+    
 `
     // const cleanedText = responseFixture
     // const results = await prisma.jobPost.create({
@@ -154,7 +156,7 @@ export const prepareQuestions = async ({
       .trim()
       .replace(/```json/g, "")
       .replace(/```/g, "")
-    console.log(cleanedText)
+
     const parsedResponse = JSON.parse(cleanedText)
 
     // Validate the response structure

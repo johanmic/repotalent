@@ -40,7 +40,6 @@ const CitySelector = ({
 
   const debouncedSearch = useDebounce(search, 500)
   useEffect(() => {
-    console.log(debouncedSearch)
     if (debouncedSearch?.length > 2) {
       getCities(debouncedSearch).then(setCities)
     }
@@ -80,7 +79,6 @@ const CitySelector = ({
                     key={city.id}
                     value={city.name}
                     onSelect={(currentValue) => {
-                      console.log(currentValue)
                       onSelect({ id: city.id, name: currentValue })
                       setValue(currentValue === value ? "" : currentValue)
                       setOpen(false)

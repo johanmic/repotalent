@@ -25,7 +25,6 @@ export function parsePodfileLock(content: string): PodVersions {
       }
     }
   }
-  console.log(pods)
 
   return summarizePodfileLock(pods)
 }

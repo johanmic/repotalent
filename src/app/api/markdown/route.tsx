@@ -42,7 +42,7 @@ export async function GET(request: Request) {
     ? `\nTags: *${jobPost.tags.map((t) => t.tag.tag).join(", ")}*\n`
     : ""
   const seniority = getSeniorityLabel((jobPost?.seniority as number) || 0).key
-  console.log(jobPost.ratings)
+
   const ratings = jobPost.ratings?.map((rating) =>
     renderRequirement({
       question: rating.question,

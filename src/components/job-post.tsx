@@ -1,25 +1,17 @@
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card"
+import AppIconsList from "@/components/app-icons-list"
+import Icon from "@/components/icon"
+import JobPostBadge from "@/components/job-post-badge"
+import TiptapRenderer from "@/components/tiptap-renderer"
 import { Title } from "@/components/title"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import AppIconsList from "@/components/app-icons-list"
-import TiptapRenderer from "@/components/tiptap-renderer"
-import { Badge } from "@/components/ui/badge"
-import Icon from "@/components/icon"
-import { pick, map } from "ramda"
-import JobPostBadge from "@/components/job-post-badge"
-import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button"
-import Link from "next/link"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { formatCurrency, getCurrencySymbol } from "@/utils/formatCurrency"
+import { getImageUrl } from "@/utils/image"
 import { getSeniorityLabel } from "@/utils/seniorityMapper"
 import type { JobPost as JobPostType } from "@actions/jobpost"
-import { getImageUrl } from "@/utils/image"
-import { getCurrencySymbol, formatCurrency } from "@/utils/formatCurrency"
+import Link from "next/link"
 export const JobPost = ({ job }: { job: JobPostType }) => {
   const imageUrl = job?.organization?.image
     ? getImageUrl(job?.organization?.image || "")

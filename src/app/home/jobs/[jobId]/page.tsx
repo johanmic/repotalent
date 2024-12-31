@@ -19,7 +19,7 @@ const JobPost = async ({ params }: { params: Params }) => {
   if (!user) {
     return redirect("/login")
   }
-  console.log(job.ratings)
+
   return (
     <div className="max-w-4xl mt-8 mx-auto p-4 md:p-0 grid grid-cols-5 gap-4">
       <div className="col-span-3">

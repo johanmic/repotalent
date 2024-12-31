@@ -6,6 +6,21 @@ import { TopMenu } from "@/components/landing/topMenu"
 import { Typewriter } from "@/components/ui/typewriter"
 import { DotBackground } from "@/components/ui/dot-background"
 import { BigFeature } from "@/components/landing/bigFeature"
+import { acceptedFileNames } from "@/utils/filenames"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Job Description Generator",
+  description: "Generate job descriptions in one click",
+  openGraph: {
+    title: "Job Description Generator",
+    description: "Generate job descriptions in one click",
+    url: "https://repotalent.com",
+    siteName: "Job Description Generator",
+    images: [{ url: "/OG.png" }],
+  },
+}
+
 export default function Home() {
   return (
     <div className="font-[family-name:var(--font-geist-sans)]">
@@ -14,34 +29,28 @@ export default function Home() {
         <Hero />
         <Feature
           title={
-            <div>
-              Generate and export job descriptions from your <br />
+            <div id="features">
+              Generate job descriptions from
+              <br />
               <span className="bg-black text-white px-2">
-                <Typewriter
-                  words={[
-                    "package.json",
-                    "requirements.txt",
-                    "Makefile",
-                    "Podfile.lock",
-                  ]}
-                />
+                <Typewriter words={[...acceptedFileNames]} />
               </span>
             </div>
           }
-          subtitle="Intutive generation of job descriptions export to markdown or PDF"
+          subtitle="Job descriptions generated in one click"
           image="/questions.png"
           badge="Platform"
         />
         <Feature
-          title="Rich Job Post Edior"
-          subtitle="Edit generated job descriptions, add extra details. Export to markdown or PDF"
+          title="Rich Job Post Editor"
+          subtitle="Fine-tune job auto-generated job descriptions and export them to markdown or PDF."
           image="/editor.png"
           badge="Platform"
           reverse
         />
         <BigFeature
-          title="Kick ass Job board"
-          subtitle="Publish your jobs on our job board and get candidates, Candidates can search job details titles even npm/pip/pod packages!"
+          title="Job board included"
+          subtitle="Your openings will be listed on our job board, where developers can search by job details, titles, or even specific libraries and tools from npm, pip, or CocoaPods to find their next gig."
           image="/jobboard.png"
           features={[
             "High quality jobs for real developers",

@@ -14,8 +14,6 @@ export interface Subscription extends subscription {
 }
 
 export async function handleSubscriptionChange(event: Stripe.Event) {
-  console.log("handleSubscriptionChange", event.type)
-
   const subscription = event.data.object as Stripe.Subscription
   const customerId = subscription.customer as string
 
@@ -24,8 +22,6 @@ export async function handleSubscriptionChange(event: Stripe.Event) {
       stripeCustomerId: customerId,
     },
   })
-
-  console.log("user", user)
 
   if (!user) {
     throw new Error("User not found")
@@ -50,11 +46,9 @@ const handleSubscriptionPurchase = async ({
   subscription: Stripe.Subscription
   userId: string
 }) => {
-  console.log("handleSubscriptionPurchase")
-
   const lineItem = subscription.items.data[0]
   const productId = lineItem.price.product as string
-  console.log("productId", productId)
+
   const product = await prisma.product.findFirst({
     where: {
       stripeId: productId,
@@ -64,7 +58,6 @@ const handleSubscriptionPurchase = async ({
     throw new Error("Credit package not found")
   }
   const recurring = lineItem.price.recurring?.interval as string
-  console.log("product", { productId, userId, recurring })
 
   const dbSub = await prisma.subscription.upsert({
     where: { userId },
@@ -94,7 +87,6 @@ const handleSubscriptionPurchase = async ({
       },
     },
   })
-  console.log("dbSub", dbSub)
 }
 
 export const handleSubscriptionDeletion = async ({
@@ -102,7 +94,6 @@ export const handleSubscriptionDeletion = async ({
 }: {
   subscription: Stripe.Subscription
 }) => {
-  console.log("handleSubscriptionDeletion")
   await prisma.subscription.update({
     where: {
       id: subscription.id,

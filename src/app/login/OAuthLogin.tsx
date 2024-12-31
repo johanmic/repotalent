@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button"
 import AppIcon from "@/components/appIcon"
 import { createClient } from "@/utils/supabase/client"
-console.log("process.env.NEXT_PUBLIC_URL", process.env.NEXT_PUBLIC_URL)
+
 export default function OAuthLogin() {
   const supabase = createClient()
   const onGithubLogin = async () => {

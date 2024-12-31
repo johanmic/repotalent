@@ -19,7 +19,7 @@ export const mapJS = async ({
   })
 
   const unique = [...new Set(names)]
-  console.log(unique)
+
   const icons = unique
     .map((key) => {
       if (appKeys.includes(key)) {
@@ -27,6 +27,6 @@ export const mapJS = async ({
       }
     })
     .filter(Boolean)
-  console.log("found icons", icons)
+
   return icons as string[]
 }

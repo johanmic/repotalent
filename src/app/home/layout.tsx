@@ -19,10 +19,8 @@ const Layout = async ({
   return (
     <SidebarProvider>
       {sidebar}
-      <main className="w-full">
-        <SidebarTrigger />
-        {children}
-      </main>
+      <SidebarTrigger />
+      <main className="w-full p-4 md:p-0">{children}</main>
     </SidebarProvider>
   )
 }

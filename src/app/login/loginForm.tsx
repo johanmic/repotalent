@@ -39,7 +39,7 @@ const LoginForm = () => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "johan.mickelin@gmail.com",
+      email: "",
       otp: "",
     },
   })
@@ -74,9 +74,6 @@ const LoginForm = () => {
     >
       {!isOtpSent ? (
         <Form {...form}>
-          <div className="text-sm font-light text-center">
-            Email One Time Password
-          </div>
           <motion.form
             onSubmit={form.handleSubmit(onSubmitEmail)}
             className="space-y-6 gap-2"

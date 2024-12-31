@@ -189,7 +189,7 @@ const Avatar = ({
   const imageUrl = organization.image
     ? getImageUrl(organization.image || "")
     : null
-  console.log(imageUrl)
+
   return (
     <View style={styles.avatar}>
       {imageUrl ? (

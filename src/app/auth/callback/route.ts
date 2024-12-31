@@ -4,13 +4,10 @@ import { registerGithubUser } from "@/app/actions/user"
 import { createClient } from "@/utils/supabase/server"
 
 export async function GET(request: Request) {
-  console.log("auth/callback")
   const { searchParams, origin } = new URL(request.url)
 
   // Log all search parameters
-  searchParams.forEach((value, key) => {
-    console.log(`Search Param - ${key}: ${value}`)
-  })
+  searchParams.forEach((value, key) => {})
 
   const code = searchParams.get("code")
   if (!code) {
@@ -26,7 +23,7 @@ export async function GET(request: Request) {
     const supabase = await createClient()
     const results = await supabase.auth.exchangeCodeForSession(code)
 
-    // console.log("results", JSON.stringify(results, null, 2))
+    //
 
     if (!results.error) {
       const forwardedHost = request.headers.get("x-forwarded-host")

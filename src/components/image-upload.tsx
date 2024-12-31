@@ -17,7 +17,6 @@ export const ImageUpload = ({ image, onUpload }: ImageUploadProps) => {
     async (file: File) => {
       try {
         const signedUrl = await signImageUrl({ mimeType: file.type })
-        console.log("Signed URL:", signedUrl)
 
         const response = await fetch(signedUrl.signedUrl, {
           method: "PUT",

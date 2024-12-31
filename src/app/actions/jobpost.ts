@@ -9,6 +9,10 @@ import { parsePodfileLock } from "@/utils/podfileLockParser"
 import { prepareQuestions } from "@/utils/questionsPrompt"
 import { createSlug } from "@/utils/slug"
 import { getUser } from "@/utils/supabase/server"
+import { getRepoMetaFiles } from "@/utils/getRepoMetaFiles"
+import { AcceptedFileName } from "@/utils/filenames"
+/// YOU ARE ADDING PATH AND FILES TO META IN JOB POST IF ITS GITHUB AND USING getRepoMetaFiles
+
 import {
   city,
   country,
@@ -20,10 +24,13 @@ import {
   openSourcePackage,
   openSourcePackageVersion,
   organization,
+  creditUsage,
+  purchase,
 } from "@prisma/client"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { omit, uniq } from "ramda"
+import { parsePyprojectToml } from "@/utils/pyprojectTomlParser"
 
 export interface JobPostToPackageVersion {
   package: openSourcePackage
@@ -45,6 +52,11 @@ export interface JobPost extends jobPost {
       country: country
     }
   }
+  creditUsage?:
+    | (creditUsage & {
+        purchase?: purchase | null
+      })[]
+    | null
 }
 
 // Separate function to update job tags
@@ -137,12 +149,34 @@ const processPackagesAndTags = async ({
 }
 
 export const createJobPost = async (data: {
-  filename: string
+  filename: AcceptedFileName
   data: string
+  meta?: {
+    repo?: string
+    owner?: string
+    path?: string
+  }
 }) => {
   const { user } = await getUser()
   if (!user?.id) {
     throw new Error("User not authenticated")
+  }
+  console.log("creating", data.meta)
+  let extra = ""
+  if (
+    data.meta?.repo &&
+    typeof data.meta?.path === "string" &&
+    data.meta?.owner
+  ) {
+    const reuslts = await getRepoMetaFiles({
+      path: data.meta.path,
+      owner: data.meta.owner,
+      repo: data.meta.repo,
+      type: data.filename,
+    })
+    if (reuslts) {
+      extra = reuslts
+    }
   }
 
   const dbUser = await prisma.user.findUnique({
@@ -160,6 +194,7 @@ export const createJobPost = async (data: {
 
   const promptReuslts = await prepareQuestions({
     data,
+    extra,
   })
   const slug = await checkedSlug({
     name: `${promptReuslts.suggestedTitle || "job"}-${
@@ -176,6 +211,8 @@ export const createJobPost = async (data: {
         source: data.filename,
         published: null,
         organizationId,
+        githubPath: data.meta?.path || null,
+        githubRepo: data.meta?.repo || null,
         questions: {
           create: promptReuslts.questions.map((question) => ({
             question,
@@ -198,11 +235,43 @@ export const createJobPost = async (data: {
         },
       },
     })
+    const purchase = await $tx.purchase.findMany({
+      where: { userId: user.id },
+      include: {
+        creditUsage: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    })
+
+    const firstPurchaseWithCredits = purchase.find((p) => {
+      const availableCredits = p.creditUsage.reduce(
+        (acc, curr) => acc + curr.creditsUsed,
+        0
+      )
+      return availableCredits < p.creditsBought
+    })
+    const firstPurchaseWithCreditsAndJobBoard = purchase.find((p) => {
+      const availableCredits = p.creditUsage.reduce(
+        (acc, curr) => acc + curr.creditsUsed,
+        0
+      )
+      return availableCredits < p.creditsBought && p.jobBoard
+    })
+    if (!firstPurchaseWithCreditsAndJobBoard) {
+      throw new Error("No credits available")
+    }
+    const purchaseId =
+      firstPurchaseWithCreditsAndJobBoard.id ||
+      firstPurchaseWithCredits?.id ||
+      null
     await $tx.creditUsage.create({
       data: {
         userId: user.id,
         creditsUsed: 1,
         jobPostId: job.id,
+        purchaseId,
       },
     })
 
@@ -246,6 +315,20 @@ export const createJobPost = async (data: {
     )
     const defaultTags = ["ios", "swift", "objective-c"]
 
+    await processPackagesAndTags({
+      jobId: job.id,
+      dependencies,
+      existingTags,
+      defaultTags,
+    })
+  } else if (data.filename === "pyproject.toml") {
+    const dependencies = Object.entries(parsePyprojectToml(data.data)).map(
+      ([name, version]) => ({
+        name,
+        version,
+      })
+    )
+    const defaultTags = ["python"]
     await processPackagesAndTags({
       jobId: job.id,
       dependencies,
@@ -320,6 +403,11 @@ export const getJobPost = async ({
       currency: true,
       questions: true,
       ratings: true,
+      creditUsage: {
+        include: {
+          purchase: true,
+        },
+      },
     },
   })
   return job as JobPost
@@ -412,6 +500,7 @@ export const updateJobPost = async ({
           "ratings",
           "packages",
           "currency",
+          "creditUsage",
           "slug",
         ],
         data

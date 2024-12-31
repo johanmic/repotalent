@@ -1,22 +1,22 @@
 "use client"
 
-import { useCallback, useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import AppIcon from "@/components/appIcon"
-import { Icon } from "@/components/icon"
-import { Title } from "@/components/title"
 import {
-  listRepoFolders,
-  getRepo,
-  listUserRepos,
   getFileContent,
   GithubRepo,
+  listRepoFolders,
+  listUserRepos,
 } from "@/app/actions/github"
+import AppIcon from "@/components/appIcon"
+import { GithubAppButton } from "@/components/github-app-button"
+import { Icon } from "@/components/icon"
+import { Title } from "@/components/title"
+import { Button } from "@/components/ui/button"
+import { AcceptedFileName } from "@/utils/filenames"
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
-dayjs.extend(relativeTime)
+import { useEffect, useState } from "react"
 import Manual from "./Manual"
-
+dayjs.extend(relativeTime)
 interface GithubItem {
   name: string
   type: "dir" | "file"
@@ -27,9 +27,10 @@ const allowedFiles = [
   "requirements.txt",
   "Makefile",
   "Podfile.lock",
+  "pyproject.toml",
 ]
 
-const GithubPicker = () => {
+const GithubPicker = ({ hasGithub }: { hasGithub: boolean }) => {
   const [repos, setRepos] = useState<GithubRepo[]>([])
   const [folders, setFolders] = useState<string[]>([])
   const [selectedRepo, setSelectedRepo] = useState<GithubRepo | null>(null)
@@ -37,7 +38,7 @@ const GithubPicker = () => {
   const [selectedFile, setSelectedFile] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [fileData, setFileData] = useState<{
-    filename: string
+    filename: AcceptedFileName
     data: string
   } | null>(null)
   // Fetch repos on mount
@@ -52,8 +53,10 @@ const GithubPicker = () => {
         }))
       )
     }
-    fetchRepos()
-  }, [])
+    if (hasGithub) {
+      fetchRepos()
+    }
+  }, [hasGithub])
 
   // Fetch folders when repo is selected
   useEffect(() => {
@@ -67,7 +70,7 @@ const GithubPicker = () => {
           repo: selectedRepo.name,
           path: currentPath,
         })) as GithubItem[]
-        console.log("Folder items:", items)
+
         setFolders(
           items.map((item: GithubItem) =>
             item.type === "dir" ? `${item.name}/` : item.name
@@ -97,7 +100,7 @@ const GithubPicker = () => {
           path: fullPath,
         })
         setFileData({
-          filename: fullPath,
+          filename: fullPath as AcceptedFileName,
           data: content,
         })
       } catch (error) {
@@ -113,6 +116,14 @@ const GithubPicker = () => {
     setSelectedFile(null)
     setCurrentPath(newPath)
   }
+  if (!hasGithub) {
+    return (
+      <div>
+        <p>Github is not installed</p>
+        <GithubAppButton installed={false} />
+      </div>
+    )
+  }
   if (selectedFile && fileData) {
     return (
       <Manual
@@ -120,6 +131,7 @@ const GithubPicker = () => {
         showDropzone={false}
         metadata={{
           repo: selectedRepo?.name,
+          owner: selectedRepo?.owner,
           path: currentPath,
         }}
       />

@@ -129,8 +129,6 @@ export const prepareQuestions = async (data: {
 `
     // const cleanedText = responseFixture
 
-    console.log(prompt)
-
     // const job = await prisma.jobPost.create({
     //   data: {
     //     title: cleanedText.suggestedTitle,
@@ -154,7 +152,7 @@ export const prepareQuestions = async (data: {
       .trim()
       .replace(/```json/g, "")
       .replace(/```/g, "")
-    console.log(cleanedText)
+
     const parsedResponse = JSON.parse(cleanedText)
 
     const job = await prisma.jobPost.create({

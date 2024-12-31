@@ -58,7 +58,6 @@ const CreateOrgForm = ({ organization }: { organization?: Organization }) => {
 
   const onSubmit = useCallback(
     async (data: z.infer<typeof schema>) => {
-      console.log(data)
       if (organization) {
         await updateOrganization(data)
       } else {
@@ -71,9 +70,7 @@ const CreateOrgForm = ({ organization }: { organization?: Organization }) => {
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(onSubmit, (errors) => {
-          console.log(errors)
-        })}
+        onSubmit={form.handleSubmit(onSubmit, (errors) => {})}
         className="space-y-6 w-full "
       >
         <div className="grid md:grid-cols-3 gap-4">
@@ -81,7 +78,6 @@ const CreateOrgForm = ({ organization }: { organization?: Organization }) => {
             <ImageUpload
               image={organization?.image || ""}
               onUpload={(path) => {
-                console.log("path", path)
                 form.setValue("image", path)
               }}
             />

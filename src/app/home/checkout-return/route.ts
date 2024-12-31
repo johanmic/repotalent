@@ -27,12 +27,13 @@ export const GET = async (request: NextRequest) => {
     if (session.status === "complete" && session.id) {
       if (session.mode === "payment") {
         const productId = session.metadata?.productId
-        console.log("productId", productId)
+
         if (productId) {
           const purchase = await addCredits({
             productId: productId,
             stripeId: session.id,
             idType: "purchaseId",
+            jobBoard: false,
           })
           if (purchase) {
             return NextResponse.redirect(

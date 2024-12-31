@@ -10,9 +10,11 @@ import { toast } from "sonner"
 export const JobPreviewBanner = ({
   job,
   published,
+  canPublish,
 }: {
   job: JobPost
   published: boolean
+  canPublish: boolean
 }) => {
   const [copied, copy] = useCopyToClipboard()
   return (
@@ -56,6 +58,7 @@ export const JobPreviewBanner = ({
         <div>
           <Button
             size="sm"
+            disabled={!canPublish}
             variant={published ? "outline" : "default"}
             onClick={async () => {
               await setPublished({
@@ -67,6 +70,11 @@ export const JobPreviewBanner = ({
             <Icon name={job.published ? "eyeOff" : "eye"} />
             {job.published ? "Unpublish" : "Publish"}
           </Button>
+          {!canPublish && (
+            <Text variant="small" className="text-muted-foreground">
+              {"used credit does not cover job board"}
+            </Text>
+          )}
         </div>
         <div>
           <Link href={`/home/jobs/${job.id}/edit`}>

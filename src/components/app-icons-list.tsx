@@ -1,11 +1,11 @@
 "use client"
 import AppIcon, { AppIcons } from "@/components/appIcon"
-import { useMemo, useState } from "react"
-import { motion } from "framer-motion"
-import { uniqBy, identity } from "ramda"
-const iconKeys = Object.keys(AppIcons)
 import { Badge } from "@/components/ui/badge"
+import { motion } from "framer-motion"
 import Link from "next/link"
+import { uniqBy } from "ramda"
+import { useMemo, useState } from "react"
+const iconKeys = Object.keys(AppIcons)
 export const AppIconsList = ({
   items,
   maxItems,

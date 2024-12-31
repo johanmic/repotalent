@@ -16,7 +16,7 @@ export function CompareDemo() {
           firstImageClassName="object-cover object-left-top w-full"
           secondImageClassname="object-cover object-left-top w-full"
           className="w-full h-full rounded-[22px] md:rounded-lg"
-          slideMode="drag"
+          // slideMode="drag"
           autoplay={true}
         />
       </div>

@@ -8,9 +8,7 @@ import { Octokit } from "@octokit/rest"
 
 import prisma from "@/store/prisma"
 import { getUser as getUserFromSupabase } from "@/utils/supabase/server"
-const GITHUB_APP_ID = process.env.GITHUB_APP_ID as string
-console.log("GITHUB_APP_ID", GITHUB_APP_ID)
-console.log("GITHUB_CLIENT_SECRET", process.env.GITHUB_CLIENT_SECRET)
+
 const auth = createAppAuth({
   appId: process.env.GITHUB_APP_ID!,
   privateKey: process.env.GITHUB_PRIVATE_KEY!,
@@ -78,12 +76,11 @@ export async function createGithubInstallation({
   }
   const accountLogin =
     "login" in installation.account ? installation.account.login : null
-  console.log("installation", accountLogin, JSON.stringify(user, null, 2))
 
   if (accountLogin !== user.user_metadata.user_name) {
     throw new Error("Installation does not match user")
   }
-  console.log("updating user")
+
   await prisma.user.update({
     where: { id: user.id },
     data: {
@@ -191,41 +188,6 @@ export const listRepoFolders = async ({
     path,
   })
   return contents
-}
-
-const testAppAuth = async (installationId: number) => {
-  const auth = createAppAuth({
-    appId: process.env.GITHUB_APP_ID!,
-    privateKey: process.env.GITHUB_PRIVATE_KEY!,
-  })
-
-  const { token } = await auth({ type: "app" })
-  const octokit = new Octokit({ auth: token })
-  // console.log("App JWT Generated:", token)
-
-  const appInfo = await octokit.rest.apps.getAuthenticated()
-  const installation = await octokit.rest.apps.getInstallation({
-    installation_id: installationId,
-  })
-  const accessToken = await auth({
-    type: "installation",
-    installationId: installationId,
-  })
-  console.log("GitHub App Info:", appInfo)
-  console.log("Installation Info:", installation)
-  console.log("Access Token:", accessToken)
-}
-
-// testAppAuth(58689366)
-
-interface RepoFile {
-  name: string
-  path: string
-  type: "file" | "dir"
-  size: number
-  sha: string
-  url: string
-  downloadUrl: string | null
 }
 
 export const listRepoFiles = async (path: string = "") => {
@@ -336,12 +298,6 @@ export const getFileContent = async ({
   const decodedContent = Buffer.from(cleanContent, "base64").toString("utf-8")
 
   return decodedContent
-}
-
-function decodeBase64ToString(base64String: string): string {
-  // Decode the Base64 string
-  const decodedString = Buffer.from(base64String, "base64").toString("utf-8")
-  return decodedString
 }
 
 export const removeGithubApp = async () => {

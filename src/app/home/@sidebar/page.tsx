@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { getUser } from "@actions/user"
+import { Separator } from "@/components/ui/separator"
 // import { SidebarUser } from "@/components/sidebar-user"
 import { NavUser } from "@/components/ui/nav-user"
 import { cn } from "@/lib/utils"
@@ -46,6 +47,7 @@ const items = [
 ]
 const SidebarComponent = async () => {
   const user = await getUser()
+
   return (
     <div>
       <Sidebar>
@@ -80,6 +82,14 @@ const SidebarComponent = async () => {
           </SidebarGroup>
         </SidebarContent>
         <SidebarFooter>
+          <Separator />
+          <div className="flex flex-row text-xs pl-2 items-center justify-between">
+            {" "}
+            Credits:{" "}
+            <Badge variant="outline">
+              {user?.creditsInfo?.creditsAvailable}
+            </Badge>
+          </div>
           <NavUser user={user} />
           {/* <Button variant="outline" asChild>
             <Link href="/home/logout">

@@ -133,5 +133,6 @@ export const addSubscriptionCredits = async (event: Stripe.Event) => {
     subscriptionId,
     userId: user.id,
     idType: "invoiceId",
+    jobBoard: true,
   })
 }

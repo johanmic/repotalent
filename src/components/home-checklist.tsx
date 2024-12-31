@@ -1,21 +1,21 @@
-import { Button } from "@/components/ui/button"
+"use client"
+import { setSkipGithubSetup } from "@/app/actions/user"
+import { GithubAppButton } from "@/components/github-app-button"
 import { Icon, icons } from "@/components/icon"
-import AppIcon from "@/components/appIcon"
+import { Button } from "@/components/ui/button"
 import Link from "next/link"
 const GithubAppInstall = ({ installed }: { installed: boolean }) => {
   return (
     <div className="flex items-center gap-2 bg-muted p-2 rounded-md justify-between">
       RepoTalent Github App{" "}
-      <Link href="https://github.com/apps/repotalent">
-        <Button className="bg-green-700 text-white">
-          {installed ? (
-            <Icon name="check" className="w-4 h-4" />
-          ) : (
-            <AppIcon name="github" className="w-4 h-4" />
-          )}
-          {installed ? "Installed" : "Install"}
-        </Button>
-      </Link>
+      <div className="flex items-center gap-2">
+        <GithubAppButton installed={installed} />
+        {!installed && (
+          <Button variant="ghost" onClick={() => setSkipGithubSetup(true)}>
+            Skip
+          </Button>
+        )}
+      </div>
     </div>
   )
 }
@@ -105,14 +105,14 @@ export const HomeChecklist = ({
       status: hasApp,
       text: "Install the app on your Github organization",
       action: "Install the app on your Github organization",
-      component: <GithubAppInstall installed={hasApp} />,
+      component: !hasApp && <GithubAppInstall installed={hasApp} />,
     },
     {
       status: hasOrg,
       text: hasOrg ? "Organization created" : "Create an organization",
       action: hasOrg ? "View Organization" : "Create an organization",
       locked: !hasApp,
-      component: (
+      component: !hasOrg && (
         <GenericAction
           text={hasOrg ? "View Organization" : "Create an organization"}
           action={hasOrg ? "View Organization" : "Create an organization"}
@@ -126,7 +126,7 @@ export const HomeChecklist = ({
       text: hasJob ? "Job posted" : "Post your first job",
       action: hasJob ? "View Jobs" : "Post your first job",
       locked: !hasOrg && !hasApp,
-      component: (
+      component: !hasJob && (
         <GenericAction
           text={hasJob ? "View Jobs" : "Post your first job"}
           action={hasJob ? "View Jobs" : "Post your first job"}
@@ -137,7 +137,7 @@ export const HomeChecklist = ({
     },
   ]
   return (
-    <div className="flex flex-col gap-2 max-w-lg mx-auto">
+    <div className="flex flex-col gap-2 max-w-lg bg-sidebar p-4 rounded-md mb-4 mx-auto">
       <h2 className="text-2xl font-bold">Setup your account</h2>
       {checklistItems.map((item) => (
         <CheckListItem key={item.text} {...item} />

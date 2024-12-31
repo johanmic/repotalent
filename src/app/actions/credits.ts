@@ -10,14 +10,15 @@ export const dbAddCredits = async ({
   userId,
   subscriptionId,
   idType,
+  jobBoard = true,
 }: {
   productId: string
   stripeId: string
   subscriptionId?: string
   userId: string
   idType: "invoiceId" | "purchaseId"
+  jobBoard: boolean
 }) => {
-  console.log("!!!!dbAddCredits", { productId, stripeId, userId, idType })
   const product = await prisma.product.findUniqueOrThrow({
     where: {
       stripeId: productId,
@@ -31,7 +32,6 @@ export const dbAddCredits = async ({
     },
   })
   if (purchaseIDUsed > 0) {
-    console.log("Purchase ID already used")
     return null
   }
 
@@ -44,6 +44,7 @@ export const dbAddCredits = async ({
       },
       stripePurchaseId: stripeId,
       idType,
+      jobBoard,
       product: {
         connect: {
           id: product.id,
@@ -67,10 +68,12 @@ export const addCredits = async ({
   productId,
   stripeId,
   idType,
+  jobBoard = true,
 }: {
   productId: string
   stripeId: string
   idType: "invoiceId" | "purchaseId"
+  jobBoard: boolean
 }) => {
   const { user } = await getUser()
   if (!user) {
@@ -82,6 +85,7 @@ export const addCredits = async ({
     stripeId,
     userId: user.id,
     idType,
+    jobBoard,
   })
   revalidatePath("/home", "layout")
   return purchase

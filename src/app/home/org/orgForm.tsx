@@ -93,9 +93,7 @@ const CreateOrgForm = ({
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(onSubmit, (errors) => {
-          console.log(errors)
-        })}
+        onSubmit={form.handleSubmit(onSubmit, (errors) => {})}
         className="space-y-6 w-full "
       >
         <div className="grid md:grid-cols-3 gap-4">
@@ -103,7 +101,6 @@ const CreateOrgForm = ({
             <ImageUpload
               image={imageUrl}
               onUpload={(path) => {
-                console.log("path", path)
                 form.setValue("image", path)
               }}
             />

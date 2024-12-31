@@ -1,4 +1,13 @@
+import Text from "@/components/text"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -6,20 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useState } from "react"
-import { PrepQuestionsResponse } from "@/app/actions/prompt"
-import { Button } from "@/components/ui/button"
-import { PencilIcon, CheckIcon } from "lucide-react"
-import Text from "@/components/text"
-import { Label } from "@/components/ui/label"
+import { experienceLevels, getSeniorityLabel } from "@/utils/seniorityMapper"
 import type { JobPost } from "@actions/jobpost"
-import { getSeniorityLabel, experienceLevels } from "@/utils/seniorityMapper"
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card"
+import { CheckIcon, PencilIcon } from "lucide-react"
+import { useState } from "react"
 
 const toneOptions = [
   { value: "professional", label: "Professional" },

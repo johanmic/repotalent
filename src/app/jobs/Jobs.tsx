@@ -16,7 +16,7 @@ export default function JobsPage({
 }) {
   const [searchQuery, setSearchQuery] = useState<string | null>(null)
   const debouncedSearchQuery = useDebounce(searchQuery, 500)
-  console.log(debouncedSearchQuery)
+
   const [searchResults, setSearchResults] = useState<JobPost[]>([])
   useEffect(() => {
     const fetchSearchResults = async () => {

@@ -12,7 +12,7 @@ import {
 import { Separator } from "@/components/ui/separator"
 import dayjs from "dayjs"
 import type { Stripe } from "stripe"
-
+import Link from "next/link"
 export const Subscription = ({
   subscription,
 }: {
@@ -99,10 +99,12 @@ export const Subscription = ({
             <p className="mb-4 text-sm text-muted-foreground">
               Subscribe to a plan to get access to premium features
             </p>
-            <Button className="flex items-center gap-2">
-              <Icon name="plus" className="h-4 w-4" />
-              Get Started
-            </Button>
+            <Link href="/home/purchase">
+              <Button className="flex items-center gap-2">
+                <Icon name="plus" className="h-4 w-4" />
+                Get Started
+              </Button>
+            </Link>
           </div>
         )}
       </CardContent>

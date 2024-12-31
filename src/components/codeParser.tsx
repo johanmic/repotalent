@@ -5,9 +5,11 @@ import { useEffect, useMemo, useState } from "react"
 // import parsePipRequirementsFile from "pip-requirements-js"
 import parsePipRequirementsFile from "@/utils/parseRequirementsTXT"
 import { parsePodfileLock } from "@/utils/podfileLockParser"
+import { parsePyprojectToml } from "@/utils/pyprojectTomlParser"
+import { AcceptedFileName } from "@/utils/filenames"
 interface CodeParserProps {
   data?: string
-  filename?: "package.json" | "requirements.txt" | "Podfile.lock"
+  filename?: AcceptedFileName
 }
 
 const sampleData = `{
@@ -65,20 +67,16 @@ function parsePackageJson(file: string) {
 
 function parseRequirementsTxt(file: string) {
   const reuslts = parsePipRequirementsFile(file)
-  console.log(reuslts)
+
   return reuslts
 }
 
 const parsePodfile = (file: string) => {
-  console.log("parsePodfile")
   const reuslts = parsePodfileLock(file)
   return reuslts
 }
 
-const getFileData = (
-  data: string,
-  filename: "package.json" | "requirements.txt" | "Podfile.lock"
-) => {
+const getFileData = (data: string, filename: AcceptedFileName) => {
   switch (filename) {
     case "package.json":
       return parsePackageJson(data)
@@ -86,6 +84,8 @@ const getFileData = (
       return parseRequirementsTxt(data)
     case "Podfile.lock":
       return parsePodfile(data)
+    case "pyproject.toml":
+      return parsePyprojectToml(data)
   }
 }
 

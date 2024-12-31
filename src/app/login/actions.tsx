@@ -6,14 +6,12 @@ import prisma from "@/store/prisma"
 import { createClient } from "@/utils/supabase/server"
 
 export async function login(formData: FormData) {
-  console.log("OTP start")
   const supabase = await createClient()
 
   const email = formData.get("email") as string
 
   // Request OTP for the email
   const { data, error } = await supabase.auth.signInWithOtp({ email })
-  console.log({ data, error })
 
   return { error }
 }

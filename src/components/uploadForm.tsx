@@ -16,12 +16,7 @@ import { useForm } from "react-hook-form"
 import Dropzone, { DropzoneState } from "shadcn-dropzone"
 import { toast } from "sonner"
 import * as z from "zod"
-const acceptedFileNames = [
-  "package.json",
-  "requirements.txt",
-  "Makefile",
-  "Podfile.lock",
-]
+import { acceptedFileNames, AcceptedFileName } from "@/utils/filenames"
 const schema = z.object({
   filename: z.string(),
   data: z.string(),
@@ -45,11 +40,14 @@ const detectFileType = (content: string): string => {
     // Matches Makefile targets
     return "Makefile"
   }
+  if (content.includes("tool.poetry.dependencies")) {
+    return "pyproject.toml"
+  }
   return "package.json" // default fallback
 }
 
 interface UploadFormProps {
-  onUpdate: (questions: { filename: string; data: string }) => void
+  onUpdate: (questions: { filename: AcceptedFileName; data: string }) => void
   onSubmit: () => void
   fileData: { filename: string; data: string } | null
   showDropzone?: boolean
@@ -91,7 +89,7 @@ const UploadForm = ({
       toast.error("Please enter some content before submitting")
       return
     }
-    onUpdate({ filename: data.filename, data: data.data })
+    onUpdate({ filename: data.filename as AcceptedFileName, data: data.data })
   })
 
   return (
@@ -119,6 +117,15 @@ const UploadForm = ({
               <div className="flex items-center gap-2">
                 <AppIcon name="python" />
                 <span>requirements.txt</span>
+              </div>
+            </SelectItem>
+            <SelectItem
+              value="pyproject.toml"
+              className="flex items-center gap-2"
+            >
+              <div className="flex items-center gap-2">
+                <AppIcon name="python" />
+                <span>pyproject.toml</span>
               </div>
             </SelectItem>
             <SelectItem value="Makefile">
@@ -153,7 +160,7 @@ const UploadForm = ({
           onDrop={async (files) => {
             if (files.length === 0) return
             const file = files[0]
-            if (!acceptedFileNames.includes(file.name)) {
+            if (!acceptedFileNames.includes(file.name as AcceptedFileName)) {
               toast.error(`File type not supported: ${file.name}`)
               return
             }

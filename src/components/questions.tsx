@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from "react"
-import { Button } from "./ui/button"
-import { motion } from "framer-motion"
-import { Card, CardHeader, CardTitle, CardDescription } from "./ui/card"
 import type { jobPostQuestion } from "@prisma/client"
+import { motion } from "framer-motion"
+import { useCallback, useEffect, useState } from "react"
+import { Button } from "./ui/button"
+import { Card, CardDescription, CardHeader } from "./ui/card"
 const Question = ({
   question,
   onDone,
