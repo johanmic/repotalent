@@ -5,13 +5,6 @@ export const mapJS = async ({
   packages: string[]
 }): Promise<string[]> => {
   const appKeys = Object.keys(AppIcons)
-  /* 
-    1. flatMap split all packages by _ 
-    2. remove duplicates
-    3. check which are in appKeys
-    return array
-
-    */
 
   const names = packages.flatMap((pkg) => {
     const names = pkg.split(/-|\//).map((name) => name.replace("@", ""))
