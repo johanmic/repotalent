@@ -2,7 +2,7 @@
 import { Badge } from "@/components/ui/badge"
 import Image from "next/image"
 import { motion, useInView } from "framer-motion"
-import React from "react"
+import React, { useRef } from "react"
 interface FeatureProps {
   title: string | React.ReactNode
   subtitle: string
@@ -17,7 +17,7 @@ export const Feature = ({
   image,
   reverse = false,
 }: FeatureProps) => {
-  const ref = React.useRef(null)
+  const ref = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>
   const isInView = useInView(ref, {
     once: true,
     margin: "0px",
