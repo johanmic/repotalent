@@ -93,6 +93,10 @@ export const validatePromoCode = async ({
     message = "you have already used this promo code"
     return { valid, message }
   }
+  if (promoCode.limit && promoCode.promoCodeUsage.length >= promoCode.limit) {
+    message = "promo code limit reached"
+    return { valid, message }
+  }
   valid = true
   message = "promo code is valid"
   return { valid, message, promoCode }

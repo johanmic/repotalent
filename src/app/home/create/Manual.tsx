@@ -64,7 +64,7 @@ const NewPost = ({
   }, [fileData, isLoading])
 
   return (
-    <div className="space-y-6 flex flex-col h-full min-h-screen">
+    <div className="space-y-6 flex flex-col h-full">
       <h1 className="text-2xl font-bold">Create job description</h1>
       {!submitted && (
         <UploadForm

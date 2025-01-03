@@ -94,7 +94,7 @@ const UploadForm = ({
 
   return (
     <div className="gap-4 flex flex-col h-full">
-      <form onSubmit={handleSubmit} className="gap-2 flex flex-col">
+      <form onSubmit={handleSubmit} className="gap-2 flex flex-col h-full">
         <Select
           defaultValue="package.json"
           onValueChange={(value) => form.setValue("filename", value)}
@@ -144,7 +144,7 @@ const UploadForm = ({
         </Select>
         <Textarea
           placeholder="Enter your package.json / requirements.txt / Makefile / Podfile content here..."
-          className="lg:min-h-[500px] text-xs text-white bg-zinc-800 w-full font-mono"
+          className="lg:min-h-[500px] h-full max-h-[60vh] text-xs text-white bg-zinc-800 w-full font-mono"
           {...form.register("data")}
         ></Textarea>
         <Button type="submit" onClick={onSubmit}>

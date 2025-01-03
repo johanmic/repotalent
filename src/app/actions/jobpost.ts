@@ -92,36 +92,45 @@ const processPackages = async ({
   jobId: string
   dependencies: { name: string; version: string }[]
 }) => {
-  await Promise.all(
-    dependencies.map(async ({ name, version }) => {
-      const pkg = await prisma.openSourcePackage.upsert({
-        where: { name },
-        create: { name },
-        update: {},
-      })
+  // Batch process in chunks of 50
+  const BATCH_SIZE = 50
 
-      const pkgVersion = await prisma.openSourcePackageVersion.upsert({
-        where: {
-          packageId_version: {
-            packageId: pkg.id,
-            version,
-          },
-        },
-        create: {
-          version,
-          packageId: pkg.id,
-        },
-        update: {},
-      })
+  for (let i = 0; i < dependencies.length; i += BATCH_SIZE) {
+    const batch = dependencies.slice(i, i + BATCH_SIZE)
 
-      return prisma.jobPostToPackageVersion.create({
-        data: {
-          jobPostId: jobId,
-          packageVersionId: pkgVersion.id,
-        },
-      })
+    await prisma.$transaction(async (tx) => {
+      await Promise.all(
+        batch.map(async ({ name, version }) => {
+          const pkg = await tx.openSourcePackage.upsert({
+            where: { name },
+            create: { name },
+            update: {},
+          })
+
+          const pkgVersion = await tx.openSourcePackageVersion.upsert({
+            where: {
+              packageId_version: {
+                packageId: pkg.id,
+                version,
+              },
+            },
+            create: {
+              version,
+              packageId: pkg.id,
+            },
+            update: {},
+          })
+
+          await tx.jobPostToPackageVersion.create({
+            data: {
+              jobPostId: jobId,
+              packageVersionId: pkgVersion.id,
+            },
+          })
+        })
+      )
     })
-  )
+  }
 }
 
 // Updated processPackagesAndTags function
@@ -157,195 +166,191 @@ export const createJobPost = async (data: {
     path?: string
   }
 }) => {
-  try {
-    const { user } = await getUser()
-    if (!user?.id) {
-      throw new Error("User not authenticated")
-    }
-    console.log("creating", data.meta)
-    let extra = ""
-    // if (
-    //   data.meta?.repo &&
-    //   typeof data.meta?.path === "string" &&
-    //   data.meta?.owner
-    // ) {
-    //   const reuslts = await getRepoMetaFiles({
-    //     path: data.meta.path,
-    //     owner: data.meta.owner,
-    //     repo: data.meta.repo,
-    //     type: data.filename,
-    //   })
-    //   if (reuslts) {
-    //     extra = reuslts
-    //   }
-    // }
-
-    const dbUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      include: { organization: true },
-    })
-    const creditsInfo = await getAvailableTokens(user.id)
-    if (creditsInfo.creditsAvailable < 1) {
-      throw new Error("Not enough credits")
-    }
-    const organizationId = dbUser?.organization?.id
-    if (!organizationId) {
-      throw new Error("User not in organization")
-    }
-
-    const promptReuslts = await prepareQuestions({
-      data,
-      extra,
-    })
-    console.log("promptReuslts", promptReuslts)
-    const slug = await checkedSlug({
-      name: `${promptReuslts.suggestedTitle || "job"}-${
-        dbUser.organization?.name
-      }`,
-      table: "jobPost",
-    })
-    const job = await prisma.$transaction(async ($tx) => {
-      const job = await $tx.jobPost.create({
-        data: {
-          title: promptReuslts.suggestedTitle,
-          slug,
-          seniority: promptReuslts.seniority,
-          source: data.filename,
-          published: null,
-          organizationId,
-          githubPath: data.meta?.path || undefined,
-          githubRepo: data.meta?.repo || null,
-          questions: {
-            create: promptReuslts.questions.map((question) => ({
-              question,
-            })),
-          },
-          ratings: {
-            create: promptReuslts.packages.map((pkg) => ({
-              question: pkg,
-            })),
-          },
-          tags: {
-            create: promptReuslts.tags.map((tag) => ({
-              tag: {
-                connectOrCreate: {
-                  where: { tag },
-                  create: { tag },
-                },
-              },
-            })),
-          },
-        },
-      })
-      console.log("job", job)
-      const purchase = await $tx.purchase.findMany({
-        where: { userId: user.id },
-        include: {
-          creditUsage: true,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      })
-
-      const firstPurchaseWithCredits = purchase.find((p) => {
-        const availableCredits = p.creditUsage.reduce(
-          (acc, curr) => acc + curr.creditsUsed,
-          0
-        )
-        return availableCredits < p.creditsBought
-      })
-      console.log("firstPurchaseWithCredits")
-      const firstPurchaseWithCreditsAndJobBoard = purchase.find((p) => {
-        const availableCredits = p.creditUsage.reduce(
-          (acc, curr) => acc + curr.creditsUsed,
-          0
-        )
-        return availableCredits < p.creditsBought && p.jobBoard
-      })
-      console.log("firstPurchaseWithCreditsAndJobBoard")
-
-      const purchaseId =
-        firstPurchaseWithCreditsAndJobBoard?.id ||
-        firstPurchaseWithCredits?.id ||
-        null
-      await $tx.creditUsage.create({
-        data: {
-          userId: user.id,
-          creditsUsed: 1,
-          jobPostId: job.id,
-          purchaseId,
-        },
-      })
-      console.log("creditUsage")
-
-      return job
-    })
-
-    const existingTags = new Set(
-      promptReuslts.tags.map((tag) => tag.toLowerCase())
-    )
-
-    if (data.filename === "package.json") {
-      const packagesJson = JSON.parse(data.data)
-      const dependencies = Object.entries({
-        ...packagesJson.dependencies,
-        ...packagesJson.devDependencies,
-      }).map(([name, version]) => ({ name, version: version as string }))
-      const defaultTags = ["javascript", "typescript", "nodejs"]
-      await processPackagesAndTags({
-        jobId: job.id,
-        dependencies,
-        existingTags,
-        defaultTags,
-      })
-    } else if (data.filename === "requirements.txt") {
-      const dependencies = Object.entries(parseRequirementsTxt(data.data)).map(
-        ([name, version]) => ({ name, version: version as string })
-      )
-      const defaultTags = ["python"]
-      await processPackagesAndTags({
-        jobId: job.id,
-        dependencies,
-        existingTags,
-        defaultTags,
-      })
-    } else if (data.filename === "Podfile.lock") {
-      const dependencies = Object.entries(parsePodfileLock(data.data)).map(
-        ([name, version]) => ({
-          name,
-          version,
-        })
-      )
-      const defaultTags = ["ios", "swift", "objective-c"]
-
-      await processPackagesAndTags({
-        jobId: job.id,
-        dependencies,
-        existingTags,
-        defaultTags,
-      })
-    } else if (data.filename === "pyproject.toml") {
-      const dependencies = Object.entries(parsePyprojectToml(data.data)).map(
-        ([name, version]) => ({
-          name,
-          version,
-        })
-      )
-      const defaultTags = ["python"]
-      await processPackagesAndTags({
-        jobId: job.id,
-        dependencies,
-        existingTags,
-        defaultTags,
-      })
-    }
-
-    redirect(`/home/jobs/${job.id}/complete`)
-  } catch (error) {
-    console.error("Error creating job post", error)
-    throw error
+  const { user } = await getUser()
+  if (!user?.id) {
+    throw new Error("User not authenticated")
   }
+  console.log("creating", data.meta)
+  let extra = ""
+  if (
+    data.meta?.repo &&
+    typeof data.meta?.path === "string" &&
+    data.meta?.owner
+  ) {
+    const reuslts = await getRepoMetaFiles({
+      path: data.meta.path,
+      owner: data.meta.owner,
+      repo: data.meta.repo,
+      type: data.filename,
+    })
+    if (reuslts) {
+      extra = reuslts
+    }
+  }
+
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    include: { organization: true },
+  })
+  const creditsInfo = await getAvailableTokens(user.id)
+  if (creditsInfo.creditsAvailable < 1) {
+    throw new Error("Not enough credits")
+  }
+  const organizationId = dbUser?.organization?.id
+  if (!organizationId) {
+    throw new Error("User not in organization")
+  }
+
+  const promptReuslts = await prepareQuestions({
+    data,
+    extra,
+  })
+  console.log("promptReuslts", promptReuslts)
+  const slug = await checkedSlug({
+    name: `${promptReuslts.suggestedTitle || "job"}-${
+      dbUser.organization?.name
+    }`,
+    table: "jobPost",
+  })
+  const job = await prisma.$transaction(async ($tx) => {
+    const job = await $tx.jobPost.create({
+      data: {
+        title: promptReuslts.suggestedTitle,
+        slug,
+        seniority: promptReuslts.seniority,
+        source: data.filename,
+        published: null,
+        organizationId,
+        githubPath: data.meta?.path || undefined,
+        githubRepo: data.meta?.repo || null,
+        questions: {
+          create: promptReuslts.questions.map((question) => ({
+            question,
+          })),
+        },
+        ratings: {
+          create: promptReuslts.packages.map((pkg) => ({
+            question: pkg,
+          })),
+        },
+        tags: {
+          create: promptReuslts.tags.map((tag) => ({
+            tag: {
+              connectOrCreate: {
+                where: { tag },
+                create: { tag },
+              },
+            },
+          })),
+        },
+      },
+    })
+    console.log("job", job)
+    const purchase = await $tx.purchase.findMany({
+      where: { userId: user.id },
+      include: {
+        creditUsage: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    })
+
+    const firstPurchaseWithCredits = purchase.find((p) => {
+      const availableCredits = p.creditUsage.reduce(
+        (acc, curr) => acc + curr.creditsUsed,
+        0
+      )
+      return availableCredits < p.creditsBought
+    })
+    console.log("firstPurchaseWithCredits")
+    const firstPurchaseWithCreditsAndJobBoard = purchase.find((p) => {
+      const availableCredits = p.creditUsage.reduce(
+        (acc, curr) => acc + curr.creditsUsed,
+        0
+      )
+      return availableCredits < p.creditsBought && p.jobBoard
+    })
+    console.log("firstPurchaseWithCreditsAndJobBoard")
+
+    const purchaseId =
+      firstPurchaseWithCreditsAndJobBoard?.id ||
+      firstPurchaseWithCredits?.id ||
+      null
+    await $tx.creditUsage.create({
+      data: {
+        userId: user.id,
+        creditsUsed: 1,
+        jobPostId: job.id,
+        purchaseId,
+      },
+    })
+    console.log("creditUsage")
+
+    return job
+  })
+
+  const existingTags = new Set(
+    promptReuslts.tags.map((tag) => tag.toLowerCase())
+  )
+
+  if (data.filename === "package.json") {
+    const packagesJson = JSON.parse(data.data)
+    const dependencies = Object.entries({
+      ...packagesJson.dependencies,
+      ...packagesJson.devDependencies,
+    }).map(([name, version]) => ({ name, version: version as string }))
+    const defaultTags = ["javascript", "typescript", "nodejs"]
+    await processPackagesAndTags({
+      jobId: job.id,
+      dependencies,
+      existingTags,
+      defaultTags,
+    })
+  } else if (data.filename === "requirements.txt") {
+    const dependencies = Object.entries(parseRequirementsTxt(data.data)).map(
+      ([name, version]) => ({ name, version: version as string })
+    )
+    const defaultTags = ["python"]
+    await processPackagesAndTags({
+      jobId: job.id,
+      dependencies,
+      existingTags,
+      defaultTags,
+    })
+  } else if (data.filename === "Podfile.lock") {
+    const dependencies = Object.entries(parsePodfileLock(data.data)).map(
+      ([name, version]) => ({
+        name,
+        version,
+      })
+    )
+    const defaultTags = ["ios", "swift", "objective-c"]
+
+    await processPackagesAndTags({
+      jobId: job.id,
+      dependencies,
+      existingTags,
+      defaultTags,
+    })
+  } else if (data.filename === "pyproject.toml") {
+    const dependencies = Object.entries(parsePyprojectToml(data.data)).map(
+      ([name, version]) => ({
+        name,
+        version,
+      })
+    )
+    const defaultTags = ["python"]
+    await processPackagesAndTags({
+      jobId: job.id,
+      dependencies,
+      existingTags,
+      defaultTags,
+    })
+  }
+  console.log("done", job)
+
+  redirect(`/home/jobs/${job.id}/complete`)
 }
 
 export const getPublishedJobPost = async ({ slug }: { slug: string }) => {
