@@ -1,3 +1,5 @@
+import React, { JSX } from "react"
+
 interface TitleProps {
   children: React.ReactNode
   size?: "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl"
