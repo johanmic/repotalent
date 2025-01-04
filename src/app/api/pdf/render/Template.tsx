@@ -226,9 +226,11 @@ const OrganizationInfo = ({ organization }: { organization: Organization }) => {
       <View>
         <Text style={styles.smallTitle}>{organization.name}</Text>
 
-        <Text style={styles.lightText}>
-          {organization.city.name}, {organization?.city?.country?.name}
-        </Text>
+        {organization.city ? (
+          <Text style={styles.lightText}>
+            {organization?.city?.name}, {organization?.city?.country?.name}
+          </Text>
+        ) : null}
       </View>
     </View>
   )

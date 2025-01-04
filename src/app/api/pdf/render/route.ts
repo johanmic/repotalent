@@ -1,4 +1,4 @@
-import { getJobPost } from "@/app/actions/jobpost"
+import { getJobPost, JobPost } from "@/app/actions/jobpost"
 import { renderToStream } from "@react-pdf/renderer"
 import { NextRequest, NextResponse } from "next/server"
 import createTemplate from "./Template"
@@ -14,9 +14,32 @@ export async function GET(req: NextRequest) {
     }
 
     const jobPost = await getJobPost({ jobId })
+    if (!jobPost) {
+      return NextResponse.json({ error: "Job post not found" }, { status: 404 })
+    }
+
+    const requiredFields = ["title", "description"] as const
+    const missingFields = requiredFields.filter(
+      (field): field is (typeof requiredFields)[number] & keyof JobPost =>
+        !(field in jobPost)
+    )
+
+    if (missingFields.length > 0) {
+      return NextResponse.json(
+        { error: `Missing required fields: ${missingFields.join(", ")}` },
+        { status: 400 }
+      )
+    }
 
     const pdfDocument = await createTemplate({ jobPost })
+    if (!pdfDocument) {
+      throw new Error("PDF template creation failed")
+    }
+
     const stream = await renderToStream(pdfDocument)
+    if (!stream) {
+      throw new Error("PDF stream generation failed")
+    }
 
     // Convert the PDF stream to a Web ReadableStream
     const blob = await new Response(stream as unknown as BodyInit).blob()
@@ -34,9 +57,13 @@ export async function GET(req: NextRequest) {
 
     return new Response(blob, { headers })
   } catch (error) {
-    console.error("PDF generation error:", error)
+    console.error("PDF generation error:", {
+      message: (error as Error).message,
+      stack: (error as Error).stack,
+    })
+
     return NextResponse.json(
-      { error: "Failed to generate PDF" },
+      { error: `Failed to generate PDF: ${(error as Error).message}` },
       { status: 500 }
     )
   }
