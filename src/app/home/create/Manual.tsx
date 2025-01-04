@@ -5,7 +5,7 @@ import UploadForm from "@/components/uploadForm"
 import { createJobPost } from "@actions/jobpost"
 import { useEffect, useState } from "react"
 import { AcceptedFileName } from "@/utils/filenames"
-
+import { useRouter } from "next/navigation"
 interface NewPostProps {
   initialFileData?: {
     filename: AcceptedFileName
@@ -24,6 +24,7 @@ const NewPost = ({
   showDropzone = true,
   metadata,
 }: NewPostProps) => {
+  const router = useRouter()
   const [isProcessing, setIsProcessing] = useState(false)
   const [showCodeParser, setShowCodeParser] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -41,7 +42,7 @@ const NewPost = ({
       setIsLoading(true)
       setIsProcessing(true)
       setShowCodeParser(true)
-      await createJobPost({
+      const job = await createJobPost({
         ...fileData,
         meta: {
           repo: metadata?.repo,
@@ -49,6 +50,11 @@ const NewPost = ({
           path: metadata?.path,
         },
       })
+      if (job) {
+        router.push(`/home/jobs/${job.id}/complete`)
+      } else {
+        router.push("/home/create/error")
+      }
     } catch (error) {
       console.error("Error processing file:", error)
     } finally {

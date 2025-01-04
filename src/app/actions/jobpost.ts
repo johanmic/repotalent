@@ -164,7 +164,7 @@ export const createJobPost = async (data: {
     owner?: string
     path?: string
   }
-}) => {
+}): Promise<JobPost> => {
   let jobId: string | null = null
   let creditUsageId: string | null = null
   try {
@@ -353,17 +353,15 @@ export const createJobPost = async (data: {
     }
     console.log("done", job)
     jobId = job.id
+    return job
   } catch (err) {
-    console.error("error", err)
-  }
-  if (jobId) {
-    redirect(`/home/jobs/${jobId}/complete`)
-  } else if (!jobId && creditUsageId) {
-    console.log("restoring credits")
-    await prisma.creditUsage.delete({
-      where: { id: creditUsageId },
-    })
-    redirect("/home/create/error")
+    if (!jobId && creditUsageId) {
+      console.log("restoring credits")
+      await prisma.creditUsage.delete({
+        where: { id: creditUsageId },
+      })
+    }
+    throw err
   }
 }
 
