@@ -32,30 +32,53 @@ export const getRepoMetaFiles = async ({
   type: AcceptedFileName
 }): Promise<string | null> => {
   try {
-    console.log("getRepoMetaFiles", path, owner, repo, type)
     const files = await listRepoFiles(path)
-    console.log("files", files)
+    if (!files || files.length === 0) {
+      console.warn("No files found in repository")
+      return null
+    }
+
     const metaFiles = getFileTypes(type)
-    console.log("metaFiles", metaFiles)
     if (!metaFiles) {
       return null
     }
+
     const matchedFiles = files.filter((file) => metaFiles.includes(file.name))
-    if (!matchedFiles) {
+    if (!matchedFiles.length) {
+      console.warn("No matching meta files found")
       return null
     }
-    const metaFileContent = await Promise.all(
+
+    const metaFileContent = await Promise.allSettled(
       matchedFiles.map(async (file) => {
-        const results = await getFileContent({ owner, repo, path: file.path })
-        return {
-          filename: file.name,
-          content: results,
+        try {
+          const results = await getFileContent({ owner, repo, path: file.path })
+          return {
+            filename: file.name,
+            content: results,
+          }
+        } catch (err) {
+          console.warn(`Failed to fetch content for ${file.path}:`, err)
+          return null
         }
       })
     )
-    const filteredContent = metaFileContent.filter(
-      (x) => x.content && x.content.length > 0
-    )
+
+    const filteredContent = metaFileContent
+      .filter(
+        (
+          result
+        ): result is PromiseFulfilledResult<{
+          filename: string
+          content: string
+        }> => result.status === "fulfilled" && result.value !== null
+      )
+      .map((result) => result.value)
+      .filter((x) => x.content && x.content.length > 0)
+
+    if (!filteredContent.length) {
+      return null
+    }
 
     return `also consider the following files: ${filteredContent
       .map((x) => {
