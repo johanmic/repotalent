@@ -279,7 +279,7 @@ export const createJobPost = async (data: {
         firstPurchaseWithCreditsAndJobBoard?.id ||
         firstPurchaseWithCredits?.id ||
         null
-      await $tx.creditUsage.create({
+      const creditUsage = await $tx.creditUsage.create({
         data: {
           userId: user.id,
           creditsUsed: 1,
@@ -287,6 +287,7 @@ export const createJobPost = async (data: {
           purchaseId,
         },
       })
+      creditUsageId = creditUsage.id
       console.log("creditUsage")
 
       return job
