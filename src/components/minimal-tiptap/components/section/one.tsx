@@ -1,11 +1,11 @@
-import * as React from "react"
-import type { Editor } from "@tiptap/react"
-import type { Level } from "@tiptap/extension-heading"
-import type { FormatAction } from "../../types"
-import type { VariantProps } from "class-variance-authority"
 import type { toggleVariants } from "@/components/ui/toggle"
 import { cn } from "@/lib/utils"
-import { ChevronDown, AArrowUp } from "lucide-react"
+import type { Level } from "@tiptap/extension-heading"
+import type { Editor } from "@tiptap/react"
+import type { VariantProps } from "class-variance-authority"
+import { AArrowUp, ChevronDown } from "lucide-react"
+import React, { JSX } from "react"
+import type { FormatAction } from "../../types"
 
 import {
   DropdownMenu,
@@ -13,8 +13,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ToolbarButton } from "../toolbar-button"
 import { ShortcutKey } from "../shortcut-key"
+import { ToolbarButton } from "../toolbar-button"
 
 interface TextStyle
   extends Omit<
