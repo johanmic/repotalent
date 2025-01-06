@@ -37,6 +37,7 @@ model user {
     subscription         subscription[]
     githubInstallationId Int?
     skipGithub           Boolean?
+    Contributor          Contributor[]
 }
 
 model organization {
@@ -76,6 +77,7 @@ model jobPost {
     type              String?
     experience        String?
     seniority         Float?
+    data              String?
     remote            Boolean?
     organization      organization?             @relation(fields: [organizationId], references: [id])
     organizationId    String?
@@ -152,6 +154,29 @@ model openSourcePackage {
     createdAt   DateTime                   @default(now())
     updatedAt   DateTime                   @updatedAt
     versions    openSourcePackageVersion[]
+    Contributor Contributor[]
+}
+
+model Contributor {
+    id        String              @id @default(cuid())
+    packageId String
+    package   openSourcePackage   @relation(fields: [packageId], references: [id])
+    userId    String
+    user      user                @relation(fields: [userId], references: [id])
+    createdAt DateTime            @default(now())
+    updatedAt DateTime            @updatedAt
+    bio       String?
+    social    ContributorSocial[]
+}
+
+model ContributorSocial {
+    id            String      @id @default(cuid())
+    contributorId String
+    contributor   Contributor @relation(fields: [contributorId], references: [id])
+    type          String
+    url           String
+    createdAt     DateTime    @default(now())
+    updatedAt     DateTime    @updatedAt
 }
 
 model openSourcePackageVersion {

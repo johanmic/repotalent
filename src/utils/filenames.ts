@@ -4,6 +4,7 @@ export type AcceptedFileName =
   | "Makefile"
   | "Podfile.lock"
   | "pyproject.toml"
+  | "pubspec.yaml"
 
 export const acceptedFileNames: AcceptedFileName[] = [
   "package.json",
@@ -11,6 +12,7 @@ export const acceptedFileNames: AcceptedFileName[] = [
   "Makefile",
   "Podfile.lock",
   "pyproject.toml",
+  "pubspec.yaml",
 ] as const
 
 export const acceptedFileNamesSet = new Set<AcceptedFileName>(acceptedFileNames)

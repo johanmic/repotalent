@@ -11,7 +11,8 @@ import { createSlug } from "@/utils/slug"
 import { getUser } from "@/utils/supabase/server"
 import { getRepoMetaFiles } from "@/utils/getRepoMetaFiles"
 import { AcceptedFileName } from "@/utils/filenames"
-
+import { tasks } from "@trigger.dev/sdk/v3"
+import { UPDATE_JOB_DEPS } from "@/trigger/constants"
 import {
   city,
   country,
@@ -83,57 +84,7 @@ const updateJobTags = async ({
   })
 }
 
-const processPackages = async ({
-  jobId,
-  dependencies,
-}: {
-  jobId: string
-  dependencies: { name: string; version: string }[]
-}) => {
-  const BATCH_SIZE = 100
-
-  for (let i = 0; i < dependencies.length; i += BATCH_SIZE) {
-    const batch = dependencies.slice(i, i + BATCH_SIZE)
-
-    await prisma.$transaction(async (tx) => {
-      await Promise.all(
-        batch.map(async ({ name, version }) => {
-          const pkg = await tx.openSourcePackage.upsert({
-            where: { name },
-            create: { name },
-            update: {},
-            select: { id: true },
-          })
-
-          const pkgVersion = await tx.openSourcePackageVersion.upsert({
-            where: {
-              packageId_version: {
-                packageId: pkg.id,
-                version,
-              },
-            },
-            create: {
-              version,
-              packageId: pkg.id,
-              createdAt: new Date(),
-            },
-            update: {},
-            select: { id: true },
-          })
-
-          await tx.jobPostToPackageVersion.create({
-            data: {
-              jobPostId: jobId,
-              packageVersionId: pkgVersion.id,
-            },
-          })
-        })
-      )
-    })
-  }
-}
-
-const processPackagesAndTags = async ({
+const processTags = async ({
   jobId,
   dependencies,
   existingTags,
@@ -149,7 +100,6 @@ const processPackagesAndTags = async ({
   const newTags = tags.filter((tag) => !existingTags.has(tag.toLowerCase()))
   const allTags = uniq([...existingTags, ...defaultTags, ...newTags])
   await updateJobTags({ jobId, allTags })
-  await processPackages({ jobId, dependencies })
 }
 
 export const createJobPost = async (data: {
@@ -168,7 +118,7 @@ export const createJobPost = async (data: {
     if (!user?.id) {
       throw new Error("User not authenticated")
     }
-    console.log("creating", data.meta)
+
     let extra = ""
     if (
       data.meta?.repo &&
@@ -199,6 +149,22 @@ export const createJobPost = async (data: {
       throw new Error("User not in organization")
     }
 
+    console.log("creating", data.meta)
+    const job = await prisma.jobPost.create({
+      data: {
+        title: "",
+        slug: "",
+        source: data.filename,
+        organizationId,
+        published: null,
+        data: data.data,
+      },
+    })
+
+    tasks.trigger(UPDATE_JOB_DEPS, {
+      jobId: job.id,
+    })
+
     const promptReuslts = await prepareQuestions({
       data,
       extra,
@@ -210,8 +176,9 @@ export const createJobPost = async (data: {
       }`,
       table: "jobPost",
     })
-    const job = await prisma.$transaction(async ($tx) => {
-      const job = await $tx.jobPost.create({
+    const updatedJob = await prisma.$transaction(async ($tx) => {
+      const results = await $tx.jobPost.update({
+        where: { id: job.id },
         data: {
           title: promptReuslts.suggestedTitle,
           slug,
@@ -286,7 +253,7 @@ export const createJobPost = async (data: {
       creditUsageId = creditUsage.id
       console.log("creditUsage")
 
-      return job
+      return results
     })
 
     const existingTags = new Set(
@@ -300,7 +267,7 @@ export const createJobPost = async (data: {
         ...packagesJson.devDependencies,
       }).map(([name, version]) => ({ name, version: version as string }))
       const defaultTags = ["javascript", "typescript", "nodejs"]
-      await processPackagesAndTags({
+      await processTags({
         jobId: job.id,
         dependencies,
         existingTags,
@@ -311,7 +278,7 @@ export const createJobPost = async (data: {
         ([name, version]) => ({ name, version: version as string })
       )
       const defaultTags = ["python"]
-      await processPackagesAndTags({
+      await processTags({
         jobId: job.id,
         dependencies,
         existingTags,
@@ -326,7 +293,7 @@ export const createJobPost = async (data: {
       )
       const defaultTags = ["ios", "swift", "objective-c"]
 
-      await processPackagesAndTags({
+      await processTags({
         jobId: job.id,
         dependencies,
         existingTags,
@@ -340,7 +307,7 @@ export const createJobPost = async (data: {
         })
       )
       const defaultTags = ["python"]
-      await processPackagesAndTags({
+      await processTags({
         jobId: job.id,
         dependencies,
         existingTags,
@@ -349,7 +316,7 @@ export const createJobPost = async (data: {
     }
     console.log("done", job)
     jobId = job.id
-    return job
+    return updatedJob
   } catch (err) {
     if (!jobId && creditUsageId) {
       console.log("restoring credits")
