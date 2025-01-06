@@ -35,6 +35,7 @@ export interface JobPostToPackageVersion {
   package: openSourcePackage
   packageVersion: openSourcePackageVersion
 }
+
 export interface JobPost extends jobPost {
   tags?: { tag: jobPostTag }[]
   questions?: jobPostQuestion[]
@@ -58,7 +59,6 @@ export interface JobPost extends jobPost {
     | null
 }
 
-// Separate function to update job tags
 const updateJobTags = async ({
   jobId,
   allTags,
@@ -83,7 +83,6 @@ const updateJobTags = async ({
   })
 }
 
-// Separate function to process packages
 const processPackages = async ({
   jobId,
   dependencies,
@@ -91,8 +90,7 @@ const processPackages = async ({
   jobId: string
   dependencies: { name: string; version: string }[]
 }) => {
-  // Batch process in chunks of 50
-  const BATCH_SIZE = 50
+  const BATCH_SIZE = 100
 
   for (let i = 0; i < dependencies.length; i += BATCH_SIZE) {
     const batch = dependencies.slice(i, i + BATCH_SIZE)
@@ -104,6 +102,7 @@ const processPackages = async ({
             where: { name },
             create: { name },
             update: {},
+            select: { id: true },
           })
 
           const pkgVersion = await tx.openSourcePackageVersion.upsert({
@@ -116,8 +115,10 @@ const processPackages = async ({
             create: {
               version,
               packageId: pkg.id,
+              createdAt: new Date(),
             },
             update: {},
+            select: { id: true },
           })
 
           await tx.jobPostToPackageVersion.create({
@@ -132,7 +133,6 @@ const processPackages = async ({
   }
 }
 
-// Updated processPackagesAndTags function
 const processPackagesAndTags = async ({
   jobId,
   dependencies,
@@ -148,11 +148,7 @@ const processPackagesAndTags = async ({
   const tags = await mapJS({ packages: keys })
   const newTags = tags.filter((tag) => !existingTags.has(tag.toLowerCase()))
   const allTags = uniq([...existingTags, ...defaultTags, ...newTags])
-
-  // Update job tags in a separate transaction
   await updateJobTags({ jobId, allTags })
-
-  // Process packages in a separate transaction
   await processPackages({ jobId, dependencies })
 }
 
@@ -648,6 +644,7 @@ export const getJobGeo = async () => {
 export const searchJobs = async ({ query }: { query: string }) => {
   const jobs = await prisma.jobPost.findMany({
     where: {
+      published: { not: null },
       OR: [
         { title: { contains: query } },
         { tags: { some: { tag: { tag: { contains: query } } } } },

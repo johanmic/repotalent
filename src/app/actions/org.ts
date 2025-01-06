@@ -38,16 +38,39 @@ export const createOrganization = async (data: OrganizationForm) => {
   if (!user) {
     redirect("/login")
   }
-  const organization = await prisma.organization.create({
-    data: {
-      ...omit(["city", "id"], data),
-      city: data.city ? { connect: { id: data.city.id } } : undefined,
-      users: { connect: { id: user.id } },
-    },
+
+  // Verify user exists in database
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.id },
   })
-  revalidatePath("/home", "layout")
-  revalidatePath("/home/org", "layout")
-  return organization as Organization
+
+  if (!dbUser) {
+    throw new Error("User not found in database")
+  }
+
+  try {
+    const organization = await prisma.organization.create({
+      data: {
+        ...omit(["city", "id"], data),
+        city: data.city ? { connect: { id: data.city.id } } : undefined,
+        users: { connect: { id: dbUser.id } },
+      },
+      include: {
+        city: {
+          include: {
+            country: true,
+          },
+        },
+      },
+    })
+
+    revalidatePath("/home", "layout")
+    revalidatePath("/home/org", "layout")
+    return organization as Organization
+  } catch (error) {
+    console.error("Failed to create organization:", error)
+    throw new Error("Failed to create organization. Please try again.")
+  }
 }
 
 export const updateOrganization = async (data: OrganizationForm) => {

@@ -80,7 +80,8 @@ const CitySelector = ({
                     value={city.name}
                     onSelect={(currentValue) => {
                       onSelect({ id: city.id, name: currentValue })
-                      setValue(currentValue === value ? "" : currentValue)
+                      setValue(currentValue)
+                      setSelectedCity(city)
                       setOpen(false)
                     }}
                   >

@@ -18,23 +18,16 @@ import { CheckCircle2 } from "lucide-react"
 import { useCallback, useState } from "react"
 import { Text } from "@/components/text"
 import { Title } from "@/components/title"
+import { Product } from "@/app/actions/product"
+
 type PricingSwitchProps = {
   onSwitch: (value: string) => void
 }
 
-type PricingCardProps = {
+type PricingCardProps = Product & {
   isYearly?: boolean
-  title: string
-  stripePriceId: string
-  annualStripePriceId?: string
-  monthlyPrice?: number
-  yearlyPrice?: number
-  price?: number
-  description: string
-  features: string[]
   actionLabel: string
   popular?: boolean
-  exclusive?: boolean
   onSelect: (x: PricingCardProps) => void
 }
 
@@ -71,14 +64,12 @@ const PricingCard = (props: PricingCardProps) => {
   const {
     isYearly,
     title,
-    monthlyPrice,
-    yearlyPrice,
     price,
+    yearlyPrice,
     description,
     features,
     actionLabel,
     popular,
-    exclusive,
     onSelect,
   } = props
   return (
@@ -86,22 +77,22 @@ const PricingCard = (props: PricingCardProps) => {
       className={cn(
         `w-72 flex flex-col justify-between py-1 ${
           popular ? "border-primary" : "border-secondary"
-        } mx-auto sm:mx-0`,
-        {
-          "animate-background-shine bg-background dark:bg-[linear-gradient(110deg,#000103,45%,#1e2631,55%,#000103)] bg-[length:200%_100%] transition-colors":
-            exclusive,
-        }
+        } mx-auto sm:mx-0`
+        // {
+        //   "animate-background-shine bg-background dark:bg-[linear-gradient(110deg,#000103,45%,#1e2631,55%,#000103)] bg-[length:200%_100%] transition-colors":
+        //     exclusive,
+        // }
       )}
     >
       <div>
         <CardHeader className="pb-8 pt-4">
-          {isYearly && yearlyPrice && monthlyPrice ? (
+          {isYearly && yearlyPrice && price ? (
             <div className="flex justify-between">
               <CardTitle className="dark:text-secondary-dark text-lg">
                 {title}
               </CardTitle>
               <Badge className="text-sm animate-fade-in">
-                Save ${monthlyPrice * 12 - yearlyPrice}
+                Save ${price * 12 - yearlyPrice}
               </Badge>
             </div>
           ) : (
@@ -115,16 +106,12 @@ const PricingCard = (props: PricingCardProps) => {
                 ? "$" + price
                 : yearlyPrice && isYearly
                 ? "$" + yearlyPrice
-                : monthlyPrice
-                ? "$" + monthlyPrice
+                : price
+                ? "$" + price
                 : null}
             </h3>
             <span className="flex flex-col justify-end text-sm mb-1">
-              {yearlyPrice && isYearly
-                ? "/year"
-                : monthlyPrice
-                ? "/month"
-                : null}
+              {yearlyPrice && isYearly ? "/year" : price ? "/month" : null}
             </span>
           </div>
           <CardDescription className="pt-1.5 h-12">
@@ -132,8 +119,8 @@ const PricingCard = (props: PricingCardProps) => {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
-          {features.map((feature: string) => (
-            <CheckItem key={feature} text={feature} />
+          {features.map((feature: Product["features"][number]) => (
+            <CheckItem key={feature.feature} text={feature.feature} />
           ))}
         </CardContent>
       </div>
@@ -153,7 +140,13 @@ const CheckItem = ({ text }: { text: string }) => (
   </div>
 )
 
-export const Pricing = ({ mode }: { mode: "landing" | "purchase" }) => {
+export const Pricing = ({
+  mode,
+  plans,
+}: {
+  mode: "landing" | "purchase"
+  plans: Product[]
+}) => {
   const [isYearly, setIsYearly] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<PricingCardProps | null>(
@@ -165,52 +158,6 @@ export const Pricing = ({ mode }: { mode: "landing" | "purchase" }) => {
     setSelectedPlan(plan)
     setDialogOpen(true)
   }, [])
-  const plans = [
-    {
-      title: "One Off",
-      price: 5,
-      stripePriceId: "prod_RNuDvKogVwr2P1",
-      description: "Dedicated support and infrastructure to fit your needs",
-      features: [
-        "Generate 1 Job Description",
-        "No Job Board Hosting",
-        "Export to Markdown",
-      ],
-      actionLabel: "Get Started",
-      exclusive: true,
-      recurring: false,
-    },
-    {
-      title: "Basic",
-      stripePriceId: "prod_RNu45yVmDQ4HJq",
-      monthlyPrice: 10,
-      yearlyPrice: 100,
-      description: "Essential features you need to get started",
-      features: [
-        "Generate 1 Job Description",
-        "1 Month of job board ",
-        "Unlimited edits and upgrades",
-        "Export to Markdown",
-      ],
-      actionLabel: "Get Started",
-      recurring: true,
-    },
-    {
-      title: "Pro",
-      stripePriceId: "prod_RNu59hKXDKjvtt",
-      monthlyPrice: 25,
-      yearlyPrice: 250,
-      description: "Perfect for multiple roles",
-      features: [
-        "Generate 3 Job Descriptions",
-        "3 Months of job board",
-        "Unlimited edits and upgrades",
-        "Export to Markdown",
-      ],
-      actionLabel: "Get Started",
-      recurring: true,
-    },
-  ]
 
   if (selectedPlan && dialogOpen) {
     return (
@@ -224,7 +171,7 @@ export const Pricing = ({ mode }: { mode: "landing" | "purchase" }) => {
             <p>Back</p>
           </div>
         </div>
-        <CheckoutForm productId={selectedPlan?.stripePriceId || ""} />
+        <CheckoutForm productId={selectedPlan?.stripeId || ""} />
       </div>
     )
   }
@@ -242,6 +189,7 @@ export const Pricing = ({ mode }: { mode: "landing" | "purchase" }) => {
             <PricingCard
               key={plan.title}
               {...plan}
+              actionLabel="Get Started"
               isYearly={isYearly}
               onSelect={mode === "purchase" ? handleSelectPlan : () => {}}
             />

@@ -187,10 +187,80 @@ function getFullContinentName(code: string): string {
   return continentMap[code] || code
 }
 
+const plans = [
+  {
+    title: "One Off",
+    price: 5,
+    stripePriceId: "prod_RUsy3vFHbGQBVF",
+    description: "One quick, custom job.",
+    features: ["Create 1 job description", "Export to Markdown & PDF"],
+    actionLabel: "Get Started",
+    exclusive: true,
+    recurring: false,
+    tokens: 1,
+  },
+  {
+    title: "Basic",
+    stripePriceId: "prod_RUsz5HhIxLzwxM",
+    price: 10,
+    yearlyPrice: 100,
+    description: "Core essentials for job posting.",
+    features: [
+      "Create 1 job description",
+      "1-month job board listing",
+      "Unlimited edits",
+      "Export to Markdown",
+    ],
+    actionLabel: "Get Started",
+    recurring: true,
+    tokens: 1,
+  },
+  {
+    title: "Pro",
+    stripePriceId: "prod_RUszn4ryzRPb5Y",
+    price: 25,
+    yearlyPrice: 250,
+    description: "Ideal for multiple hires.",
+    features: [
+      "Create 3 job descriptions",
+      "3-month job board listing",
+      "Unlimited edits",
+      "Export to Markdown",
+    ],
+    actionLabel: "Get Started",
+    recurring: true,
+    tokens: 3,
+  },
+]
+
+export const seedProducts = async () => {
+  await Promise.all(
+    plans.map(async (plan) => {
+      await prisma.product.create({
+        data: {
+          title: plan.title,
+          price: plan.price,
+          yearlyPrice: plan.yearlyPrice,
+          description: plan.description,
+          recurring: plan.recurring,
+          credits: plan.tokens,
+          stripeId: plan.stripePriceId,
+          features: {
+            create: plan.features.map((feature) => ({
+              feature,
+            })),
+          },
+        },
+      })
+    })
+  )
+}
+
 async function main() {
   await generateExtensions()
   await importCountriesData()
   await importCities()
+  await seedProducts()
 }
 
 main()

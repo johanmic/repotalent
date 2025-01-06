@@ -8,7 +8,7 @@ import { DotBackground } from "@/components/ui/dot-background"
 import { BigFeature } from "@/components/landing/bigFeature"
 import { acceptedFileNames } from "@/utils/filenames"
 import { Metadata } from "next"
-
+import { getProducts } from "./actions/product"
 export const metadata: Metadata = {
   title: "Job Description Generator",
   description: "Generate job descriptions in one click",
@@ -21,7 +21,8 @@ export const metadata: Metadata = {
   },
 }
 
-export default function Home() {
+export default async function Home() {
+  const plans = await getProducts()
   return (
     <div className="font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col  max-w-6xl justify-center items-center mx-auto p-4">
@@ -62,7 +63,7 @@ export default function Home() {
           CTA_link="/jobs"
         />
         <DotBackground>
-          <Pricing mode="landing" />
+          <Pricing mode="landing" plans={plans} />
         </DotBackground>
       </main>
     </div>

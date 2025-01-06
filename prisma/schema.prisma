@@ -337,13 +337,28 @@ model promoCodeUsage {
 }
 
 model product {
-    id           String         @id @default(cuid())
+    id           String           @id @default(cuid())
     credits      Int
-    stripeId     String         @unique
-    createdAt    DateTime       @default(now())
-    updatedAt    DateTime       @updatedAt
+    stripeId     String           @unique
+    createdAt    DateTime         @default(now())
+    updatedAt    DateTime         @updatedAt
+    title        String
+    description  String?
+    price        Int
+    yearlyPrice  Int?
     purchases    purchase[]
     subscription subscription[]
+    recurring    Boolean          @default(true)
+    features     productFeature[]
+}
+
+model productFeature {
+    id        String   @id @default(cuid())
+    productId String
+    product   product  @relation(fields: [productId], references: [id])
+    feature   String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 model subscription {
