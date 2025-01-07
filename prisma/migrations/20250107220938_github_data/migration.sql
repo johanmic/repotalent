@@ -42,13 +42,15 @@ CREATE TABLE "githubRepo" (
 );
 
 -- CreateTable
-CREATE TABLE "openSourcePackageTags" (
+CREATE TABLE "contribution" (
     "id" TEXT NOT NULL,
-    "tag" TEXT NOT NULL,
+    "githubRepoId" TEXT NOT NULL,
+    "contributorId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "contributions" INTEGER NOT NULL DEFAULT 1,
 
-    CONSTRAINT "openSourcePackageTags_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "contribution_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -82,13 +84,22 @@ CREATE TABLE "contributor" (
     "linkedin" TEXT,
     "facebook" TEXT,
     "instagram" TEXT,
-    "github" TEXT,
     "bluesky" TEXT,
     "fetchedOrgAt" TIMESTAMP(3),
     "optOut" BOOLEAN,
     "contributorOrganizationId" TEXT,
 
     CONSTRAINT "contributor_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "openSourcePackageTags" (
+    "id" TEXT NOT NULL,
+    "tag" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "openSourcePackageTags_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -116,14 +127,6 @@ CREATE TABLE "_githubRepoToopenSourcePackageTags" (
     CONSTRAINT "_githubRepoToopenSourcePackageTags_AB_pkey" PRIMARY KEY ("A","B")
 );
 
--- CreateTable
-CREATE TABLE "_contributorTogithubRepo" (
-    "A" TEXT NOT NULL,
-    "B" TEXT NOT NULL,
-
-    CONSTRAINT "_contributorTogithubRepo_AB_pkey" PRIMARY KEY ("A","B")
-);
-
 -- CreateIndex
 CREATE UNIQUE INDEX "githubRepo_name_key" ON "githubRepo"("name");
 
@@ -131,13 +134,19 @@ CREATE UNIQUE INDEX "githubRepo_name_key" ON "githubRepo"("name");
 CREATE UNIQUE INDEX "githubRepo_gitUrl_key" ON "githubRepo"("gitUrl");
 
 -- CreateIndex
-CREATE INDEX "_githubRepoToopenSourcePackageTags_B_index" ON "_githubRepoToopenSourcePackageTags"("B");
+CREATE UNIQUE INDEX "contributor_githubId_key" ON "contributor"("githubId");
 
 -- CreateIndex
-CREATE INDEX "_contributorTogithubRepo_B_index" ON "_contributorTogithubRepo"("B");
+CREATE INDEX "_githubRepoToopenSourcePackageTags_B_index" ON "_githubRepoToopenSourcePackageTags"("B");
 
 -- AddForeignKey
 ALTER TABLE "openSourcePackage" ADD CONSTRAINT "openSourcePackage_githubRepoId_fkey" FOREIGN KEY ("githubRepoId") REFERENCES "githubRepo"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "contribution" ADD CONSTRAINT "contribution_githubRepoId_fkey" FOREIGN KEY ("githubRepoId") REFERENCES "githubRepo"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "contribution" ADD CONSTRAINT "contribution_contributorId_fkey" FOREIGN KEY ("contributorId") REFERENCES "contributor"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "contributor" ADD CONSTRAINT "contributor_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -153,9 +162,3 @@ ALTER TABLE "_githubRepoToopenSourcePackageTags" ADD CONSTRAINT "_githubRepoToop
 
 -- AddForeignKey
 ALTER TABLE "_githubRepoToopenSourcePackageTags" ADD CONSTRAINT "_githubRepoToopenSourcePackageTags_B_fkey" FOREIGN KEY ("B") REFERENCES "openSourcePackageTags"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "_contributorTogithubRepo" ADD CONSTRAINT "_contributorTogithubRepo_A_fkey" FOREIGN KEY ("A") REFERENCES "contributor"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "_contributorTogithubRepo" ADD CONSTRAINT "_contributorTogithubRepo_B_fkey" FOREIGN KEY ("B") REFERENCES "githubRepo"("id") ON DELETE CASCADE ON UPDATE CASCADE;

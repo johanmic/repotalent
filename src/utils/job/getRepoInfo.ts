@@ -46,8 +46,7 @@ export const getJobRepoInfo = async (jobId: string) => {
 
   console.log("pkgs", packages.length)
 
-  const chonk = splitEvery(1, packages)
-  const chunks = [chonk[16]]
+  const chunks = splitEvery(16, packages)
   for (const chunk of chunks) {
     await Promise.all(
       chunk.map(async (pkg) => {
@@ -74,10 +73,12 @@ export const getJobRepoInfo = async (jobId: string) => {
           githubInstallationId,
         })
         console.log("contributors", contributors)
+        await createContributors(pkg.githubRepoId, contributors)
       })
     )
   }
 }
+
 const updateRepoInfo = async ({
   id,
   repoData,
@@ -86,11 +87,12 @@ const updateRepoInfo = async ({
   repoData: RestEndpointMethodTypes["repos"]["get"]["response"]
 }) => {
   const data = repoData.data
-  // Update the package with repo information
-
-  await prisma.githubRepo.update({
+  // Use upsert instead of update to handle both create and update cases
+  await prisma.githubRepo.upsert({
     where: { id },
-    data: {
+    create: {
+      id,
+      name: data.name,
       description: data.description,
       logo: data.owner.avatar_url,
       website: data.homepage,
@@ -101,7 +103,25 @@ const updateRepoInfo = async ({
       stars: data.stargazers_count,
       watchers: data.watchers_count,
       forks: data.forks_count,
-      // Create or connect tags
+      tags: {
+        connectOrCreate: data?.topics?.map((topic) => ({
+          where: { id: topic },
+          create: { id: topic, tag: topic },
+        })),
+      },
+    },
+    update: {
+      name: data.name,
+      description: data.description,
+      logo: data.owner.avatar_url,
+      website: data.homepage,
+      gitUrl: data.html_url,
+      repoUpdatedAt: new Date(data.updated_at),
+      archived: data.archived,
+      language: data.language,
+      stars: data.stargazers_count,
+      watchers: data.watchers_count,
+      forks: data.forks_count,
       tags: {
         connectOrCreate: data?.topics?.map((topic) => ({
           where: { id: topic },
@@ -116,16 +136,50 @@ const createContributors = async (
   id: string,
   contributors: RestEndpointMethodTypes["repos"]["listContributors"]["response"]
 ) => {
-  await prisma.contributor.createMany({
-    data: contributors.data
-      .filter((contributor) => contributor.id && contributor.login)
-      .map((contributor) => ({
-        githubUserId: contributor.id!,
-        githubRepoId: id,
-        userId: contributor.login!,
-        repoId: id,
-      })),
-  })
+  // Process one chunk at a time instead of parallel processing
+  const chunks = splitEvery(30, contributors.data)
+  for (const chunk of chunks) {
+    // Process contributors sequentially to avoid race conditions
+    for (const contributor of chunk) {
+      if (!contributor.id || contributor.login?.includes("[bot]")) {
+        continue
+      }
+
+      try {
+        await prisma.contributor.upsert({
+          where: {
+            githubId: contributor.id,
+          },
+          create: {
+            githubId: contributor.id,
+            avatar: contributor.avatar_url,
+            name: contributor.login,
+            contributions: {
+              create: {
+                contributions: contributor.contributions, // Fix: use individual contributor's contributions
+                githubRepoId: id,
+              },
+            },
+          },
+          update: {
+            avatar: contributor.avatar_url,
+            name: contributor.login,
+            contributions: {
+              create: {
+                contributions: contributor.contributions, // Fix: use individual contributor's contributions
+                githubRepoId: id,
+              },
+            },
+          },
+        })
+      } catch (error) {
+        console.error(
+          `Failed to upsert contributor ${contributor.login}:`,
+          error
+        )
+      }
+    }
+  }
 }
 
-getJobRepoInfo("cm5mls2km003wrzp0fhgkma0t")
+getJobRepoInfo("cm5n1dltq0004rzb8yuhdelnw")

@@ -37,7 +37,6 @@ model user {
     subscription         subscription[]
     githubInstallationId Int?
     skipGithub           Boolean?
-    contributor          contributor[]
 }
 
 model organization {
@@ -154,42 +153,41 @@ model openSourcePackage {
 }
 
 model githubRepo {
-    id            String    @id @default(cuid())
-    name          String    @unique
-    gitUrl        String?   @unique
-    website       String?
-    description   String?
-    logo          String?
-    createdAt     DateTime  @default(now())
-    updatedAt     DateTime  @updatedAt
-    repoUpdatedAt DateTime?
-    archived      Boolean   @default(false)
-
-    contributor       contributor[]
+    id                String                  @id @default(cuid())
+    name              String                  @unique
+    gitUrl            String?                 @unique
+    website           String?
+    description       String?
+    logo              String?
+    createdAt         DateTime                @default(now())
+    updatedAt         DateTime                @updatedAt
+    repoUpdatedAt     DateTime?
+    archived          Boolean                 @default(false)
     language          String?
     stars             Int?
     watchers          Int?
     forks             Int?
     tags              openSourcePackageTags[]
     openSourcePackage openSourcePackage[]
+    contributions     contribution[]
 }
 
-model openSourcePackageTags {
-    id        String       @id @default(cuid())
-    tag       String
-    createdAt DateTime     @default(now())
-    updatedAt DateTime     @updatedAt
-    packages  githubRepo[]
+model contribution {
+    id            String      @id @default(cuid())
+    githubRepoId  String
+    githubRepo    githubRepo  @relation(fields: [githubRepoId], references: [id])
+    contributorId String
+    contributor   contributor @relation(fields: [contributorId], references: [id])
+    createdAt     DateTime    @default(now())
+    updatedAt     DateTime    @updatedAt
+    contributions Int         @default(1)
 }
 
 model contributor {
     id                        String                   @id @default(cuid())
-    repos                     githubRepo[]
-    userId                    String
     avatar                    String?
     name                      String?
     company                   String?
-    user                      user                     @relation(fields: [userId], references: [id])
     createdAt                 DateTime                 @default(now())
     updatedAt                 DateTime                 @updatedAt
     bio                       String?
@@ -199,7 +197,7 @@ model contributor {
     cityId                    String?
     city                      city?                    @relation(fields: [cityId], references: [id])
     login                     String?
-    githubId                  Int?
+    githubId                  Int?                     @unique
     nodeId                    String?
     avatarUrl                 String?
     blog                      String?
@@ -215,12 +213,20 @@ model contributor {
     linkedin                  String?
     facebook                  String?
     instagram                 String?
-    github                    String?
     bluesky                   String?
     fetchedOrgAt              DateTime?
     optOut                    Boolean?
     contributorOrganization   contributorOrganization? @relation(fields: [contributorOrganizationId], references: [id])
     contributorOrganizationId String?
+    contributions             contribution[]
+}
+
+model openSourcePackageTags {
+    id        String       @id @default(cuid())
+    tag       String
+    createdAt DateTime     @default(now())
+    updatedAt DateTime     @updatedAt
+    packages  githubRepo[]
 }
 
 model contributorOrganization {
@@ -459,3 +465,5 @@ model subscription {
     active    Boolean    @default(true)
     recurring String     @default("month")
 }
+
+/// YOU ARE ADDING CONTRIBUTIONS TO THE MANY TO MANY ON GITHUB -> CONTRUBUTOR
