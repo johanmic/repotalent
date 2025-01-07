@@ -1,6 +1,7 @@
 import { createAppAuth } from "@octokit/auth-app"
 import { Octokit } from "@octokit/rest"
-
+import prisma from "@/store/prisma"
+import type { RestEndpointMethodTypes } from "@octokit/rest"
 const auth = createAppAuth({
   appId: process.env.GITHUB_APP_ID!,
   privateKey: process.env.GITHUB_PRIVATE_KEY!,
@@ -13,8 +14,8 @@ export const getRepo = async ({
 }: {
   owner: string
   repo: string
-  githubInstallationId: string
-}) => {
+  githubInstallationId: number
+}): Promise<RestEndpointMethodTypes["repos"]["get"]["response"] | null> => {
   const installationAuth = await auth({
     type: "installation",
     installationId: githubInstallationId,
@@ -24,12 +25,12 @@ export const getRepo = async ({
     auth: installationAuth.token,
   })
 
-  const { data: repoData } = await octokit.rest.repos.get({
+  const response = await octokit.rest.repos.get({
     owner,
     repo,
   })
 
-  return repoData
+  return response
 }
 
 export const getRepoContributors = async ({
@@ -39,8 +40,10 @@ export const getRepoContributors = async ({
 }: {
   owner: string
   repo: string
-  githubInstallationId: string
-}) => {
+  githubInstallationId: number
+}): Promise<
+  RestEndpointMethodTypes["repos"]["listContributors"]["response"]
+> => {
   const installationAuth = await auth({
     type: "installation",
     installationId: githubInstallationId,
@@ -50,10 +53,11 @@ export const getRepoContributors = async ({
     auth: installationAuth.token,
   })
 
-  const { data: contributors } = await octokit.rest.repos.listContributors({
+  const response = await octokit.rest.repos.listContributors({
     owner,
     repo,
   })
+  return response
 }
 
 export const getRepoContributor = async ({

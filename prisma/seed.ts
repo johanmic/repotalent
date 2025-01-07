@@ -256,11 +256,23 @@ export const seedProducts = async () => {
   )
 }
 
+export const seedPromoCodes = async () => {
+  await prisma.promoCode.create({
+    data: {
+      code: "BEACHBOD25",
+      credits: 25,
+      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
+      limit: 10,
+    },
+  })
+}
+
 async function main() {
   await generateExtensions()
   await importCountriesData()
   await importCities()
   await seedProducts()
+  await seedPromoCodes()
 }
 
 main()

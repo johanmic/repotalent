@@ -37,7 +37,7 @@ model user {
     subscription         subscription[]
     githubInstallationId Int?
     skipGithub           Boolean?
-    Contributor          Contributor[]
+    contributor          contributor[]
 }
 
 model organization {
@@ -138,6 +138,7 @@ model jobPostToPackageVersion {
     createdAt        DateTime                 @default(now())
     updatedAt        DateTime                 @updatedAt
     includeInPost    Boolean                  @default(false)
+    importance       Int?
 
     @@id([jobPostId, packageVersionId])
     @@index([jobPostId])
@@ -145,38 +146,96 @@ model jobPostToPackageVersion {
 }
 
 model openSourcePackage {
-    id          String                     @id @default(cuid())
-    name        String                     @unique
-    gitUrl      String?
-    website     String?
+    id           String                     @id @default(cuid())
+    name         String                     @unique
+    githubRepo   githubRepo?                @relation(fields: [githubRepoId], references: [id])
+    githubRepoId String?
+    versions     openSourcePackageVersion[]
+}
+
+model githubRepo {
+    id            String    @id @default(cuid())
+    name          String    @unique
+    gitUrl        String?   @unique
+    website       String?
+    description   String?
+    logo          String?
+    createdAt     DateTime  @default(now())
+    updatedAt     DateTime  @updatedAt
+    repoUpdatedAt DateTime?
+    archived      Boolean   @default(false)
+
+    contributor       contributor[]
+    language          String?
+    stars             Int?
+    watchers          Int?
+    forks             Int?
+    tags              openSourcePackageTags[]
+    openSourcePackage openSourcePackage[]
+}
+
+model openSourcePackageTags {
+    id        String       @id @default(cuid())
+    tag       String
+    createdAt DateTime     @default(now())
+    updatedAt DateTime     @updatedAt
+    packages  githubRepo[]
+}
+
+model contributor {
+    id                        String                   @id @default(cuid())
+    repos                     githubRepo[]
+    userId                    String
+    avatar                    String?
+    name                      String?
+    company                   String?
+    user                      user                     @relation(fields: [userId], references: [id])
+    createdAt                 DateTime                 @default(now())
+    updatedAt                 DateTime                 @updatedAt
+    bio                       String?
+    followers                 Int?
+    following                 Int?
+    locationRaw               String?
+    cityId                    String?
+    city                      city?                    @relation(fields: [cityId], references: [id])
+    login                     String?
+    githubId                  Int?
+    nodeId                    String?
+    avatarUrl                 String?
+    blog                      String?
+    hireable                  Boolean?
+    publicRepos               Int?
+    publicGists               Int?
+    type                      String?
+    siteAdmin                 Boolean?                 @default(false)
+    githubCreatedAt           DateTime?
+    githubUpdatedAt           DateTime?
+    readme                    String?
+    twitter                   String?
+    linkedin                  String?
+    facebook                  String?
+    instagram                 String?
+    github                    String?
+    bluesky                   String?
+    fetchedOrgAt              DateTime?
+    optOut                    Boolean?
+    contributorOrganization   contributorOrganization? @relation(fields: [contributorOrganizationId], references: [id])
+    contributorOrganizationId String?
+}
+
+model contributorOrganization {
+    id          String        @id @default(cuid())
+    name        String
+    avatar      String?
     description String?
-    logo        String?
-    createdAt   DateTime                   @default(now())
-    updatedAt   DateTime                   @updatedAt
-    versions    openSourcePackageVersion[]
-    Contributor Contributor[]
-}
-
-model Contributor {
-    id        String              @id @default(cuid())
-    packageId String
-    package   openSourcePackage   @relation(fields: [packageId], references: [id])
-    userId    String
-    user      user                @relation(fields: [userId], references: [id])
-    createdAt DateTime            @default(now())
-    updatedAt DateTime            @updatedAt
-    bio       String?
-    social    ContributorSocial[]
-}
-
-model ContributorSocial {
-    id            String      @id @default(cuid())
-    contributorId String
-    contributor   Contributor @relation(fields: [contributorId], references: [id])
-    type          String
-    url           String
-    createdAt     DateTime    @default(now())
-    updatedAt     DateTime    @updatedAt
+    followers   Int?
+    following   Int?
+    email       String?
+    twitter     String?
+    location    String?
+    contributor contributor[]
+    createdAt   DateTime      @default(now())
+    updatedAt   DateTime      @updatedAt
 }
 
 model openSourcePackageVersion {
@@ -242,6 +301,7 @@ model city {
     country       country                   @relation(fields: [countryId], references: [id])
     user          user[]
     organizations organization[]
+    contributor   contributor[]
 
     @@unique([name, countryId])
 }
