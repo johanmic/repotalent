@@ -434,6 +434,9 @@ export const listJobs = async (): Promise<JobPost[]> => {
       ratings: true,
       packages: true,
     },
+    orderBy: {
+      createdAt: "desc",
+    },
   })
   return results as JobPost[]
 }

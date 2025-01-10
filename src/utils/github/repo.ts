@@ -82,3 +82,49 @@ export const getRepoContributor = async ({
 
   return contributor
 }
+
+export const getGithubUser = async ({
+  username,
+  installationId,
+}: {
+  username: string
+  installationId: number
+}): Promise<RestEndpointMethodTypes["users"]["getByUsername"]["response"]> => {
+  const installationAuth = await auth({
+    type: "installation",
+    installationId: installationId,
+  })
+
+  const octokit = new Octokit({
+    auth: installationAuth.token,
+  })
+
+  const results = await octokit.rest.users.getByUsername({
+    username,
+  })
+
+  return results
+}
+
+export const checkRateLimit = async ({
+  installationId,
+}: {
+  installationId: number
+}): Promise<{
+  limit: number
+  remaining: number
+  reset: Date
+}> => {
+  const installationAuth = await auth({
+    type: "installation",
+    installationId: installationId,
+  })
+
+  const octokit = new Octokit({
+    auth: installationAuth.token,
+  })
+
+  const response = await octokit.rest.rateLimit.get()
+  const { limit, remaining, reset } = response.data.rate
+  return { limit, remaining, reset: new Date(reset * 1000) }
+}

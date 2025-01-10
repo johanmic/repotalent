@@ -64,48 +64,49 @@ model organization {
 }
 
 model jobPost {
-    id                String                    @id @default(cuid())
-    published         DateTime?                 @default(now())
-    title             String?
-    description       String?
-    source            String
-    createdAt         DateTime                  @default(now())
-    updatedAt         DateTime                  @updatedAt
-    minSalary         Int?
-    maxSalary         Int?
-    type              String?
-    experience        String?
-    seniority         Float?
-    data              String?
-    remote            Boolean?
-    organization      organization?             @relation(fields: [organizationId], references: [id])
-    organizationId    String?
-    packages          jobPostToPackageVersion[]
-    questions         jobPostQuestion[]
-    tags              jobPostToTag[]
-    openSource        Boolean                   @default(false)
-    views             Int                       @default(0)
-    hybrid            Boolean                   @default(false)
-    consulting        Boolean                   @default(false)
-    ratings           jobPostRatings[]
-    tone              String?
-    additionalInfo    String?
-    applicationUrl    String?
-    equity            Boolean                   @default(false)
-    currencyId        String?
-    currency          currency?                 @relation(fields: [currencyId], references: [id])
-    slug              String                    @unique
-    jobPostTokenUsage jobPostTokenUsage[]
-    creditUsage       creditUsage[]
-    showAuthor        Boolean                   @default(true)
-    showOrganization  Boolean                   @default(true)
-    showSalary        Boolean                   @default(true)
-    showLocation      Boolean                   @default(true)
-    showTags          Boolean                   @default(true)
-    showPackages      Boolean                   @default(true)
-    showQuestions     Boolean                   @default(true)
-    githubRepo        String?
-    githubPath        String?
+    id                         String                       @id @default(cuid())
+    published                  DateTime?                    @default(now())
+    title                      String?
+    description                String?
+    source                     String
+    createdAt                  DateTime                     @default(now())
+    updatedAt                  DateTime                     @updatedAt
+    minSalary                  Int?
+    maxSalary                  Int?
+    type                       String?
+    experience                 String?
+    seniority                  Float?
+    data                       String?
+    remote                     Boolean?
+    organization               organization?                @relation(fields: [organizationId], references: [id])
+    organizationId             String?
+    packages                   jobPostToPackageVersion[]
+    questions                  jobPostQuestion[]
+    tags                       jobPostToTag[]
+    openSource                 Boolean                      @default(false)
+    views                      Int                          @default(0)
+    hybrid                     Boolean                      @default(false)
+    consulting                 Boolean                      @default(false)
+    ratings                    jobPostRatings[]
+    tone                       String?
+    additionalInfo             String?
+    applicationUrl             String?
+    equity                     Boolean                      @default(false)
+    currencyId                 String?
+    currency                   currency?                    @relation(fields: [currencyId], references: [id])
+    slug                       String                       @unique
+    jobPostTokenUsage          jobPostTokenUsage[]
+    creditUsage                creditUsage[]
+    showAuthor                 Boolean                      @default(true)
+    showOrganization           Boolean                      @default(true)
+    showSalary                 Boolean                      @default(true)
+    showLocation               Boolean                      @default(true)
+    showTags                   Boolean                      @default(true)
+    showPackages               Boolean                      @default(true)
+    showQuestions              Boolean                      @default(true)
+    githubRepo                 String?
+    githubPath                 String?
+    jobPostContributorBookmark jobPostContributorBookmark[]
 }
 
 model jobPostTokenUsage {
@@ -142,6 +143,22 @@ model jobPostToPackageVersion {
     @@id([jobPostId, packageVersionId])
     @@index([jobPostId])
     @@index([packageVersionId])
+}
+
+model jobPostContributorBookmark {
+    id            String      @id @default(cuid())
+    jobPost       jobPost     @relation(fields: [jobPostId], references: [id])
+    jobPostId     String
+    contributor   contributor @relation(fields: [contributorId], references: [id])
+    contributorId String
+    createdAt     DateTime    @default(now())
+    updatedAt     DateTime    @updatedAt
+    status        String?
+    comment       String?
+    rating        Float?
+    starred       Boolean?
+
+    @@unique([jobPostId, contributorId])
 }
 
 model openSourcePackage {
@@ -184,41 +201,44 @@ model contribution {
 }
 
 model contributor {
-    id                        String                   @id @default(cuid())
-    avatar                    String?
-    name                      String?
-    company                   String?
-    createdAt                 DateTime                 @default(now())
-    updatedAt                 DateTime                 @updatedAt
-    bio                       String?
-    followers                 Int?
-    following                 Int?
-    locationRaw               String?
-    cityId                    String?
-    city                      city?                    @relation(fields: [cityId], references: [id])
-    login                     String?
-    githubId                  Int?                     @unique
-    nodeId                    String?
-    avatarUrl                 String?
-    blog                      String?
-    hireable                  Boolean?
-    publicRepos               Int?
-    publicGists               Int?
-    type                      String?
-    siteAdmin                 Boolean?                 @default(false)
-    githubCreatedAt           DateTime?
-    githubUpdatedAt           DateTime?
-    readme                    String?
-    twitter                   String?
-    linkedin                  String?
-    facebook                  String?
-    instagram                 String?
-    bluesky                   String?
-    fetchedOrgAt              DateTime?
-    optOut                    Boolean?
-    contributorOrganization   contributorOrganization? @relation(fields: [contributorOrganizationId], references: [id])
-    contributorOrganizationId String?
-    contributions             contribution[]
+    id                         String                       @id @default(cuid())
+    avatar                     String?
+    name                       String?
+    company                    String?
+    createdAt                  DateTime                     @default(now())
+    updatedAt                  DateTime                     @updatedAt
+    bio                        String?
+    followers                  Int?
+    following                  Int?
+    locationRaw                String?
+    cityId                     String?
+    city                       city?                        @relation(fields: [cityId], references: [id])
+    login                      String?
+    githubId                   Int?                         @unique
+    nodeId                     String?
+    avatarUrl                  String?
+    blog                       String?
+    hireable                   Boolean?
+    email                      String?
+    fetchedAt                  DateTime?
+    publicRepos                Int?
+    publicGists                Int?
+    type                       String?
+    siteAdmin                  Boolean?                     @default(false)
+    githubCreatedAt            DateTime?
+    githubUpdatedAt            DateTime?
+    readme                     String?
+    twitter                    String?
+    linkedin                   String?
+    facebook                   String?
+    instagram                  String?
+    bluesky                    String?
+    fetchedOrgAt               DateTime?
+    optOut                     Boolean?
+    contributorOrganization    contributorOrganization?     @relation(fields: [contributorOrganizationId], references: [id])
+    contributorOrganizationId  String?
+    contributions              contribution[]
+    jobPostContributorBookmark jobPostContributorBookmark[]
 }
 
 model openSourcePackageTags {
@@ -441,6 +461,7 @@ model product {
     subscription subscription[]
     recurring    Boolean          @default(true)
     features     productFeature[]
+    leadsEnabled Boolean          @default(false)
 }
 
 model productFeature {

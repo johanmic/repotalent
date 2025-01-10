@@ -15,39 +15,57 @@ import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { getUser } from "@actions/user"
 import { Separator } from "@/components/ui/separator"
+import { getUserSubscriptionFromDB } from "@actions/subscriptions"
 // import { SidebarUser } from "@/components/sidebar-user"
 import { NavUser } from "@/components/ui/nav-user"
 import { cn } from "@/lib/utils"
-const items = [
-  // {
-  //   label: "Home",
-  //   icon: <Icon name="home" />,
-  //   href: "/home",
-  // },
-  {
-    label: "Jobs",
-    icon: <Icon name="post" />,
-    href: "/home/jobs",
-  },
-  {
-    label: "Organization",
-    icon: <Icon name="organization" />,
-    href: "/home/org",
-  },
-  {
-    label: "Candidates",
-    icon: <Icon name="user" />,
-    comingSoon: true,
-  },
-  {
-    label: "Leads",
-    icon: <Icon name="user" />,
-    comingSoon: true,
-  },
-]
+
+type SidebarItem = {
+  label: string
+  icon: React.ReactNode
+  href?: string
+  comingSoon?: boolean
+  pro?: boolean
+}
+
 const SidebarComponent = async () => {
   const user = await getUser()
-
+  const items: SidebarItem[] = [
+    // {
+    //   label: "Home",
+    //   icon: <Icon name="home" />,
+    //   href: "/home",
+    // },
+    {
+      label: "Jobs",
+      icon: <Icon name="post" />,
+      href: "/home/jobs",
+    },
+    {
+      label: "Organization",
+      icon: <Icon name="organization" />,
+      href: "/home/org",
+    },
+    {
+      label: "Candidates",
+      icon: <Icon name="user" />,
+      comingSoon: true,
+    },
+  ]
+  const subscription = await getUserSubscriptionFromDB()
+  if (subscription?.purchases?.[0]?.product?.leadsEnabled) {
+    items.push({
+      label: "Leads",
+      icon: <Icon name="user" />,
+      href: "/home/leads",
+    })
+  } else {
+    items.push({
+      label: "Leads",
+      icon: <Icon name="user" />,
+      pro: true,
+    })
+  }
   return (
     <div>
       <Sidebar>
@@ -60,13 +78,19 @@ const SidebarComponent = async () => {
               {items.map((item) => (
                 <SidebarMenuItem
                   key={item.label}
-                  className={cn(item.comingSoon && "opacity-50")}
+                  className={cn(item.comingSoon || (item.pro && "opacity-50"))}
                 >
                   <SidebarMenuButton asChild>
                     <a href={item.comingSoon ? "#" : item.href}>
                       {item.icon}
                       <span>{item.label}</span>
                       {item.comingSoon && <Badge>Coming Soon</Badge>}
+                      {item.pro && (
+                        <Badge>
+                          <Icon name="lock" className="h-3 w-3 mr-1" /> Pro
+                          Feature
+                        </Badge>
+                      )}
                     </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

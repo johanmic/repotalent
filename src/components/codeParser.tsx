@@ -99,8 +99,15 @@ const CodeParser = ({ data, filename = "package.json" }: CodeParserProps) => {
 
   const fileData = useMemo(() => {
     if (!data) return null
-    return getFileData(data, filename)
+    try {
+      return getFileData(data, filename)
+    } catch (error) {
+      console.error("Error parsing file:", error)
+      return null
+    }
   }, [data, filename])
+
+  if (!fileData) return null
 
   const calculateSectionLength = (obj: Record<string, string>): number => {
     if (Array.isArray(obj)) return obj.length
@@ -136,10 +143,11 @@ const CodeParser = ({ data, filename = "package.json" }: CodeParserProps) => {
       highlightItems()
     }
   }, [intialAnimationDone, currentPaths, fileData?.length])
-  if (!data) return null
+
   const calculateTotalItems = (obj: Record<string, string>): number => {
+    if (!obj) return 0
     return Object.values(obj).reduce((count, value) => {
-      if (typeof value === "object") {
+      if (typeof value === "object" && value !== null) {
         return count + calculateTotalItems(value)
       }
       return count + 1
@@ -277,8 +285,6 @@ const CodeParser = ({ data, filename = "package.json" }: CodeParserProps) => {
       )
     })
   }
-
-  if (!fileData) return null
 
   return (
     <Card className="bg-zinc-800 p-4">

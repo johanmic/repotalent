@@ -4,7 +4,11 @@ import CodeParser from "@/components/codeParser"
 import UploadForm from "@/components/uploadForm"
 import { createJobPost } from "@actions/jobpost"
 import { useEffect, useState } from "react"
-import { AcceptedFileName } from "@/utils/filenames"
+import {
+  AcceptedFileName,
+  isAcceptedFileName,
+  removePathFromFilename,
+} from "@/utils/filenames"
 import { useRouter } from "next/navigation"
 interface NewPostProps {
   initialFileData?: {
@@ -32,8 +36,19 @@ const NewPost = ({
   const [fileData, setFileData] = useState<{
     filename: AcceptedFileName
     data: string
-  } | null>(initialFileData || null)
+  } | null>(null)
 
+  useEffect(() => {
+    if (initialFileData) {
+      const filename = removePathFromFilename(initialFileData.filename)
+      if (filename && isAcceptedFileName(filename)) {
+        setFileData({
+          filename: filename as AcceptedFileName,
+          data: initialFileData.data,
+        })
+      }
+    }
+  }, [initialFileData])
   const submit = async () => {
     if (!fileData?.filename || !fileData?.data?.length || isProcessing) return
     setSubmitted(true)

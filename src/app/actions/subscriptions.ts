@@ -124,6 +124,24 @@ export const getUserSubscription = async () => {
   }
 }
 
+export const getUserSubscriptionFromDB = async () => {
+  const { user } = await getUser()
+  if (!user) {
+    throw new Error("User not found")
+  }
+  const subscription = await prisma.subscription.findFirst({
+    where: { userId: user.id },
+    include: {
+      purchases: {
+        include: {
+          product: true,
+        },
+      },
+    },
+  })
+  return subscription
+}
+
 export const cancelUserSubscription = async (stripeSubscriptionId: string) => {
   const { user } = await getUser()
   if (!user) {

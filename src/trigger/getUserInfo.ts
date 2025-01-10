@@ -1,8 +1,8 @@
 import { logger, task, tasks } from "@trigger.dev/sdk/v3"
-import { getJobRepoInfo } from "@/utils/job/getRepoInfo"
-import { GET_REPO_INFO, GET_USER_INFO } from "./constants"
+import { getUserInfo } from "@/utils/job/getUserInfo"
+import { GET_USER_INFO, CALC_SCORES } from "./constants"
 export const updateJobDeps = task({
-  id: GET_REPO_INFO,
+  id: GET_USER_INFO,
   // Set an optional maxDuration to prevent tasks from running indefinitely
   maxDuration: 300, // Stop executing after 300 secs (5 mins) of compute
   run: async (
@@ -13,8 +13,9 @@ export const updateJobDeps = task({
   ) => {
     logger.log("Updating job deps", { jobId: payload.jobId, ctx })
 
-    await getJobRepoInfo(payload.jobId)
-    await tasks.trigger(GET_USER_INFO, { jobId: payload.jobId })
+    await getUserInfo(payload.jobId)
+    await tasks.trigger(CALC_SCORES, { jobId: payload.jobId })
+
     return {
       message: "Job deps updated",
     }

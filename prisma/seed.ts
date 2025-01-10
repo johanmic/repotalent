@@ -214,6 +214,7 @@ const plans = [
     actionLabel: "Get Started",
     recurring: true,
     tokens: 1,
+    leadsEnabled: false,
   },
   {
     title: "Pro",
@@ -226,10 +227,12 @@ const plans = [
       "3-month job board listing",
       "Unlimited edits",
       "Export to Markdown",
+      "Find leads from open source packages",
     ],
     actionLabel: "Get Started",
     recurring: true,
     tokens: 3,
+    leadsEnabled: true,
   },
 ]
 

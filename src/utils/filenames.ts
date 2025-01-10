@@ -22,4 +22,8 @@ export const isAcceptedFileName = (
 ): filename is AcceptedFileName =>
   acceptedFileNamesSet.has(filename as AcceptedFileName)
 
+export const removePathFromFilename = (filename: string) => {
+  return filename.split("/").pop()
+}
+
 export const getAcceptedFileNames = () => acceptedFileNames

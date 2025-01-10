@@ -126,15 +126,23 @@ const GithubPicker = ({ hasGithub }: { hasGithub: boolean }) => {
   }
   if (selectedFile && fileData) {
     return (
-      <Manual
-        initialFileData={fileData}
-        showDropzone={false}
-        metadata={{
-          repo: selectedRepo?.name,
-          owner: selectedRepo?.owner,
-          path: currentPath,
-        }}
-      />
+      <div>
+        <div className="flex justify-end">
+          <Button onClick={() => setSelectedFile(null)}>
+            <Icon name="moveLeft" className="mr-2 h-4 w-4" />
+            Back to files
+          </Button>
+        </div>
+        <Manual
+          initialFileData={fileData}
+          showDropzone={false}
+          metadata={{
+            repo: selectedRepo?.name,
+            owner: selectedRepo?.owner,
+            path: currentPath,
+          }}
+        />
+      </div>
     )
   }
   return (
