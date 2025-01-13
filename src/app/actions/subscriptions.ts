@@ -103,7 +103,9 @@ export const handleSubscriptionDeletion = async ({
     },
   })
 }
-
+export interface Subscription extends Stripe.Subscription {
+  plan: Stripe.Plan
+}
 export const getUserSubscription = async () => {
   const { user } = await getUser()
   if (!user) {

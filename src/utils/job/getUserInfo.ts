@@ -1,12 +1,7 @@
 import prisma from "@/store/prisma"
-import { logger, tasks } from "@trigger.dev/sdk/v3"
-import {
-  openSourcePackageVersion,
-  openSourcePackage,
-  githubRepo,
-} from "@prisma/client"
-import { getGithubUser, checkRateLimit } from "@/utils/github/repo"
 import { GET_USER_INFO } from "@/trigger/constants"
+import { checkRateLimit, getGithubUser } from "@/utils/github/repo"
+import { logger, tasks } from "@trigger.dev/sdk/v3"
 export const getUserInfo = async (jobId: string) => {
   const job = await prisma.jobPost.findUniqueOrThrow({
     where: { id: jobId },
@@ -132,6 +127,11 @@ export const getUserInfo = async (jobId: string) => {
     logger.info(`Waiting for ${waitMinutes} minutes`)
     tasks.trigger(GET_USER_INFO, { jobId }, { delay: `${waitMinutes} minutes` })
   }
+  await prisma.jobActionsLog.create({
+    data: {
+      jobPostId: jobId,
+      action: "getUserInfo",
+      completed: true,
+    },
+  })
 }
-
-getUserInfo("cm5n1dltq0004rzb8yuhdelnw")

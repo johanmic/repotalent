@@ -1,5 +1,16 @@
-import { PrismaClient } from "@prisma/client"
 import prisma from "@/store/prisma"
+
+interface Contributor {
+  id: string
+  publicRepos: number | null
+  followers: number | null
+  contributions: {
+    contributions: number
+    githubRepo: {
+      id: string
+    }
+  }[]
+}
 
 export const precalcRatings = async (
   jobId: string,
@@ -13,7 +24,7 @@ export const precalcRatings = async (
   const jobRepoCount = 5 // your logic to count job repos
   const jobSeniority = job.seniority || 1
 
-  const contributors = await prisma.contributor.findMany({
+  const contributors: Contributor[] = await prisma.contributor.findMany({
     where: {
       fetchedAt: {
         not: null,
@@ -59,7 +70,7 @@ export const precalcRatings = async (
 
   // Process in batches of 100
   const batchSize = 100
-  const batches = []
+  const batches: Promise<any>[] = []
 
   for (let i = 0; i < contributors.length; i += batchSize) {
     const batch = contributors.slice(i, i + batchSize).map((contributor) => {
@@ -99,12 +110,18 @@ export const precalcRatings = async (
         contributors.length / batchSize
       )}`
     )
-    const batchResult = await Promise.all(batch)
-    batches.push(batchResult)
+    batches.push(Promise.all(batch))
   }
 
   const results = batches.flat()
   console.log(`Completed processing ${results.length} contributors`)
+  await prisma.jobActionsLog.create({
+    data: {
+      jobPostId: jobId,
+      action: "calculateJobScores",
+      completed: true,
+    },
+  })
 }
 
-precalcRatings("cm5n1dltq0004rzb8yuhdelnw")
+//precalcRatings("cm5n1dltq0004rzb8yuhdelnw")

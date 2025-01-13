@@ -1,8 +1,6 @@
 import prisma from "@/store/prisma"
 import { getRepo, getRepoContributors } from "@/utils/github/repo"
-import type { Package } from "@/utils/job/getGithubUrls"
-import { splitEvery } from "ramda"
-import { normalizeGithubUrl, getInfoFromUrl } from "@/utils/job/getGithubUrls"
+import { getInfoFromUrl, normalizeGithubUrl } from "@/utils/job/getGithubUrls"
 import type { RestEndpointMethodTypes } from "@octokit/rest"
 
 export const getJobRepoInfo = async (jobId: string) => {
@@ -46,37 +44,54 @@ export const getJobRepoInfo = async (jobId: string) => {
 
   console.log("pkgs", packages.length)
 
-  const chunks = splitEvery(16, packages)
-  for (const chunk of chunks) {
-    await Promise.all(
-      chunk.map(async (pkg) => {
-        console.log("pkg", pkg)
-        if (!pkg.githubRepo?.gitUrl || !pkg.githubRepoId) {
-          return
-        }
-        const normalizedUrl = normalizeGithubUrl(pkg.githubRepo.gitUrl)
-        const { owner, repo } = await getInfoFromUrl(normalizedUrl)
-        console.log(owner, repo)
-        const repoData = await getRepo({
-          owner,
-          repo,
-          githubInstallationId,
-        })
-        if (!repoData) {
-          return
-        }
-        await updateRepoInfo({ id: pkg.githubRepoId, repoData })
-        console.log("updated")
-        const contributors = await getRepoContributors({
-          owner,
-          repo,
-          githubInstallationId,
-        })
-        console.log("contributors", contributors)
-        await createContributors(pkg.githubRepoId, contributors)
+  // Process packages sequentially instead of in parallel chunks
+  for (const pkg of packages) {
+    console.log("pkg", pkg)
+    if (!pkg.githubRepo?.gitUrl || !pkg.githubRepoId) {
+      continue
+    }
+
+    try {
+      const normalizedUrl = normalizeGithubUrl(pkg.githubRepo.gitUrl)
+      const { owner, repo } = await getInfoFromUrl(normalizedUrl)
+      console.log(owner, repo)
+
+      const repoData = await getRepo({
+        owner,
+        repo,
+        githubInstallationId,
       })
-    )
+
+      if (!repoData) {
+        continue
+      }
+
+      await updateRepoInfo({ id: pkg.githubRepoId, repoData })
+      console.log("updated")
+
+      const contributors = await getRepoContributors({
+        owner,
+        repo,
+        githubInstallationId,
+      })
+      console.log("contributors", contributors)
+
+      await createContributors(pkg.githubRepoId, contributors)
+    } catch (error) {
+      console.error(
+        `Failed to process package ${pkg.githubRepo.gitUrl}:`,
+        error
+      )
+      continue
+    }
   }
+  await prisma.jobActionsLog.create({
+    data: {
+      jobPostId: jobId,
+      action: "getRepoInfo",
+      completed: true,
+    },
+  })
 }
 
 const updateRepoInfo = async ({
@@ -87,9 +102,10 @@ const updateRepoInfo = async ({
   repoData: RestEndpointMethodTypes["repos"]["get"]["response"]
 }) => {
   const data = repoData.data
-  // Use upsert instead of update to handle both create and update cases
   await prisma.githubRepo.upsert({
-    where: { id },
+    where: {
+      id,
+    },
     create: {
       id,
       name: data.name,
@@ -98,6 +114,7 @@ const updateRepoInfo = async ({
       website: data.homepage,
       gitUrl: data.html_url,
       repoUpdatedAt: new Date(data.updated_at),
+      repoCreatedAt: new Date(data.created_at),
       archived: data.archived,
       language: data.language,
       stars: data.stargazers_count,
@@ -111,12 +128,12 @@ const updateRepoInfo = async ({
       },
     },
     update: {
-      name: data.name,
       description: data.description,
       logo: data.owner.avatar_url,
       website: data.homepage,
-      gitUrl: data.html_url,
+      // gitUrl: data.html_url,
       repoUpdatedAt: new Date(data.updated_at),
+      repoCreatedAt: new Date(data.created_at),
       archived: data.archived,
       language: data.language,
       stars: data.stargazers_count,
@@ -137,49 +154,44 @@ const createContributors = async (
   contributors: RestEndpointMethodTypes["repos"]["listContributors"]["response"]
 ) => {
   // Process one chunk at a time instead of parallel processing
-  const chunks = splitEvery(30, contributors.data)
-  for (const chunk of chunks) {
-    // Process contributors sequentially to avoid race conditions
-    for (const contributor of chunk) {
-      if (!contributor.id || contributor.login?.includes("[bot]")) {
-        continue
-      }
+  // const chunks = splitEvery(30, contributors.data)
+  // for (const chunk of chunks) {
+  // Process contributors sequentially to avoid race conditions
+  for (const contributor of contributors.data) {
+    if (!contributor.id || contributor.login?.includes("bot")) {
+      continue
+    }
 
-      try {
-        await prisma.contributor.upsert({
-          where: {
-            githubId: contributor.id,
-          },
-          create: {
-            githubId: contributor.id,
-            avatar: contributor.avatar_url,
-            name: contributor.login,
-            contributions: {
-              create: {
-                contributions: contributor.contributions, // Fix: use individual contributor's contributions
-                githubRepoId: id,
-              },
+    try {
+      await prisma.contributor.upsert({
+        where: {
+          githubId: contributor.id,
+        },
+        create: {
+          githubId: contributor.id,
+          avatar: contributor.avatar_url,
+          name: contributor.login,
+          contributions: {
+            create: {
+              contributions: contributor.contributions, // Fix: use individual contributor's contributions
+              githubRepoId: id,
             },
           },
-          update: {
-            avatar: contributor.avatar_url,
-            name: contributor.login,
-            contributions: {
-              create: {
-                contributions: contributor.contributions, // Fix: use individual contributor's contributions
-                githubRepoId: id,
-              },
+        },
+        update: {
+          avatar: contributor.avatar_url,
+          name: contributor.login,
+          contributions: {
+            create: {
+              contributions: contributor.contributions, // Fix: use individual contributor's contributions
+              githubRepoId: id,
             },
           },
-        })
-      } catch (error) {
-        console.error(
-          `Failed to upsert contributor ${contributor.login}:`,
-          error
-        )
-      }
+        },
+      })
+    } catch (error) {
+      console.error(`Failed to upsert contributor ${contributor.login}:`, error)
     }
   }
+  // }
 }
-
-getJobRepoInfo("cm5n1dltq0004rzb8yuhdelnw")

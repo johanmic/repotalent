@@ -1,36 +1,32 @@
 "use client"
 import { JobPost } from "@/app/actions/jobpost"
 import {
-  getLeadsForJob,
   Contributor,
   ContributorStats,
+  FilterOptions,
+  getLeadsForJob,
 } from "@/app/actions/leads"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { useEffect, useState } from "react"
 import { DataTable } from "@/components/ui/data-table"
-import { columns } from "./[jobId]/columns"
-import Lead from "./[jobId]/lead"
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { FilterForm } from "./[jobId]/filter-form"
-import { FilterOptions } from "@/app/actions/leads"
-export const LeadsTable = ({ jobs }: { jobs: JobPost[] }) => {
-  const [selectedJob, setSelectedJob] = useState<JobPost | null>(null)
+import { useEffect, useState } from "react"
+import { columns } from "./columns"
+import { FilterForm } from "./filter-form"
+import Lead from "./lead"
+import { toast } from "sonner"
+import { Spinner } from "@/components/ui/spinner"
+import { Title } from "@/components/title"
+export const LeadsTable = ({ job }: { job: JobPost }) => {
   const [leads, setLeads] = useState<Contributor[]>([])
   const [isSheetOpen, setIsSheetOpen] = useState(false)
   const [selectedLead, setSelectedLead] = useState<Contributor | null>(null)
   const [stats, setStats] = useState<ContributorStats | null>(null)
+  const [loading, setLoading] = useState(false)
+
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
     hireable: false,
     minFollowers: null,
@@ -46,60 +42,43 @@ export const LeadsTable = ({ jobs }: { jobs: JobPost[] }) => {
   })
 
   useEffect(() => {
-    setSelectedJob(jobs[0])
-  }, [jobs])
-
-  useEffect(() => {
-    if (selectedJob) {
-      getLeadsForJob({
-        jobId: selectedJob.id,
-        options: filterOptions,
-      }).then(({ contributors, stats }) => {
+    setLoading(true)
+    getLeadsForJob({
+      jobId: job.id,
+      options: filterOptions,
+    })
+      .then(({ contributors, stats }) => {
         setLeads(contributors as Contributor[])
         setStats(stats)
+        setLoading(false)
       })
-    }
-  }, [selectedJob, filterOptions])
+      .catch((error) => {
+        toast.error("Error fetching leads")
+        setLoading(false)
+      })
+  }, [job, filterOptions])
 
   const onRowClick = (row: Contributor) => {
     setSelectedLead(row)
     setIsSheetOpen(true)
   }
 
-  console.log(leads)
-
+  const onCellClick = {
+    star: (cell: Contributor) => {
+      console.log(cell)
+    },
+  }
   return (
     <div className="flex flex-col gap-4 m-4">
-      <div className="flex flex-col gap-4">
-        <div className="flex justify-end gap-2">
-          <FilterForm
-            options={filterOptions}
-            onOptionsChange={(options) => setFilterOptions(options)}
-            maxFollowers={stats?.maxFollowers || 10000}
-          />
-          <div>
-            <Select
-              value={selectedJob?.id}
-              onValueChange={(value) =>
-                setSelectedJob(jobs.find((job) => job.id === value) || null)
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a job" />
-              </SelectTrigger>
-              <SelectContent>
-                {jobs.map((job) => (
-                  <SelectItem key={job.id} value={job.id}>
-                    {job.title}{" "}
-                    <span className="text-xs text-muted-foreground">
-                      ({job.createdAt.toLocaleDateString()})
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+      {loading && (
+        <div className="fixed right-10 bottom-10 m-auto flex justify-center items-center bg-black text-white p-2 rounded-lg gap-4 z-[10] w-64 h-16">
+          Fetching data
+          <Spinner size="xsmall" className="text-white" />
         </div>
+      )}
+      <div className="flex flex-col gap-2">
+        <p className="text-sm text-muted-foreground">Leads for</p>
+        <Title>{job.title}</Title>
       </div>
       {stats && (
         <div className="w-full bg-sidebar-primary-foreground rounded-lg p-3">
@@ -127,11 +106,18 @@ export const LeadsTable = ({ jobs }: { jobs: JobPost[] }) => {
           </div>
         </div>
       )}
-
+      <div className="flex justify-end gap-2">
+        <FilterForm
+          options={filterOptions}
+          onOptionsChange={(options) => setFilterOptions(options)}
+          maxFollowers={stats?.maxFollowers || 10000}
+        />
+      </div>
       <DataTable
-        columns={columns(selectedJob?.id)}
+        columns={columns(job.id)}
         data={leads}
         onRowClick={onRowClick}
+        onCellClick={onCellClick}
       />
 
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
@@ -139,9 +125,7 @@ export const LeadsTable = ({ jobs }: { jobs: JobPost[] }) => {
           <SheetHeader>
             <SheetTitle></SheetTitle>
           </SheetHeader>
-          {selectedLead && selectedJob?.id && (
-            <Lead contributor={selectedLead} jobId={selectedJob?.id} />
-          )}
+          {selectedLead && <Lead contributor={selectedLead} jobId={job.id} />}
         </SheetContent>
       </Sheet>
     </div>

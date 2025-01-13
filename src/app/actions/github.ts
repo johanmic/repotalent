@@ -5,7 +5,7 @@
 
 import { createAppAuth } from "@octokit/auth-app"
 import { Octokit } from "@octokit/rest"
-
+import { githubRepo, openSourcePackage } from "@prisma/client"
 import prisma from "@/store/prisma"
 import { getUser as getUserFromSupabase } from "@/utils/supabase/server"
 
@@ -30,6 +30,10 @@ export const getInstallation = async (installationId: number) => {
   return installation
 }
 
+export interface DBGithubRepo extends githubRepo {
+  openSourcePackage?: openSourcePackage
+}
+
 export interface GithubRepo {
   id: number
   name: string
@@ -40,6 +44,7 @@ export interface GithubRepo {
   url: string
   default_branch: string
   updated_at: string
+  created_at: string
 }
 export interface GithubOrg {
   login: string

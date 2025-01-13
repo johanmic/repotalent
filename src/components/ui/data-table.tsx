@@ -25,16 +25,24 @@ interface BaseData {
   id: string | number
 }
 
+interface CellClick<TData> {
+  [key: string]: (cell: TData) => void
+}
+
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  rowClickUrl?: string
   onRowClick?: (row: TData) => void
+  onCellClick?: CellClick<TData>
 }
 
 export function DataTable<TData extends BaseData, TValue>({
   columns,
   data,
+  rowClickUrl,
   onRowClick,
+  onCellClick,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const router = useRouter()
@@ -84,10 +92,25 @@ export function DataTable<TData extends BaseData, TValue>({
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
                   className="cursor-pointer"
-                  onClick={() => onRowClick?.(row.original)}
+                  onClick={() => {
+                    if (onRowClick) {
+                      onRowClick(row.original)
+                    } else if (rowClickUrl) {
+                      router.push(`${rowClickUrl}/${row.original.id}`)
+                    }
+                  }}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="text-sm">
+                    <TableCell
+                      key={cell.id}
+                      className="text-sm"
+                      onClick={() => {
+                        const cellClickHandler = onCellClick?.[cell.column.id]
+                        if (cellClickHandler) {
+                          cellClickHandler(cell.getContext().row.original)
+                        }
+                      }}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()

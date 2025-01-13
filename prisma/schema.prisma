@@ -37,6 +37,10 @@ model user {
     subscription         subscription[]
     githubInstallationId Int?
     skipGithub           Boolean?
+
+    @@index([organizationId])
+    @@index([cityId])
+    @@index([email])
 }
 
 model organization {
@@ -61,6 +65,9 @@ model organization {
     cityId      String?
     state       String?
     users       user[]
+
+    @@index([cityId])
+    @@index([name])
 }
 
 model jobPost {
@@ -107,6 +114,12 @@ model jobPost {
     githubRepo                 String?
     githubPath                 String?
     jobPostContributorBookmark jobPostContributorBookmark[]
+    jobActionsLog              jobActionsLog[]
+
+    @@index([organizationId])
+    @@index([published])
+    @@index([createdAt])
+    @@index([currencyId])
 }
 
 model jobPostTokenUsage {
@@ -167,6 +180,10 @@ model openSourcePackage {
     githubRepo   githubRepo?                @relation(fields: [githubRepoId], references: [id])
     githubRepoId String?
     versions     openSourcePackageVersion[]
+    createdAt    DateTime                   @default(now())
+    updatedAt    DateTime                   @updatedAt
+
+    @@index([githubRepoId])
 }
 
 model githubRepo {
@@ -179,6 +196,7 @@ model githubRepo {
     createdAt         DateTime                @default(now())
     updatedAt         DateTime                @updatedAt
     repoUpdatedAt     DateTime?
+    repoCreatedAt     DateTime?
     archived          Boolean                 @default(false)
     language          String?
     stars             Int?
@@ -187,6 +205,9 @@ model githubRepo {
     tags              openSourcePackageTags[]
     openSourcePackage openSourcePackage[]
     contributions     contribution[]
+
+    @@index([name])
+    @@index([gitUrl])
 }
 
 model contribution {
@@ -198,6 +219,10 @@ model contribution {
     createdAt     DateTime    @default(now())
     updatedAt     DateTime    @updatedAt
     contributions Int         @default(1)
+
+    @@index([githubRepoId])
+    @@index([contributorId])
+    @@index([createdAt])
 }
 
 model contributor {
@@ -239,6 +264,11 @@ model contributor {
     contributorOrganizationId  String?
     contributions              contribution[]
     jobPostContributorBookmark jobPostContributorBookmark[]
+
+    @@index([githubId])
+    @@index([login])
+    @@index([contributorOrganizationId])
+    @@index([name])
 }
 
 model openSourcePackageTags {
@@ -330,6 +360,8 @@ model city {
     contributor   contributor[]
 
     @@unique([name, countryId])
+    @@index([countryId])
+    @@index([name])
 }
 
 model country {
@@ -409,19 +441,21 @@ model purchase {
     subscription     subscription[]
     idType           String?
     jobBoard         Boolean        @default(true)
+    leadsEnabled     Boolean        @default(false)
     creditUsage      creditUsage[]
 }
 
 model creditUsage {
-    id          String    @id @default(cuid())
-    userId      String
-    user        user      @relation(fields: [userId], references: [id])
-    jobPostId   String
-    jobPost     jobPost   @relation(fields: [jobPostId], references: [id])
-    creditsUsed Int       @default(1)
-    createdAt   DateTime  @default(now())
-    purchaseId  String?
-    purchase    purchase? @relation(fields: [purchaseId], references: [id])
+    id           String    @id @default(cuid())
+    userId       String
+    user         user      @relation(fields: [userId], references: [id])
+    jobPostId    String
+    jobPost      jobPost   @relation(fields: [jobPostId], references: [id])
+    creditsUsed  Int       @default(1)
+    createdAt    DateTime  @default(now())
+    purchaseId   String?
+    purchase     purchase? @relation(fields: [purchaseId], references: [id])
+    leadsEnabled Boolean?
 }
 
 model promoCode {
@@ -434,6 +468,7 @@ model promoCode {
     oneTime        Boolean          @default(false)
     promoCodeUsage promoCodeUsage[]
     purchase       purchase[]
+    leadsEnabled   Boolean          @default(false)
     limit          Int?
 }
 
@@ -485,6 +520,16 @@ model subscription {
     purchases purchase[]
     active    Boolean    @default(true)
     recurring String     @default("month")
+}
+
+model jobActionsLog {
+    id        String   @id @default(cuid())
+    jobPostId String
+    jobPost   jobPost  @relation(fields: [jobPostId], references: [id])
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    action    String
+    completed Boolean  @default(false)
 }
 
 /// YOU ARE ADDING CONTRIBUTIONS TO THE MANY TO MANY ON GITHUB -> CONTRUBUTOR

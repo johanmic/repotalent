@@ -1,7 +1,7 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { DataTableColumnHeader } from "./data-table-column-header"
+import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
 import { Button } from "@/components/ui/button"
 import { MoreHorizontal } from "lucide-react"
 import {

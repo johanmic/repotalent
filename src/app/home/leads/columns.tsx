@@ -1,9 +1,8 @@
 "use client"
 
-import { ColumnDef } from "@tanstack/react-table"
-import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
+import { JobPost } from "@/app/actions/jobpost"
 import { Button } from "@/components/ui/button"
-import { MoreHorizontal } from "lucide-react"
+import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,113 +11,40 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Contributor } from "@/app/actions/leads"
+import { Spinner } from "@/components/ui/spinner"
+import { REQUIRED_ACTIONS } from "@/utils/job/constants"
+import { ColumnDef } from "@tanstack/react-table"
+import { Check, MoreHorizontal } from "lucide-react"
+import { useState } from "react"
+import { Progress } from "@/components/ui/progress"
 
-export const columns: ColumnDef<Contributor>[] = [
+export const columns: ColumnDef<JobPost>[] = [
+  // {
+  //   accessorKey: "slug",
+  //   header: ({ column }) => (
+  //     <DataTableColumnHeader column={column} title="slug" />
+  //   ),
+  // },
   {
-    accessorKey: "avatar",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="" />,
-    enableSorting: false,
-    cell: ({ row }) => (
-      <img
-        src={row.getValue("avatar")}
-        alt={`${row.getValue("name")}'s avatar`}
-        className="h-10 w-10 rounded-full min-w-10 min-h-10"
-      />
+    accessorKey: "title",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Title" />
     ),
   },
+
   {
-    accessorKey: "name",
+    accessorKey: "createdAt",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Name" />
-    ),
-  },
-  {
-    accessorKey: "bio",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Bio" />
+      <DataTableColumnHeader column={column} title="Created" />
     ),
     cell: ({ row }) => {
-      const bio = row.getValue("bio") as string | null
-      return (
-        <div className="text-xs text-muted-foreground max-w-64">
-          {bio ? bio.slice(0, 200) + "..." : "N/A"}
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: "company",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Company" />
-    ),
-    cell: ({ row }) => (
-      <div className="text-xs text-muted-foreground">
-        {row.getValue("company")}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "locationRaw",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Location" />
-    ),
-    cell: ({ row }) => (
-      <div className="text-xs text-muted-foreground">
-        {row.getValue("locationRaw")}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "followers",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Followers" />
-    ),
-    cell: ({ row }) => (
-      <div className="text-xs">{row.getValue("followers")}</div>
-    ),
-  },
-  {
-    accessorKey: "hireable",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Hireable" />
-    ),
-    cell: ({ row }) => {
-      const value = row.getValue("hireable")
-      return (
-        <div className="text-xs text-muted-foreground">
-          {value === null ? "N/A" : value ? "Yes" : "No"}
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: "contributions",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Contributions" />
-    ),
-    cell: ({ row }) => {
-      const contributions = row.original.contributions
-      return (
-        <div className="text-xs text-muted-foreground space-y-1">
-          {contributions.length > 0
-            ? contributions.map((contrib) => (
-                <div key={contrib.id}>
-                  {`${contrib.contributions.toLocaleString()} to`}
-                  <span className="font-bold ml-1">
-                    {contrib.githubRepo.name}
-                  </span>
-                </div>
-              ))
-            : "N/A"}
-        </div>
-      )
+      return new Date(row.getValue("createdAt")).toLocaleDateString()
     },
   },
   {
     id: "actions",
     cell: ({ row }) => {
-      const contributor = row.original
+      const job = row.original
 
       return (
         <DropdownMenu>
@@ -131,15 +57,47 @@ export const columns: ColumnDef<Contributor>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(contributor.id)}
+              onClick={() => navigator.clipboard.writeText(job.id)}
             >
-              Copy Contributor ID
+              Copy Job ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>View Profile</DropdownMenuItem>
-            <DropdownMenuItem>View Contributions</DropdownMenuItem>
+            <DropdownMenuItem>View Details</DropdownMenuItem>
+            <DropdownMenuItem>Edit Job</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+      )
+    },
+  },
+  {
+    id: "progress",
+    header: "Progress",
+    cell: ({ row }) => {
+      const job = row.original
+
+      const completedActions =
+        job.jobActionsLog?.filter((log) => log.completed).length || 0
+      const totalActions = REQUIRED_ACTIONS.length
+      const progress = (completedActions / totalActions) * 100
+      if (progress === 100) {
+        return (
+          <div className="flex items-center gap-2">
+            <Check className="text-green-500" />
+            <span className="text-sm">Completed</span>
+          </div>
+        )
+      }
+      return <Progress value={progress} />
+    },
+  },
+  {
+    id: "viewLeads",
+    header: "Leads",
+    cell: ({ row }) => {
+      return (
+        <Button variant="outline" className="text-sm">
+          View Leads
+        </Button>
       )
     },
   },

@@ -50,6 +50,7 @@ const GithubPicker = ({ hasGithub }: { hasGithub: boolean }) => {
           ...repo,
           full_name: repo.fullName,
           updated_at: repo.updated_at ?? new Date().toISOString(),
+          created_at: new Date().toISOString(),
         }))
       )
     }

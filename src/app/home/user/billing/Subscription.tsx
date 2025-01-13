@@ -10,13 +10,17 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import dayjs from "dayjs"
-import type { Stripe } from "stripe"
 import Link from "next/link"
+import type { Stripe } from "stripe"
+
+export interface Subscription extends Stripe.Subscription {
+  plan: Stripe.Plan
+}
+
 export const Subscription = ({
   subscription,
 }: {
-  subscription: Stripe.Subscription
+  subscription: Subscription
 }) => {
   console.log(subscription)
   const isActive = subscription?.status === "active"

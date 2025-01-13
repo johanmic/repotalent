@@ -107,4 +107,11 @@ export const updateJobDepsAsync = async (jobId: string) => {
       dependencies,
     })
   }
+  await prisma.jobActionsLog.create({
+    data: {
+      jobPostId: job.id,
+      action: "updateJobDeps",
+      completed: true,
+    },
+  })
 }

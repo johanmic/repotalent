@@ -12,7 +12,12 @@ import { Subscription } from "./Subscription"
 const ProfilePage = async () => {
   const user = await getUser()
   const { purchases, creditUsage } = await getUserUsageStats()
-  const subscription = await getUserSubscription()
+  const subscription = (await getUserSubscription()) as unknown as Subscription
+
+  const subscriptionWithPlan = {
+    ...subscription,
+    plan: subscription?.plan || "defaultPlan",
+  }
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-4">
@@ -94,7 +99,7 @@ const ProfilePage = async () => {
         </CardContent>
       </Card>
 
-      <Subscription subscription={Object.assign({}, subscription)} />
+      <Subscription subscription={subscriptionWithPlan as Subscription} />
 
       <Card>
         <CardContent className="pt-6">

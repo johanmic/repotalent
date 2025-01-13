@@ -13,7 +13,7 @@ import Icon from "@/components/icon"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
-import { getUser } from "@actions/user"
+import { getUser, getLeadsEnabled } from "@actions/user"
 import { Separator } from "@/components/ui/separator"
 import { getUserSubscriptionFromDB } from "@actions/subscriptions"
 // import { SidebarUser } from "@/components/sidebar-user"
@@ -52,8 +52,8 @@ const SidebarComponent = async () => {
       comingSoon: true,
     },
   ]
-  const subscription = await getUserSubscriptionFromDB()
-  if (subscription?.purchases?.[0]?.product?.leadsEnabled) {
+  const leadsEnabled = await getLeadsEnabled()
+  if (leadsEnabled) {
     items.push({
       label: "Leads",
       icon: <Icon name="user" />,
@@ -78,7 +78,7 @@ const SidebarComponent = async () => {
               {items.map((item) => (
                 <SidebarMenuItem
                   key={item.label}
-                  className={cn(item.comingSoon || (item.pro && "opacity-50"))}
+                  className={cn((item.comingSoon || item.pro) && "opacity-50")}
                 >
                   <SidebarMenuButton asChild>
                     <a href={item.comingSoon ? "#" : item.href}>
@@ -107,13 +107,15 @@ const SidebarComponent = async () => {
         </SidebarContent>
         <SidebarFooter>
           <Separator />
-          <div className="flex flex-row text-xs pl-2 items-center justify-between">
-            {" "}
+          <Link
+            className="flex flex-row text-xs pl-2 items-center justify-between"
+            href="/home/purchase"
+          >
             Credits:{" "}
             <Badge variant="outline">
               {user?.creditsInfo?.creditsAvailable}
             </Badge>
-          </div>
+          </Link>
           <NavUser user={user} />
           {/* <Button variant="outline" asChild>
             <Link href="/home/logout">

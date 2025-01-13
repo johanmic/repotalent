@@ -26,6 +26,7 @@ import {
   organization,
   creditUsage,
   purchase,
+  jobActionsLog,
 } from "@prisma/client"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
@@ -42,6 +43,7 @@ export interface JobPost extends jobPost {
   questions?: jobPostQuestion[]
   ratings?: jobPostRatings[]
   currency?: currency
+  jobActionsLog?: jobActionsLog[]
   packages?: {
     packageVersion?: {
       package: openSourcePackage
@@ -432,7 +434,16 @@ export const listJobs = async (): Promise<JobPost[]> => {
       },
       questions: true,
       ratings: true,
-      packages: true,
+      packages: {
+        include: {
+          packageVersion: {
+            include: {
+              package: true,
+            },
+          },
+        },
+      },
+      jobActionsLog: true,
     },
     orderBy: {
       createdAt: "desc",
@@ -486,6 +497,7 @@ export const updateJobPost = async ({
           "organization",
           "createdAt",
           "updatedAt",
+          "jobActionsLog",
           "tags",
           "questions",
           "ratings",

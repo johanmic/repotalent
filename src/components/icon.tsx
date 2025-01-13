@@ -48,6 +48,8 @@ import {
   Star,
   GitFork,
   Code,
+  Github,
+  TrendingUp,
 } from "lucide-react"
 
 export const icons = {
@@ -102,6 +104,7 @@ export const icons = {
   gitFork: GitFork,
   lock: Lock,
   code: Code,
+  trendingUp: TrendingUp,
 }
 
 export const Icon = ({

@@ -21,6 +21,30 @@ DROP COLUMN "updatedAt",
 DROP COLUMN "website",
 ADD COLUMN     "githubRepoId" TEXT;
 
+-- AlterTable
+ALTER TABLE "product" ADD COLUMN     "leadsEnabled" BOOLEAN NOT NULL DEFAULT false;
+
+-- AlterTable
+ALTER TABLE "promoCode" ADD COLUMN     "leadsEnabled" BOOLEAN NOT NULL DEFAULT false;
+
+-- AlterTable
+ALTER TABLE "purchase" ADD COLUMN     "leadsEnabled" BOOLEAN NOT NULL DEFAULT false;
+
+-- CreateTable
+CREATE TABLE "jobPostContributorBookmark" (
+    "id" TEXT NOT NULL,
+    "jobPostId" TEXT NOT NULL,
+    "contributorId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "status" TEXT,
+    "comment" TEXT,
+    "rating" DOUBLE PRECISION,
+    "starred" BOOLEAN,
+
+    CONSTRAINT "jobPostContributorBookmark_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateTable
 CREATE TABLE "githubRepo" (
     "id" TEXT NOT NULL,
@@ -32,6 +56,7 @@ CREATE TABLE "githubRepo" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "repoUpdatedAt" TIMESTAMP(3),
+    "repoCreatedAt" TIMESTAMP(3),
     "archived" BOOLEAN NOT NULL DEFAULT false,
     "language" TEXT,
     "stars" INTEGER,
@@ -56,7 +81,6 @@ CREATE TABLE "contribution" (
 -- CreateTable
 CREATE TABLE "contributor" (
     "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
     "avatar" TEXT,
     "name" TEXT,
     "company" TEXT,
@@ -73,6 +97,8 @@ CREATE TABLE "contributor" (
     "avatarUrl" TEXT,
     "blog" TEXT,
     "hireable" BOOLEAN,
+    "email" TEXT,
+    "fetchedAt" TIMESTAMP(3),
     "publicRepos" INTEGER,
     "publicGists" INTEGER,
     "type" TEXT,
@@ -128,6 +154,9 @@ CREATE TABLE "_githubRepoToopenSourcePackageTags" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "jobPostContributorBookmark_jobPostId_contributorId_key" ON "jobPostContributorBookmark"("jobPostId", "contributorId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "githubRepo_name_key" ON "githubRepo"("name");
 
 -- CreateIndex
@@ -140,6 +169,12 @@ CREATE UNIQUE INDEX "contributor_githubId_key" ON "contributor"("githubId");
 CREATE INDEX "_githubRepoToopenSourcePackageTags_B_index" ON "_githubRepoToopenSourcePackageTags"("B");
 
 -- AddForeignKey
+ALTER TABLE "jobPostContributorBookmark" ADD CONSTRAINT "jobPostContributorBookmark_jobPostId_fkey" FOREIGN KEY ("jobPostId") REFERENCES "jobPost"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "jobPostContributorBookmark" ADD CONSTRAINT "jobPostContributorBookmark_contributorId_fkey" FOREIGN KEY ("contributorId") REFERENCES "contributor"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "openSourcePackage" ADD CONSTRAINT "openSourcePackage_githubRepoId_fkey" FOREIGN KEY ("githubRepoId") REFERENCES "githubRepo"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -147,9 +182,6 @@ ALTER TABLE "contribution" ADD CONSTRAINT "contribution_githubRepoId_fkey" FOREI
 
 -- AddForeignKey
 ALTER TABLE "contribution" ADD CONSTRAINT "contribution_contributorId_fkey" FOREIGN KEY ("contributorId") REFERENCES "contributor"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "contributor" ADD CONSTRAINT "contributor_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "contributor" ADD CONSTRAINT "contributor_cityId_fkey" FOREIGN KEY ("cityId") REFERENCES "city"("id") ON DELETE SET NULL ON UPDATE CASCADE;

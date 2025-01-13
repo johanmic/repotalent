@@ -130,3 +130,38 @@ export const setSkipGithubSetup = async (skip: boolean) => {
     data: { skipGithub: skip },
   })
 }
+
+export const getLeadsEnabled = async (): Promise<boolean> => {
+  const user = await getUser()
+  if (!user) {
+    throw new Error("User not found")
+  }
+  const oneMonthAgo = new Date()
+  oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
+
+  const dbUser = await prisma.user.findFirst({
+    where: {
+      id: user.id,
+      OR: [
+        {
+          purchase: {
+            some: {
+              leadsEnabled: true,
+              createdAt: { gt: oneMonthAgo },
+            },
+          },
+        },
+        {
+          promoCodeUsage: {
+            some: {
+              createdAt: { gt: oneMonthAgo },
+              promoCode: { leadsEnabled: true },
+            },
+          },
+        },
+      ],
+    },
+  })
+
+  return Boolean(dbUser)
+}

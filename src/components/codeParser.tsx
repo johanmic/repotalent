@@ -12,55 +12,6 @@ interface CodeParserProps {
   filename?: AcceptedFileName
 }
 
-const sampleData = `{
-  "name": "repotalent",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev --turbo",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
-  "dependencies": {
-    "@ai-sdk/openai": "^1.0.6",
-    "@hookform/resolvers": "^3.9.1",
-    "@radix-ui/react-checkbox": "^1.1.2",
-    "@radix-ui/react-dialog": "^1.1.2",
-    "@radix-ui/react-label": "^2.1.0",
-    "@radix-ui/react-select": "^2.1.2",
-    "@radix-ui/react-slot": "^1.1.0",
-    "@supabase/ssr": "^0.5.2",
-    "@supabase/supabase-js": "^2.46.2",
-    "ai": "^4.0.11",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "framer-motion": "^11.13.1",
-    "input-otp": "^1.4.1",
-    "lucide-react": "^0.465.0",
-    "next": "15.0.3",
-    "next-themes": "^0.4.3",
-    "react": "^18",
-    "react-dom": "^18",
-    "react-hook-form": "^7.53.2",
-    "shadcn-dropzone": "^0.2.1",
-    "sonner": "^1.7.0",
-    "tailwind-merge": "^2.5.5",
-    "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.23.8"
-  },
-  "devDependencies": {
-    "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "eslint": "^8",
-    "eslint-config-next": "14.2.16",
-    "postcss": "^8",
-    "tailwindcss": "^3.4.16",
-    "typescript": "^5"
-  }
-}`
-
 function parsePackageJson(file: string) {
   return JSON.parse(file)
 }
@@ -91,7 +42,6 @@ const getFileData = (data: string, filename: AcceptedFileName) => {
 
 const CodeParser = ({ data, filename = "package.json" }: CodeParserProps) => {
   const [intialAnimationDone, setIntialAnimationDone] = useState(false)
-  const [renderedCount, setRenderedCount] = useState(0)
   const [highlightedItems, setHighlightedItems] = useState<Set<string>>(
     new Set()
   )
@@ -106,6 +56,20 @@ const CodeParser = ({ data, filename = "package.json" }: CodeParserProps) => {
       return null
     }
   }, [data, filename])
+
+  useEffect(() => {
+    if (fileData && intialAnimationDone && currentPaths.length > 0) {
+      const highlightItems = () => {
+        currentPaths.forEach((path, index) => {
+          setTimeout(() => {
+            setHighlightedItems((prev) => new Set([...prev, path]))
+          }, index * (fileData.length > 20 ? 100 : 200))
+        })
+      }
+
+      highlightItems()
+    }
+  }, [intialAnimationDone, currentPaths, fileData])
 
   if (!fileData) return null
 
@@ -130,20 +94,6 @@ const CodeParser = ({ data, filename = "package.json" }: CodeParserProps) => {
     return sectionLength > 20 ? 0.05 : 0.1
   }
 
-  useEffect(() => {
-    if (fileData && intialAnimationDone && currentPaths.length > 0) {
-      const highlightItems = () => {
-        currentPaths.forEach((path, index) => {
-          setTimeout(() => {
-            setHighlightedItems((prev) => new Set([...prev, path]))
-          }, index * (fileData?.length > 20 ? 100 : 200))
-        })
-      }
-
-      highlightItems()
-    }
-  }, [intialAnimationDone, currentPaths, fileData?.length])
-
   const calculateTotalItems = (obj: Record<string, string>): number => {
     if (!obj) return 0
     return Object.values(obj).reduce((count, value) => {
@@ -154,16 +104,10 @@ const CodeParser = ({ data, filename = "package.json" }: CodeParserProps) => {
     }, 0)
   }
 
-  const totalItems = calculateTotalItems(fileData)
+  // const totalItems = calculateTotalItems(fileData)
 
   const handleAnimationComplete = () => {
-    setRenderedCount((prevCount) => {
-      const newCount = prevCount + 1
-      if (newCount === totalItems) {
-        setIntialAnimationDone(true)
-      }
-      return newCount
-    })
+    setIntialAnimationDone(true)
   }
 
   const generateGroupColor = (index: number): string => {
@@ -207,9 +151,7 @@ const CodeParser = ({ data, filename = "package.json" }: CodeParserProps) => {
 
       // Only keep groups with multiple packages
       return Object.fromEntries(
-        Object.entries(wordGroups).filter(
-          ([_, packages]) => packages.length > 1
-        )
+        Object.entries(wordGroups).filter(([, packages]) => packages.length > 1)
       )
     }
 
