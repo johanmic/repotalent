@@ -44,6 +44,12 @@ import {
   Timer,
   User,
   X,
+  Lock,
+  Star,
+  GitFork,
+  Code,
+  Github,
+  TrendingUp,
 } from "lucide-react"
 
 export const icons = {
@@ -94,6 +100,11 @@ export const icons = {
   user: User,
   markdown: FileCode,
   x: X,
+  star: Star,
+  gitFork: GitFork,
+  lock: Lock,
+  code: Code,
+  trendingUp: TrendingUp,
 }
 
 export const Icon = ({

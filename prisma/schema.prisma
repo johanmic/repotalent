@@ -2,7 +2,7 @@ datasource db {
     provider   = "postgresql"
     url        = env("DATABASE_URL")
     directUrl  = env("DIRECT_URL")
-    extensions = [postgis(version: "3.1.4")]
+    extensions = [postgis()]
 }
 
 generator client {
@@ -37,7 +37,10 @@ model user {
     subscription         subscription[]
     githubInstallationId Int?
     skipGithub           Boolean?
-    Contributor          Contributor[]
+
+    @@index([organizationId])
+    @@index([cityId])
+    @@index([email])
 }
 
 model organization {
@@ -62,51 +65,61 @@ model organization {
     cityId      String?
     state       String?
     users       user[]
+
+    @@index([cityId])
+    @@index([name])
 }
 
 model jobPost {
-    id                String                    @id @default(cuid())
-    published         DateTime?                 @default(now())
-    title             String?
-    description       String?
-    source            String
-    createdAt         DateTime                  @default(now())
-    updatedAt         DateTime                  @updatedAt
-    minSalary         Int?
-    maxSalary         Int?
-    type              String?
-    experience        String?
-    seniority         Float?
-    data              String?
-    remote            Boolean?
-    organization      organization?             @relation(fields: [organizationId], references: [id])
-    organizationId    String?
-    packages          jobPostToPackageVersion[]
-    questions         jobPostQuestion[]
-    tags              jobPostToTag[]
-    openSource        Boolean                   @default(false)
-    views             Int                       @default(0)
-    hybrid            Boolean                   @default(false)
-    consulting        Boolean                   @default(false)
-    ratings           jobPostRatings[]
-    tone              String?
-    additionalInfo    String?
-    applicationUrl    String?
-    equity            Boolean                   @default(false)
-    currencyId        String?
-    currency          currency?                 @relation(fields: [currencyId], references: [id])
-    slug              String                    @unique
-    jobPostTokenUsage jobPostTokenUsage[]
-    creditUsage       creditUsage[]
-    showAuthor        Boolean                   @default(true)
-    showOrganization  Boolean                   @default(true)
-    showSalary        Boolean                   @default(true)
-    showLocation      Boolean                   @default(true)
-    showTags          Boolean                   @default(true)
-    showPackages      Boolean                   @default(true)
-    showQuestions     Boolean                   @default(true)
-    githubRepo        String?
-    githubPath        String?
+    id                         String                       @id @default(cuid())
+    published                  DateTime?                    @default(now())
+    title                      String?
+    description                String?
+    source                     String
+    createdAt                  DateTime                     @default(now())
+    updatedAt                  DateTime                     @updatedAt
+    minSalary                  Int?
+    maxSalary                  Int?
+    type                       String?
+    experience                 String?
+    seniority                  Float?
+    data                       String?
+    remote                     Boolean?
+    organization               organization?                @relation(fields: [organizationId], references: [id])
+    organizationId             String?
+    packages                   jobPostToPackageVersion[]
+    questions                  jobPostQuestion[]
+    tags                       jobPostToTag[]
+    openSource                 Boolean                      @default(false)
+    views                      Int                          @default(0)
+    hybrid                     Boolean                      @default(false)
+    consulting                 Boolean                      @default(false)
+    ratings                    jobPostRatings[]
+    tone                       String?
+    additionalInfo             String?
+    applicationUrl             String?
+    equity                     Boolean                      @default(false)
+    currencyId                 String?
+    currency                   currency?                    @relation(fields: [currencyId], references: [id])
+    slug                       String                       @unique
+    jobPostTokenUsage          jobPostTokenUsage[]
+    creditUsage                creditUsage[]
+    showAuthor                 Boolean                      @default(true)
+    showOrganization           Boolean                      @default(true)
+    showSalary                 Boolean                      @default(true)
+    showLocation               Boolean                      @default(true)
+    showTags                   Boolean                      @default(true)
+    showPackages               Boolean                      @default(true)
+    showQuestions              Boolean                      @default(true)
+    githubRepo                 String?
+    githubPath                 String?
+    jobPostContributorBookmark jobPostContributorBookmark[]
+    jobActionsLog              jobActionsLog[]
+
+    @@index([organizationId])
+    @@index([published])
+    @@index([createdAt])
+    @@index([currencyId])
 }
 
 model jobPostTokenUsage {
@@ -138,45 +151,147 @@ model jobPostToPackageVersion {
     createdAt        DateTime                 @default(now())
     updatedAt        DateTime                 @updatedAt
     includeInPost    Boolean                  @default(false)
+    importance       Int?
 
     @@id([jobPostId, packageVersionId])
     @@index([jobPostId])
     @@index([packageVersionId])
 }
 
-model openSourcePackage {
-    id          String                     @id @default(cuid())
-    name        String                     @unique
-    gitUrl      String?
-    website     String?
-    description String?
-    logo        String?
-    createdAt   DateTime                   @default(now())
-    updatedAt   DateTime                   @updatedAt
-    versions    openSourcePackageVersion[]
-    Contributor Contributor[]
-}
-
-model Contributor {
-    id        String              @id @default(cuid())
-    packageId String
-    package   openSourcePackage   @relation(fields: [packageId], references: [id])
-    userId    String
-    user      user                @relation(fields: [userId], references: [id])
-    createdAt DateTime            @default(now())
-    updatedAt DateTime            @updatedAt
-    bio       String?
-    social    ContributorSocial[]
-}
-
-model ContributorSocial {
+model jobPostContributorBookmark {
     id            String      @id @default(cuid())
+    jobPost       jobPost     @relation(fields: [jobPostId], references: [id])
+    jobPostId     String
+    contributor   contributor @relation(fields: [contributorId], references: [id])
     contributorId String
-    contributor   Contributor @relation(fields: [contributorId], references: [id])
-    type          String
-    url           String
     createdAt     DateTime    @default(now())
     updatedAt     DateTime    @updatedAt
+    status        String?
+    comment       String?
+    rating        Float?
+    starred       Boolean?
+
+    @@unique([jobPostId, contributorId])
+}
+
+model openSourcePackage {
+    id           String                     @id @default(cuid())
+    name         String                     @unique
+    githubRepo   githubRepo?                @relation(fields: [githubRepoId], references: [id])
+    githubRepoId String?
+    versions     openSourcePackageVersion[]
+    createdAt    DateTime                   @default(now())
+    updatedAt    DateTime                   @updatedAt
+
+    @@index([githubRepoId])
+}
+
+model githubRepo {
+    id                String                  @id @default(cuid())
+    name              String                  @unique
+    gitUrl            String?                 @unique
+    website           String?
+    description       String?
+    logo              String?
+    createdAt         DateTime                @default(now())
+    updatedAt         DateTime                @updatedAt
+    repoUpdatedAt     DateTime?
+    repoCreatedAt     DateTime?
+    archived          Boolean                 @default(false)
+    language          String?
+    stars             Int?
+    watchers          Int?
+    forks             Int?
+    tags              openSourcePackageTags[]
+    openSourcePackage openSourcePackage[]
+    contributions     contribution[]
+
+    @@index([name])
+    @@index([gitUrl])
+}
+
+model contribution {
+    id            String      @id @default(cuid())
+    githubRepoId  String
+    githubRepo    githubRepo  @relation(fields: [githubRepoId], references: [id])
+    contributorId String
+    contributor   contributor @relation(fields: [contributorId], references: [id])
+    createdAt     DateTime    @default(now())
+    updatedAt     DateTime    @updatedAt
+    contributions Int         @default(1)
+
+    @@index([githubRepoId])
+    @@index([contributorId])
+    @@index([createdAt])
+}
+
+model contributor {
+    id                         String                       @id @default(cuid())
+    avatar                     String?
+    name                       String?
+    company                    String?
+    createdAt                  DateTime                     @default(now())
+    updatedAt                  DateTime                     @updatedAt
+    bio                        String?
+    followers                  Int?
+    following                  Int?
+    locationRaw                String?
+    cityId                     String?
+    city                       city?                        @relation(fields: [cityId], references: [id])
+    login                      String?
+    githubId                   Int?                         @unique
+    nodeId                     String?
+    avatarUrl                  String?
+    blog                       String?
+    hireable                   Boolean?
+    email                      String?
+    fetchedAt                  DateTime?
+    publicRepos                Int?
+    publicGists                Int?
+    type                       String?
+    siteAdmin                  Boolean?                     @default(false)
+    githubCreatedAt            DateTime?
+    githubUpdatedAt            DateTime?
+    readme                     String?
+    twitter                    String?
+    linkedin                   String?
+    facebook                   String?
+    instagram                  String?
+    bluesky                    String?
+    fetchedOrgAt               DateTime?
+    optOut                     Boolean?
+    contributorOrganization    contributorOrganization?     @relation(fields: [contributorOrganizationId], references: [id])
+    contributorOrganizationId  String?
+    contributions              contribution[]
+    jobPostContributorBookmark jobPostContributorBookmark[]
+
+    @@index([githubId])
+    @@index([login])
+    @@index([contributorOrganizationId])
+    @@index([name])
+}
+
+model openSourcePackageTags {
+    id        String       @id @default(cuid())
+    tag       String
+    createdAt DateTime     @default(now())
+    updatedAt DateTime     @updatedAt
+    packages  githubRepo[]
+}
+
+model contributorOrganization {
+    id          String        @id @default(cuid())
+    name        String
+    avatar      String?
+    description String?
+    followers   Int?
+    following   Int?
+    email       String?
+    twitter     String?
+    location    String?
+    contributor contributor[]
+    createdAt   DateTime      @default(now())
+    updatedAt   DateTime      @updatedAt
 }
 
 model openSourcePackageVersion {
@@ -242,8 +357,11 @@ model city {
     country       country                   @relation(fields: [countryId], references: [id])
     user          user[]
     organizations organization[]
+    contributor   contributor[]
 
     @@unique([name, countryId])
+    @@index([countryId])
+    @@index([name])
 }
 
 model country {
@@ -323,19 +441,21 @@ model purchase {
     subscription     subscription[]
     idType           String?
     jobBoard         Boolean        @default(true)
+    leadsEnabled     Boolean        @default(false)
     creditUsage      creditUsage[]
 }
 
 model creditUsage {
-    id          String    @id @default(cuid())
-    userId      String
-    user        user      @relation(fields: [userId], references: [id])
-    jobPostId   String
-    jobPost     jobPost   @relation(fields: [jobPostId], references: [id])
-    creditsUsed Int       @default(1)
-    createdAt   DateTime  @default(now())
-    purchaseId  String?
-    purchase    purchase? @relation(fields: [purchaseId], references: [id])
+    id           String    @id @default(cuid())
+    userId       String
+    user         user      @relation(fields: [userId], references: [id])
+    jobPostId    String
+    jobPost      jobPost   @relation(fields: [jobPostId], references: [id])
+    creditsUsed  Int       @default(1)
+    createdAt    DateTime  @default(now())
+    purchaseId   String?
+    purchase     purchase? @relation(fields: [purchaseId], references: [id])
+    leadsEnabled Boolean?
 }
 
 model promoCode {
@@ -348,6 +468,7 @@ model promoCode {
     oneTime        Boolean          @default(false)
     promoCodeUsage promoCodeUsage[]
     purchase       purchase[]
+    leadsEnabled   Boolean          @default(false)
     limit          Int?
 }
 
@@ -375,6 +496,7 @@ model product {
     subscription subscription[]
     recurring    Boolean          @default(true)
     features     productFeature[]
+    leadsEnabled Boolean          @default(false)
 }
 
 model productFeature {
@@ -399,3 +521,15 @@ model subscription {
     active    Boolean    @default(true)
     recurring String     @default("month")
 }
+
+model jobActionsLog {
+    id        String   @id @default(cuid())
+    jobPostId String
+    jobPost   jobPost  @relation(fields: [jobPostId], references: [id])
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    action    String
+    completed Boolean  @default(false)
+}
+
+/// YOU ARE ADDING CONTRIBUTIONS TO THE MANY TO MANY ON GITHUB -> CONTRUBUTOR

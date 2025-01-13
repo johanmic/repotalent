@@ -10,18 +10,37 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import dayjs from "dayjs"
-import type { Stripe } from "stripe"
 import Link from "next/link"
+import type { Stripe } from "stripe"
+
+export interface Subscription extends Stripe.Subscription {
+  plan: Stripe.Plan
+}
+
 export const Subscription = ({
   subscription,
 }: {
-  subscription: Stripe.Subscription
+  subscription: Subscription
 }) => {
+  console.log(subscription)
   const isActive = subscription?.status === "active"
   const nextBilling = subscription?.current_period_end
-    ? dayjs(subscription.current_period_end).format("MMMM D, YYYY")
+    ? new Date(subscription.current_period_end * 1000).toLocaleDateString(
+        "en-US",
+        {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }
+      )
     : null
+
+  const formatPrice = (amount: number, currency: string) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currency.toLowerCase(),
+    }).format(amount / 100)
+  }
 
   return (
     <Card>
@@ -46,8 +65,19 @@ export const Subscription = ({
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Plan</span>
                 <span className="font-medium">
-                  {subscription?.items?.data?.[0].price.nickname ||
-                    "Basic Plan"}
+                  {subscription?.plan?.nickname || "Premium Plan"}
+                </span>
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Price</span>
+                <span className="font-medium">
+                  {subscription?.plan?.amount && subscription?.plan?.currency
+                    ? formatPrice(
+                        subscription.plan.amount,
+                        subscription.plan.currency
+                      )
+                    : "N/A"}
                 </span>
               </div>
               <Separator />

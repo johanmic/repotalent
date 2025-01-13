@@ -28,14 +28,19 @@ import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { getImageUrl } from "@/utils/image"
 
-const citySchema = z.object({
-  id: z.string(),
-  name: z.string(),
-})
+const citySchema = z
+  .object({
+    id: z.string({ required_error: "Please select a city" }),
+    name: z.string({ required_error: "Please select a city" }),
+  })
+  .nullable()
+  .refine((data) => data !== null, {
+    message: "Please select a city",
+  })
 
 export const schema = z.object({
   id: z.string().optional(),
-  name: z.string().min(5),
+  name: z.string().min(2, "Name must be at least 2 characters long"),
   website: z.string().url().nullable().optional(),
   contact: z.string().nullable(),
   city: citySchema,
@@ -90,11 +95,34 @@ const CreateOrgForm = ({
       ? organization?.image
       : getImageUrl(organization?.image || "")
     : null
+
+  const getFirstError = (errors: object): string => {
+    // Recursively search for the first error message
+    const findFirstMessage = (obj: any): string | undefined => {
+      if (obj?.message) return obj.message // Check for message at current level first
+
+      for (const key in obj) {
+        if (obj[key]?.message) {
+          return obj[key].message
+        }
+        if (typeof obj[key] === "object") {
+          const message = findFirstMessage(obj[key])
+          if (message) return message
+        }
+      }
+    }
+
+    return findFirstMessage(errors) || "Please fill out all required fields"
+  }
+
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(onSubmit, (errors) => {})}
-        className="space-y-6 w-full "
+        onSubmit={form.handleSubmit(onSubmit, (errors) => {
+          console.log(errors)
+          toast.error(getFirstError(errors))
+        })}
+        className="space-y-6 w-full"
       >
         <div className="grid md:grid-cols-3 gap-4">
           <div className="gap-2 flex flex-col items-center justify-center">

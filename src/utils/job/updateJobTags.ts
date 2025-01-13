@@ -10,46 +10,50 @@ const addPackages = async ({
   jobId: string
   dependencies: { name: string; version: string }[]
 }) => {
-  const BATCH_SIZE = 100
+  try {
+    const BATCH_SIZE = 100
 
-  for (let i = 0; i < dependencies.length; i += BATCH_SIZE) {
-    const batch = dependencies.slice(i, i + BATCH_SIZE)
+    for (let i = 0; i < dependencies.length; i += BATCH_SIZE) {
+      const batch = dependencies.slice(i, i + BATCH_SIZE)
 
-    await prisma.$transaction(async (tx) => {
-      await Promise.all(
-        batch.map(async ({ name, version }) => {
-          const pkg = await tx.openSourcePackage.upsert({
-            where: { name },
-            create: { name },
-            update: {},
-            select: { id: true },
-          })
+      await prisma.$transaction(async (tx) => {
+        await Promise.all(
+          batch.map(async ({ name, version }) => {
+            const pkg = await tx.openSourcePackage.upsert({
+              where: { name },
+              create: { name },
+              update: {},
+              select: { id: true },
+            })
 
-          const pkgVersion = await tx.openSourcePackageVersion.upsert({
-            where: {
-              packageId_version: {
-                packageId: pkg.id,
-                version,
+            const pkgVersion = await tx.openSourcePackageVersion.upsert({
+              where: {
+                packageId_version: {
+                  packageId: pkg.id,
+                  version,
+                },
               },
-            },
-            create: {
-              version,
-              packageId: pkg.id,
-              createdAt: new Date(),
-            },
-            update: {},
-            select: { id: true },
-          })
+              create: {
+                version,
+                packageId: pkg.id,
+                createdAt: new Date(),
+              },
+              update: {},
+              select: { id: true },
+            })
 
-          await tx.jobPostToPackageVersion.create({
-            data: {
-              jobPostId: jobId,
-              packageVersionId: pkgVersion.id,
-            },
+            await tx.jobPostToPackageVersion.create({
+              data: {
+                jobPostId: jobId,
+                packageVersionId: pkgVersion.id,
+              },
+            })
           })
-        })
-      )
-    })
+        )
+      })
+    }
+  } catch (e) {
+    console.log("error")
   }
 }
 
@@ -103,4 +107,11 @@ export const updateJobDepsAsync = async (jobId: string) => {
       dependencies,
     })
   }
+  await prisma.jobActionsLog.create({
+    data: {
+      jobPostId: job.id,
+      action: "updateJobDeps",
+      completed: true,
+    },
+  })
 }

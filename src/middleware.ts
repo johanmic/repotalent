@@ -5,7 +5,13 @@ import { updateSession } from "@/utils/supabase/middleware"
 //   return await updateSession(request)
 // }
 
-const excludePaths = ["/", "/api", "/jobs"]
+const excludePaths = [
+  "/",
+  "/api",
+  "/jobs",
+  "/manifest.webmanifest",
+  "manifest.json",
+]
 
 export async function middleware(request: NextRequest) {
   // Check if the current path starts with any excludePath

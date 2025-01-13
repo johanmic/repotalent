@@ -43,7 +43,7 @@ const Stepper = ({
   onDone: () => void
 }) => {
   const [currentStep, setCurrentStep] = useState(0)
-
+  const [isLoading, setIsLoading] = useState(false)
   useEffect(() => {
     onChangeStep(currentStep)
   }, [currentStep])
@@ -73,8 +73,9 @@ const Stepper = ({
           </Button>
         )}
         {currentStep === steps.length - 1 && (
-          <Button className="ml-auto" onClick={onDone}>
-            Write job description <Icon name="moveRight" className="ml-2" />
+          <Button className="ml-auto" onClick={onDone} disabled={isLoading}>
+            Write job description{" "}
+            <Icon name={isLoading ? "spinner" : "moveRight"} className="ml-2" />
           </Button>
         )}
         {currentStep < steps.length - 1 && (

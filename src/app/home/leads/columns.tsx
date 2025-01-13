@@ -1,9 +1,8 @@
 "use client"
 
-import { ColumnDef } from "@tanstack/react-table"
-import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
+import { JobPost } from "@/app/actions/jobpost"
 import { Button } from "@/components/ui/button"
-import { MoreHorizontal } from "lucide-react"
+import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,7 +11,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { JobPost } from "@/app/actions/jobpost"
+import { Spinner } from "@/components/ui/spinner"
+import { REQUIRED_ACTIONS } from "@/utils/job/constants"
+import { ColumnDef } from "@tanstack/react-table"
+import { Check, MoreHorizontal } from "lucide-react"
+import { useState } from "react"
+import { Progress } from "@/components/ui/progress"
 
 export const columns: ColumnDef<JobPost>[] = [
   // {
@@ -27,40 +31,11 @@ export const columns: ColumnDef<JobPost>[] = [
       <DataTableColumnHeader column={column} title="Title" />
     ),
   },
-  {
-    accessorKey: "organizationName",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Organization" />
-    ),
-  },
-  {
-    accessorKey: "workLocation",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Location" />
-    ),
-  },
-  {
-    accessorKey: "published",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Status" />
-    ),
-    cell: ({ row }) => {
-      const publishedDate = row.getValue("published") as string
-      return (
-        <div
-          className={`capitalize ${
-            publishedDate ? "text-green-600" : "text-gray-600"
-          }`}
-        >
-          {publishedDate ? "published" : "draft"}
-        </div>
-      )
-    },
-  },
+
   {
     accessorKey: "createdAt",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Created At" />
+      <DataTableColumnHeader column={column} title="Created" />
     ),
     cell: ({ row }) => {
       return new Date(row.getValue("createdAt")).toLocaleDateString()
@@ -91,6 +66,38 @@ export const columns: ColumnDef<JobPost>[] = [
             <DropdownMenuItem>Edit Job</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+      )
+    },
+  },
+  {
+    id: "progress",
+    header: "Progress",
+    cell: ({ row }) => {
+      const job = row.original
+
+      const completedActions =
+        job.jobActionsLog?.filter((log) => log.completed).length || 0
+      const totalActions = REQUIRED_ACTIONS.length
+      const progress = (completedActions / totalActions) * 100
+      if (progress === 100) {
+        return (
+          <div className="flex items-center gap-2">
+            <Check className="text-green-500" />
+            <span className="text-sm">Completed</span>
+          </div>
+        )
+      }
+      return <Progress value={progress} />
+    },
+  },
+  {
+    id: "viewLeads",
+    header: "Leads",
+    cell: ({ row }) => {
+      return (
+        <Button variant="outline" className="text-sm">
+          View Leads
+        </Button>
       )
     },
   },

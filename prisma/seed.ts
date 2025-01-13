@@ -214,6 +214,7 @@ const plans = [
     actionLabel: "Get Started",
     recurring: true,
     tokens: 1,
+    leadsEnabled: false,
   },
   {
     title: "Pro",
@@ -226,10 +227,12 @@ const plans = [
       "3-month job board listing",
       "Unlimited edits",
       "Export to Markdown",
+      "Find leads from open source packages",
     ],
     actionLabel: "Get Started",
     recurring: true,
     tokens: 3,
+    leadsEnabled: true,
   },
 ]
 
@@ -256,11 +259,23 @@ export const seedProducts = async () => {
   )
 }
 
+export const seedPromoCodes = async () => {
+  await prisma.promoCode.create({
+    data: {
+      code: "BEACHBOD25",
+      credits: 25,
+      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
+      limit: 10,
+    },
+  })
+}
+
 async function main() {
   await generateExtensions()
   await importCountriesData()
   await importCities()
   await seedProducts()
+  await seedPromoCodes()
 }
 
 main()

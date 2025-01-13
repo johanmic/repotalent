@@ -1,6 +1,6 @@
-import { logger, task } from "@trigger.dev/sdk/v3"
+import { logger, task, tasks } from "@trigger.dev/sdk/v3"
 import { getGithubUrls } from "@/utils/job/getGithubUrls"
-import { GET_DEPS_GITHUB } from "./constants"
+import { GET_DEPS_GITHUB, GET_REPO_INFO } from "./constants"
 export const getDepsGithub = task({
   id: GET_DEPS_GITHUB,
   // Set an optional maxDuration to prevent tasks from running indefinitely
@@ -14,7 +14,7 @@ export const getDepsGithub = task({
     logger.log("Updating job deps", { jobId: payload.jobId, ctx })
 
     await getGithubUrls(payload.jobId)
-
+    await tasks.trigger(GET_REPO_INFO, { jobId: payload.jobId })
     return {
       message: "Job deps updated",
     }
