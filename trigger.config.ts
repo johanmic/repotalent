@@ -1,4 +1,5 @@
 import { defineConfig } from "@trigger.dev/sdk/v3"
+import { prismaExtension } from "@trigger.dev/build/extensions/prisma"
 
 export default defineConfig({
   project: "proj_sncazuuikejdmhqcqybm",
@@ -17,4 +18,12 @@ export default defineConfig({
     },
   },
   dirs: ["./src/trigger"],
+  build: {
+    extensions: [
+      prismaExtension({
+        // update this to the path of your Prisma schema file
+        schema: "prisma/schema.prisma",
+      }),
+    ],
+  },
 })
