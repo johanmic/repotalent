@@ -35,7 +35,13 @@ import * as zod from "zod"
 import { useRouter } from "next/navigation"
 import { CurrencySelector } from "@/components/currency-selector"
 import { Currency } from "@/app/actions/city"
-
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 const tagSchema = zod.object({
   tag: zod.string(),
   id: zod.string(),
@@ -146,8 +152,21 @@ const EditJobPost = ({
 
   const jobId = job.id
   const [generation, setGeneration] = useState<string>("")
-
+  const [additionalInfo, setAdditionalInfo] = useState<string>(
+    job.additionalInfo || ""
+  )
   const [isLoading, setIsLoading] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  const handleRewriteClick = () => {
+    setIsModalOpen(true)
+  }
+
+  const handleModalSubmit = async () => {
+    setIsModalOpen(false)
+    await handleWrite()
+  }
+
   const onStreamingDone = useCallback(
     async (fullValue: string) => {
       const json = await generateJSONFromMarkdown(fullValue)
@@ -168,6 +187,7 @@ const EditJobPost = ({
 
       const { output } = await writeJobDescription({
         jobId: jobId as string,
+        additionalInfo,
       })
       let out = ``
       for await (const delta of readStreamableValue(output)) {
@@ -183,7 +203,7 @@ const EditJobPost = ({
     } finally {
       setIsLoading(false)
     }
-  }, [jobId, onStreamingDone])
+  }, [jobId, onStreamingDone, additionalInfo])
 
   useEffect(() => {
     if (job && !job.description) {
@@ -535,22 +555,58 @@ const EditJobPost = ({
                 </div>
               </div>
               <div className="hidden md:flex flex-wrap flex-row gap-2 justify-start my-4 items-center">
-                {
-                  <Button
-                    onClick={handleWrite}
-                    disabled={isLoading}
-                    className="btn btn-primary"
-                    size="sm"
-                    variant={job.description ? "outline" : "default"}
-                  >
-                    {isLoading ? (
-                      <Icon name="spinner" />
-                    ) : (
-                      <Icon name="rotate" />
-                    )}
-                    {isLoading ? "Writing..." : "Rewrite Description"}
-                  </Button>
-                }
+                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                  <Link href={`/home/jobs/${jobId}/complete`}>
+                    <Button
+                      role="submit"
+                      className="btn btn-secondary"
+                      variant="ghost"
+                      disabled={isLoading}
+                      size="sm"
+                    >
+                      <Icon name="fileSliders" />
+                      Edit Questions
+                    </Button>
+                  </Link>
+                  <DialogTrigger asChild>
+                    <Button
+                      onClick={handleRewriteClick}
+                      disabled={isLoading}
+                      className="btn btn-primary"
+                      size="sm"
+                      variant={job.description ? "ghost" : "default"}
+                    >
+                      {isLoading ? (
+                        <Icon name="spinner" />
+                      ) : (
+                        <Icon name="rotate" />
+                      )}
+                      {isLoading ? "Writing..." : "Rewrite"}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Rewrite Job Description</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <p className="text-warning text-xs font-light">
+                        Warning: This will remove edits to the job description.
+                      </p>
+                      <textarea
+                        className="w-full p-2 border rounded"
+                        value={additionalInfo}
+                        onChange={(e) => setAdditionalInfo(e.target.value)}
+                        placeholder="Enter additional information"
+                      />
+                      <Button
+                        onClick={handleModalSubmit}
+                        className="btn btn-primary"
+                      >
+                        Submit
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
 
                 <Button
                   role="submit"
@@ -559,24 +615,48 @@ const EditJobPost = ({
                   size="sm"
                 >
                   <Icon name="save" />
-                  Save Description
+                  Save
                 </Button>
               </div>
             </div>
           </div>
 
           <div className="md:hidden fixed bottom-0 right-0 left-0 md:ml-48 flex justify-center items-center gap-2 p-4 bg-sidebar-accent border  ">
-            {
-              <Button
-                onClick={handleWrite}
-                disabled={isLoading}
-                variant={job.description ? "outline" : "default"}
-                className="btn btn-primary"
-              >
-                {isLoading ? <Icon name="spinner" /> : <Icon name="rotate" />}
-                {isLoading ? "Writing..." : "Rewrite Description"}
-              </Button>
-            }
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  onClick={handleRewriteClick}
+                  disabled={isLoading}
+                  variant={job.description ? "outline" : "default"}
+                  className="btn btn-primary"
+                >
+                  {isLoading ? <Icon name="spinner" /> : <Icon name="rotate" />}
+                  {isLoading ? "Writing..." : "Rewrite"}
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Rewrite Job Description</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <p className="text-warning text-xs font-light">
+                    Warning: This will remove all previous data.
+                  </p>
+                  <textarea
+                    className="w-full p-2 border rounded"
+                    value={additionalInfo}
+                    onChange={(e) => setAdditionalInfo(e.target.value)}
+                    placeholder="Enter additional information"
+                  />
+                  <Button
+                    onClick={handleModalSubmit}
+                    className="btn btn-primary"
+                  >
+                    Submit
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
 
             <Button
               role="submit"

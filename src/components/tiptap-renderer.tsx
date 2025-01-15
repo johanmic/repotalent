@@ -7,6 +7,13 @@ import Heading from "@tiptap/extension-heading"
 import ListItem from "@tiptap/extension-list-item"
 import Paragraph from "@tiptap/extension-paragraph"
 import Text from "@tiptap/extension-text"
+import Link from "@tiptap/extension-link"
+import TextStyle from "@tiptap/extension-text-style"
+import Blockquote from "@tiptap/extension-blockquote"
+import Italic from "@tiptap/extension-italic"
+import Strike from "@tiptap/extension-strike"
+import Underline from "@tiptap/extension-underline"
+import HorizontalRule from "@tiptap/extension-horizontal-rule"
 // Option 1: Browser + server-side
 import { generateHTML } from "@tiptap/html"
 import { useMemo } from "react"
@@ -36,6 +43,22 @@ export const renderHTML = ({
         style: styling.Paragraph,
       },
     }),
+    Link.configure({
+      HTMLAttributes: {
+        class: "underline",
+      },
+    }),
+    TextStyle.configure({
+      HTMLAttributes: {
+        style: ({ color }) => ({
+          color: color || "inherit",
+        }),
+      },
+    }),
+    Blockquote.configure(),
+    Italic.configure(),
+    Strike.configure(),
+    Underline.configure(),
     Text.configure({
       HTMLAttributes: {
         style: styling?.Text || "",
@@ -56,6 +79,7 @@ export const renderHTML = ({
         style: styling?.BulletList || "",
       },
     }),
+    HorizontalRule.configure(),
     Heading.configure({
       levels: [1, 2, 3],
       HTMLAttributes: {

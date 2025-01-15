@@ -64,9 +64,7 @@ export const LeadsTable = ({ job }: { job: JobPost }) => {
   }
 
   const onCellClick = {
-    star: (cell: Contributor) => {
-      console.log(cell)
-    },
+    star: (cell: Contributor) => {},
   }
   return (
     <div className="flex flex-col gap-4 m-4">

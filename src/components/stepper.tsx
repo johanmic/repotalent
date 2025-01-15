@@ -73,7 +73,14 @@ const Stepper = ({
           </Button>
         )}
         {currentStep === steps.length - 1 && (
-          <Button className="ml-auto" onClick={onDone} disabled={isLoading}>
+          <Button
+            className="ml-auto"
+            onClick={() => {
+              setIsLoading(true)
+              onDone()
+            }}
+            disabled={isLoading}
+          >
             Write job description{" "}
             <Icon name={isLoading ? "spinner" : "moveRight"} className="ml-2" />
           </Button>

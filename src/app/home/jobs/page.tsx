@@ -17,13 +17,17 @@ const JobsPage = async () => {
   const hasApp = user.githubInstallationId !== null || user.skipGithub === true
   const hasOrg = Boolean(user.organization)
   const hasJob = jobs.length > 0
-  console.log(jobs)
+
   return (
     <div className="container mx-auto py-10">
       {!hasApp || !hasOrg || !hasJob ? (
         <HomeChecklist hasApp={hasApp} hasOrg={hasOrg} hasJob={hasJob} />
       ) : (
-        <DataTable columns={columns} data={jobs} />
+        <DataTable
+          columns={columns}
+          data={jobs}
+          rowClickUrl={"/home/jobs/{id}/edit"}
+        />
       )}
     </div>
   )

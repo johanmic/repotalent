@@ -50,6 +50,7 @@ import {
   Code,
   Github,
   TrendingUp,
+  FileSliders,
 } from "lucide-react"
 
 export const icons = {
@@ -105,6 +106,7 @@ export const icons = {
   lock: Lock,
   code: Code,
   trendingUp: TrendingUp,
+  fileSliders: FileSliders,
 }
 
 export const Icon = ({

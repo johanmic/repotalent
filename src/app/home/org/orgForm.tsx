@@ -119,7 +119,6 @@ const CreateOrgForm = ({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit, (errors) => {
-          console.log(errors)
           toast.error(getFirstError(errors))
         })}
         className="space-y-6 w-full"

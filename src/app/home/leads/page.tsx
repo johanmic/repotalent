@@ -18,7 +18,7 @@ const JobsPage = async () => {
     redirect("/home/org")
   }
   const jobs = await listJobs()
-  console.log("jobs", jobs)
+
   return (
     <div className="container mx-auto py-10">
       {leadsEnabled && (

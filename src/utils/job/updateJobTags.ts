@@ -52,9 +52,7 @@ const addPackages = async ({
         )
       })
     }
-  } catch (e) {
-    console.log("error")
-  }
+  } catch (e) {}
 }
 
 export const updateJobDepsAsync = async (jobId: string) => {

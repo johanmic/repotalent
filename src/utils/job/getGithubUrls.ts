@@ -65,7 +65,6 @@ export const getInfoFromUrl = async (
 }
 
 export const getGithubUrls = async (jobId: string) => {
-  console.log("Getting github urls", { jobId })
   const packages = (await prisma.openSourcePackage.findMany({
     where: {
       versions: {
@@ -80,12 +79,12 @@ export const getGithubUrls = async (jobId: string) => {
       githubRepoId: null,
     },
   })) as Package[]
-  console.log("Packages", packages.length)
+
   if (packages.length === 0) return null
   const job = await prisma.jobPost.findUniqueOrThrow({
     where: { id: jobId },
   })
-  console.log("Job", job)
+
   logger.log("Getting github urls", { jobId, jobSource: job.source })
   switch (job?.source) {
     case "package.json":
@@ -160,7 +159,6 @@ export const getGithubRepoFromPyPI = async (packages: Package[]) => {
 }
 
 export const getGithubRepoFromPodfile = async (packages: Package[]) => {
-  console.log("Getting github repo from podfile", packages)
   const results = await Promise.allSettled(
     packages.map(async (pkg) => {
       try {
@@ -178,7 +176,6 @@ export const getGithubRepoFromPodfile = async (packages: Package[]) => {
           return
         }
 
-        console.log("Data", data)
         // const repositoryUrl = data.source?.git
         const podSpecFile = await getPodspecFile(
           pkg.name,
@@ -228,7 +225,7 @@ const getPodspecFile = async (podName: string, version: string) => {
   const url = `https://trunk.cocoapods.org/api/v1/pods/${podName}/specs/${version}`
   try {
     const response = await axios.get(url)
-    console.log(response.data)
+
     return response.data
   } catch (error) {
     console.error(`Error fetching podspec for ${podName}@${version}:`, error)

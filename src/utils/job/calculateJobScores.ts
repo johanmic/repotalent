@@ -64,10 +64,6 @@ export const precalcRatings = async (
     },
   })
 
-  console.log(contributors.length)
-
-  console.log(`Processing ${contributors.length} contributors`)
-
   // Process in batches of 100
   const batchSize = 100
   const batches: Promise<any>[] = []
@@ -114,7 +110,7 @@ export const precalcRatings = async (
   }
 
   const results = batches.flat()
-  console.log(`Completed processing ${results.length} contributors`)
+
   await prisma.jobActionsLog.create({
     data: {
       jobPostId: jobId,

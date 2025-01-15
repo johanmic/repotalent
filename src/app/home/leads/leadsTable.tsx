@@ -66,8 +66,6 @@ export const LeadsTable = ({ jobs }: { jobs: JobPost[] }) => {
     setIsSheetOpen(true)
   }
 
-  console.log(leads)
-
   return (
     <div className="flex flex-col gap-4 m-4">
       <div className="flex flex-col gap-4">

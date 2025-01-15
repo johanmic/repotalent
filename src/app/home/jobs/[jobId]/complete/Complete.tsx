@@ -18,6 +18,7 @@ const PrepQuestionStepper = ({ jobPost }: { jobPost: JobPost }) => {
   )
 
   const [tone, setTone] = useState<string>("")
+  const [title, setTitle] = useState<string>(jobPost?.title || "")
   const [additionalInfo, setAdditionalInfo] = useState<string>("")
   const [experienceLevel, setExperienceLevel] = useState<number>(
     jobPost?.seniority || 0.5
@@ -28,12 +29,14 @@ const PrepQuestionStepper = ({ jobPost }: { jobPost: JobPost }) => {
       jobId: jobPost.id,
       data: {
         ...jobPost,
+        additionalInfo: additionalInfo,
         questions: questionResults,
         ratings: sliderResults,
         seniority: experienceLevel,
+        title: title,
       },
     })
-  }, [jobPost, questionResults, sliderResults, experienceLevel])
+  }, [jobPost, questionResults, sliderResults, experienceLevel, title])
 
   const steps = [
     {
@@ -62,10 +65,14 @@ const PrepQuestionStepper = ({ jobPost }: { jobPost: JobPost }) => {
         <Confirm
           jobPost={jobPost}
           tone={tone}
+          setTitle={setTitle}
+          questionResults={questionResults}
+          sliderResults={sliderResults}
           additionalInfo={additionalInfo}
           setTone={setTone}
           setAdditionalInfo={setAdditionalInfo}
           setExperienceLevel={setExperienceLevel}
+          active={activeStep === 2}
         />
       ),
     },
@@ -89,7 +96,6 @@ const CompleteJobPost = ({ jobPost }: { jobPost: JobPost }) => {
           <PrepQuestionStepper jobPost={jobPost} />
         </div>
       </div>
-      )
     </div>
   )
 }

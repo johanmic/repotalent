@@ -151,7 +151,6 @@ export const createJobPost = async (data: {
       throw new Error("User not in organization")
     }
 
-    console.log("creating", data.meta)
     const job = await prisma.jobPost.create({
       data: {
         title: "",
@@ -170,8 +169,10 @@ export const createJobPost = async (data: {
     const promptReuslts = await prepareQuestions({
       data,
       extra,
+      jobPostId: job.id,
+      userId: user.id,
     })
-    console.log("promptReuslts", promptReuslts)
+
     const slug = await checkedSlug({
       name: `${promptReuslts.suggestedTitle || "job"}-${
         dbUser.organization?.name
@@ -212,7 +213,7 @@ export const createJobPost = async (data: {
           },
         },
       })
-      console.log("job", job)
+
       const purchase = await $tx.purchase.findMany({
         where: { userId: user.id },
         include: {
@@ -230,7 +231,7 @@ export const createJobPost = async (data: {
         )
         return availableCredits < p.creditsBought
       })
-      console.log("firstPurchaseWithCredits")
+
       const firstPurchaseWithCreditsAndJobBoard = purchase.find((p) => {
         const availableCredits = p.creditUsage.reduce(
           (acc, curr) => acc + curr.creditsUsed,
@@ -238,7 +239,6 @@ export const createJobPost = async (data: {
         )
         return availableCredits < p.creditsBought && p.jobBoard
       })
-      console.log("firstPurchaseWithCreditsAndJobBoard")
 
       const purchaseId =
         firstPurchaseWithCreditsAndJobBoard?.id ||
@@ -253,7 +253,6 @@ export const createJobPost = async (data: {
         },
       })
       creditUsageId = creditUsage.id
-      console.log("creditUsage")
 
       return results
     })
@@ -316,12 +315,11 @@ export const createJobPost = async (data: {
         defaultTags,
       })
     }
-    console.log("done", job)
+
     jobId = job.id
     return updatedJob
   } catch (err) {
     if (!jobId && creditUsageId) {
-      console.log("restoring credits")
       await prisma.creditUsage.delete({
         where: { id: creditUsageId },
       })
@@ -434,15 +432,15 @@ export const listJobs = async (): Promise<JobPost[]> => {
       },
       questions: true,
       ratings: true,
-      packages: {
-        include: {
-          packageVersion: {
-            include: {
-              package: true,
-            },
-          },
-        },
-      },
+      // packages: {
+      //   include: {
+      //     packageVersion: {
+      //       include: {
+      //         package: true,
+      //       },
+      //     },
+      //   },
+      // },
       jobActionsLog: true,
     },
     orderBy: {
@@ -461,7 +459,6 @@ export const updateJobPost = async ({
   data: Partial<JobPost>
   shouldRedirect?: boolean
 }) => {
-  console.log("updateJobPost", data)
   const { user } = await getUser()
   if (!user?.id) {
     throw new Error("User not authenticated")

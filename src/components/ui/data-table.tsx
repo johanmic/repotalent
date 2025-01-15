@@ -96,7 +96,11 @@ export function DataTable<TData extends BaseData, TValue>({
                     if (onRowClick) {
                       onRowClick(row.original)
                     } else if (rowClickUrl) {
-                      router.push(`${rowClickUrl}/${row.original.id}`)
+                      const formattedUrl = rowClickUrl.replace(
+                        "{id}",
+                        String(row.original.id)
+                      )
+                      router.push(formattedUrl)
                     }
                   }}
                 >

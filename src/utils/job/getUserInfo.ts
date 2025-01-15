@@ -47,8 +47,6 @@ export const getUserInfo = async (jobId: string) => {
     },
   })
 
-  console.log(contributors.length)
-
   if (contributors.length === 0) {
     return null
   }
@@ -56,8 +54,6 @@ export const getUserInfo = async (jobId: string) => {
   const rateLimit = await checkRateLimit({
     installationId: githubInstallationId,
   })
-
-  console.log(rateLimit)
 
   if (rateLimit.remaining < 10) {
     tasks.trigger(GET_USER_INFO, { jobId })
@@ -90,7 +86,6 @@ export const getUserInfo = async (jobId: string) => {
       installationId: githubInstallationId,
     })
 
-    console.log(results)
     if (!results.data) {
       await prisma.contributor.update({
         where: { id: contributor.id },
@@ -100,7 +95,7 @@ export const getUserInfo = async (jobId: string) => {
       })
       continue
     }
-    console.log(results.data)
+
     const user = results.data
     await prisma.contributor.update({
       where: { id: contributor.id },

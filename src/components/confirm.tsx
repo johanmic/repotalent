@@ -18,14 +18,16 @@ import {
 import { experienceLevels, getSeniorityLabel } from "@/utils/seniorityMapper"
 import type { JobPost } from "@actions/jobpost"
 import { CheckIcon, PencilIcon } from "lucide-react"
-import { useState } from "react"
-
+import { useState, useEffect } from "react"
+import { reCalculateTitleAndSeniority } from "@/app/actions/prompt"
+import type { jobPostQuestion, jobPostRatings } from "@prisma/client"
 const toneOptions = [
   { value: "professional", label: "Professional" },
   { value: "casual", label: "Casual" },
   { value: "friendly", label: "Friendly" },
   { value: "formal", label: "Formal" },
 ]
+import { Spinner } from "@/components/ui/spinner"
 
 interface EditableFieldProps {
   value: string
@@ -103,20 +105,47 @@ export default function Confirm({
   jobPost,
   setTone,
   setAdditionalInfo,
+  questionResults,
   tone,
+  setTitle,
   additionalInfo,
+  sliderResults,
   setExperienceLevel,
+  active,
 }: {
   jobPost: JobPost
   tone: string
   additionalInfo: string
+  questionResults: jobPostQuestion[]
+  sliderResults: jobPostRatings[]
   setTone: (tone: string) => void
   setAdditionalInfo: (additionalInfo: string) => void
   setExperienceLevel: (experienceLevel: number) => void
+  setTitle: (title: string) => void
+  active: boolean
 }) {
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [isEditingLevel, setIsEditingLevel] = useState(false)
   const [seniority, setSeniority] = useState(jobPost.seniority || 0.3)
+  const [title, localsetTitle] = useState(jobPost.title || "")
+  const [loading, setLoading] = useState(false)
+  const getSuggestedTitle = async () => {
+    setLoading(true)
+    const { suggestedTitle, seniority } = await reCalculateTitleAndSeniority({
+      jobPostId: jobPost.id,
+      questions: questionResults,
+      ratings: sliderResults,
+    })
+    setLoading(false)
+    localsetTitle(suggestedTitle)
+    setSeniority(seniority)
+    // setTitle(results.title)
+  }
+  useEffect(() => {
+    if (active) {
+      getSuggestedTitle()
+    }
+  }, [active, questionResults, sliderResults])
   return (
     <div className="w-full">
       {jobPost && (
@@ -128,7 +157,12 @@ export default function Confirm({
                 Review and edit the job posting details
               </CardDescription>
             </CardHeader>
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4 relative">
+              {loading && (
+                <div className="absolute top-0 left-0 w-full h-full bg-black/70 flex text-white items-center justify-center">
+                  Updating labels <Spinner className="h-4 w-4 text-white" />
+                </div>
+              )}
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <Label className="flex items-center gap-2">
@@ -138,9 +172,13 @@ export default function Confirm({
                     </Text>
                   </Label>
                   <EditableField
-                    value={jobPost.title || ""}
+                    value={title || ""}
                     isEditing={isEditingTitle}
                     onToggleEdit={() => setIsEditingTitle(!isEditingTitle)}
+                    onValueChange={(value) => {
+                      localsetTitle(value.toString())
+                      setTitle(value.toString())
+                    }}
                   />
                 </div>
 

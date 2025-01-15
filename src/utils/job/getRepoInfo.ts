@@ -42,11 +42,8 @@ export const getJobRepoInfo = async (jobId: string) => {
     },
   })
 
-  console.log("pkgs", packages.length)
-
   // Process packages sequentially instead of in parallel chunks
   for (const pkg of packages) {
-    console.log("pkg", pkg)
     if (!pkg.githubRepo?.gitUrl || !pkg.githubRepoId) {
       continue
     }
@@ -54,7 +51,6 @@ export const getJobRepoInfo = async (jobId: string) => {
     try {
       const normalizedUrl = normalizeGithubUrl(pkg.githubRepo.gitUrl)
       const { owner, repo } = await getInfoFromUrl(normalizedUrl)
-      console.log(owner, repo)
 
       const repoData = await getRepo({
         owner,
@@ -67,14 +63,12 @@ export const getJobRepoInfo = async (jobId: string) => {
       }
 
       await updateRepoInfo({ id: pkg.githubRepoId, repoData })
-      console.log("updated")
 
       const contributors = await getRepoContributors({
         owner,
         repo,
         githubInstallationId,
       })
-      console.log("contributors", contributors)
 
       await createContributors(pkg.githubRepoId, contributors)
     } catch (error) {

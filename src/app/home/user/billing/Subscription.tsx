@@ -22,7 +22,6 @@ export const Subscription = ({
 }: {
   subscription: Subscription
 }) => {
-  console.log(subscription)
   const isActive = subscription?.status === "active"
   const nextBilling = subscription?.current_period_end
     ? new Date(subscription.current_period_end * 1000).toLocaleDateString(

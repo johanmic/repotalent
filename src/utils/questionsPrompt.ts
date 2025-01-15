@@ -1,6 +1,8 @@
 "use server"
 import { openai } from "@ai-sdk/openai"
 import { generateText } from "ai"
+import prisma from "@/store/prisma"
+import { getUser } from "@/utils/supabase/server"
 
 const packageJSONDescription = `
   look for design systems, build systems, react, next, node, typescript, etc.
@@ -72,12 +74,16 @@ export interface PrepQuestionsResponse {
 export const prepareQuestions = async ({
   data,
   extra,
+  jobPostId,
+  userId,
 }: {
   data: {
     filename: string
     data: string
   }
   extra?: string
+  jobPostId: string
+  userId: string
 }): Promise<PrepQuestionsResponse> => {
   try {
     const filename = data.filename
@@ -145,12 +151,19 @@ export const prepareQuestions = async ({
 
     // return responseFixture
 
-    const { text } = await generateText({
+    const { text, usage } = await generateText({
       model: openai("gpt-4o"),
       system: "You are a friendly assistant!",
       prompt: `Create a post about ${prompt}`,
     })
 
+    await prisma.jobPostTokenUsage.create({
+      data: {
+        jobPostId: jobPostId,
+        tokensUsed: usage.totalTokens,
+        userId: userId,
+      },
+    })
     // Add validation and cleanup of the response
     const cleanedText = text
       .trim()

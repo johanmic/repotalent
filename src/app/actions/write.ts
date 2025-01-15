@@ -7,7 +7,7 @@ import { JobPost } from "@actions/jobpost"
 import { createStreamableValue } from "ai/rsc"
 // This method must be named GET
 
-const makePrompt = (job: JobPost) => {
+const makePrompt = (job: JobPost, additionalInfo: string) => {
   return `
   You are a job description generator. You are given a job post and you need to generate a description for it.
   Output simple markdown with titles, lists, paragraphs.
@@ -69,13 +69,19 @@ Use Tone of voice ${job.tone || "neutral"}
     .join("\n")}
 
    Additional instructions:
-  ${job.additionalInfo}
+  ${additionalInfo || job.additionalInfo || ""}
 
 
   `
 }
 
-export const writeJobDescription = async ({ jobId }: { jobId: string }) => {
+export const writeJobDescription = async ({
+  jobId,
+  additionalInfo = "",
+}: {
+  jobId: string
+  additionalInfo?: string
+}) => {
   const stream = createStreamableValue("")
 
   ;(async () => {
@@ -135,7 +141,7 @@ export const writeJobDescription = async ({ jobId }: { jobId: string }) => {
     //   return
     // }
 
-    const prompt = makePrompt(job as JobPost)
+    const prompt = makePrompt(job as JobPost, additionalInfo)
     const { textStream, usage } = await streamText({
       model: openai("gpt-4o-mini"),
       messages: [
