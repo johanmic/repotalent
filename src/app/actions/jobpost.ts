@@ -180,6 +180,7 @@ export const createJobPost = async (data: {
       table: "jobPost",
     })
     const updatedJob = await prisma.$transaction(async ($tx) => {
+      const uniqTags = uniq(promptReuslts.tags)
       const results = await $tx.jobPost.update({
         where: { id: job.id },
         data: {
@@ -202,7 +203,7 @@ export const createJobPost = async (data: {
             })),
           },
           tags: {
-            create: promptReuslts.tags.map((tag) => ({
+            create: uniqTags.map((tag) => ({
               tag: {
                 connectOrCreate: {
                   where: { tag },

@@ -40,7 +40,11 @@ const detectFileType = (content: string): string => {
     // Matches Makefile targets
     return "Makefile"
   }
-  if (content.includes("tool.poetry.dependencies")) {
+  if (
+    content.includes("tool.poetry.dependencies") ||
+    content.includes("tool.poetry") ||
+    content.includes("dependencies = [")
+  ) {
     return "pyproject.toml"
   }
   return "package.json" // default fallback
