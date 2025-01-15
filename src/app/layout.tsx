@@ -3,7 +3,7 @@ import localFont from "next/font/local"
 import "./globals.css"
 import { Toaster } from "@/components/ui/sonner"
 import { ThemeProvider } from "@/components/theme-provider"
-import { JetBrains_Mono } from "next/font/google"
+import { PostHogProvider as PHProvider } from "./providers"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -32,10 +32,12 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        <ThemeProvider attribute="class" defaultTheme="light">
-          {children}
-          <Toaster position="top-center" />
-        </ThemeProvider>
+        <PHProvider>
+          <ThemeProvider attribute="class" defaultTheme="light">
+            {children}
+            <Toaster position="top-center" />
+          </ThemeProvider>
+        </PHProvider>
       </body>
     </html>
   )

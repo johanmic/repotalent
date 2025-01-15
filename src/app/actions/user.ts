@@ -6,6 +6,8 @@ import { getUser as getUserFromSupabase } from "@/utils/supabase/server"
 import { createClient } from "@/utils/supabase/server"
 import { getGithubUser } from "@/app/actions/github"
 import { raw } from "@/utils/deburr"
+import posthog from "@/utils/posthog-node"
+
 export interface User extends user {
   organization: organization
   creditsInfo?: {
@@ -79,6 +81,27 @@ export const updateUser = async (
       bio: data.bio || null,
     },
   })
+
+  posthog.identify({
+    distinctId: user.id,
+    properties: {
+      name: data.name,
+      email: user.email,
+      avatar: data.avatar,
+      bio: data.bio,
+    },
+  })
+
+  posthog.capture({
+    distinctId: user.id,
+    event: "user updated",
+    properties: {
+      name: data.name,
+      hasAvatar: !!data.avatar,
+      hasBio: !!data.bio,
+    },
+  })
+
   return results as User
 }
 
@@ -94,6 +117,14 @@ export const setStripeCustomerId = async (stripeCustomerId: string) => {
     where: { id: user.id },
     data: { stripeCustomerId },
   })
+
+  posthog.capture({
+    distinctId: user.id,
+    event: "user connected stripe",
+    properties: {
+      stripeCustomerId,
+    },
+  })
 }
 
 export const registerGithubUser = async () => {
@@ -101,7 +132,6 @@ export const registerGithubUser = async () => {
   if (!user) {
     throw new Error("User not found")
   }
-  // const userId = user.id
   if (!user.email) {
     throw new Error("User not found")
   }
@@ -117,6 +147,25 @@ export const registerGithubUser = async () => {
     where: { email: user.email },
     update: query,
     create: { ...query, id: user.id },
+  })
+
+  posthog.identify({
+    distinctId: user.id,
+    properties: {
+      email: user.email,
+      name: user.user_metadata.user_name,
+      avatar: user.user_metadata.avatar_url,
+      githubId: user.user_metadata.user_name,
+    },
+  })
+
+  posthog.capture({
+    distinctId: user.id,
+    event: "user connected github",
+    properties: {
+      email: user.email,
+      githubUsername: user.user_metadata.user_name,
+    },
   })
 }
 

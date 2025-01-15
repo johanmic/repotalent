@@ -13,6 +13,7 @@ const excludePaths = [
   "manifest.json",
   "/legal/tos",
   "/legal/privacy",
+  "/PostHogPageView",
 ]
 
 export async function middleware(request: NextRequest) {
