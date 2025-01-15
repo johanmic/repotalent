@@ -12,7 +12,7 @@ interface CompareProps {
   firstImageClassName?: string
   secondImageClassname?: string
   initialSliderPercentage?: number
-  slideMode?: "hover" | "drag"
+  slideMode?: "drag"
   showHandlebar?: boolean
   autoplay?: boolean
   autoplayDuration?: number
@@ -24,7 +24,7 @@ export const Compare = ({
   firstImageClassName,
   secondImageClassname,
   initialSliderPercentage = 50,
-  slideMode = "hover",
+  slideMode = "drag",
   showHandlebar = true,
   autoplay = false,
   autoplayDuration = 5000,
@@ -73,9 +73,6 @@ export const Compare = ({
 
   function mouseLeaveHandler() {
     setIsMouseOver(false)
-    if (slideMode === "hover") {
-      setSliderXPercent(initialSliderPercentage)
-    }
     if (slideMode === "drag") {
       setIsDragging(false)
     }
@@ -100,7 +97,7 @@ export const Compare = ({
   const handleMove = useCallback(
     (clientX: number) => {
       if (!sliderRef.current) return
-      if (slideMode === "hover" || (slideMode === "drag" && isDragging)) {
+      if (slideMode === "drag" && isDragging) {
         const rect = sliderRef.current.getBoundingClientRect()
         const x = clientX - rect.left
         const percent = (x / rect.width) * 100
@@ -152,7 +149,7 @@ export const Compare = ({
       className={cn("w-[400px] h-[400px] overflow-hidden", className)}
       style={{
         position: "relative",
-        cursor: slideMode === "drag" ? "grab" : "col-resize",
+        cursor: "grab",
       }}
       onMouseMove={handleMouseMove}
       onMouseLeave={mouseLeaveHandler}

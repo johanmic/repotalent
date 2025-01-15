@@ -10,8 +10,12 @@ interface BigFeatureProps {
   image: string
   features: string[]
   badge?: string
+  extra?: string | React.ReactNode
   CTA?: string
   CTA_link?: string
+  reverse?: boolean
+  animatedBoarder?: boolean
+  className?: string
 }
 export const BigFeature = ({
   title,
@@ -19,18 +23,30 @@ export const BigFeature = ({
   image,
   features,
   badge,
+  extra,
   CTA,
   CTA_link,
+  reverse,
+  animatedBoarder = true,
+  className,
 }: BigFeatureProps) => (
-  <div className="w-full ">
+  <div className={`w-full ${className}`}>
     <div className="container mx-auto">
-      <div className="relative p-[2px] rounded-lg bg-gradient-to-r from-primary via-purple-500 to-pink-500 animate-gradient-x">
+      <div
+        className={`relative p-[2px] rounded-lg ${
+          animatedBoarder
+            ? "bg-gradient-to-r from-primary via-purple-500 to-pink-500 animate-gradient-x"
+            : ""
+        }`}
+      >
         <div className="grid rounded-lg bg-background py-20 lg:py-40 p-8 grid-cols-1 gap-8 items-center lg:grid-cols-2">
-          <div className="flex gap-10 flex-col">
+          <div
+            className={`flex gap-10 flex-col ${reverse ? "lg:order-2" : ""}`}
+          >
             <div className="flex gap-4 flex-col">
               {badge && (
                 <div>
-                  <Badge variant="outline">{badge}</Badge>
+                  <Badge>{badge}</Badge>
                 </div>
               )}
               <div className="flex gap-2 flex-col">
@@ -52,6 +68,7 @@ export const BigFeature = ({
                 </div>
               ))}
             </div>
+            {extra}
             {CTA && CTA_link && (
               <div className="flex justify-start">
                 <Button asChild>
@@ -63,8 +80,12 @@ export const BigFeature = ({
               </div>
             )}
           </div>
-          {image ? (
-            <div className="border rounded-md drop-shadow-xl p-4 bg-white border-muted">
+          <div
+            className={`${
+              reverse ? "lg:order-1" : ""
+            } border rounded-md drop-shadow-xl p-4 bg-white border-muted`}
+          >
+            {image ? (
               <Image
                 src={image}
                 alt="feature"
@@ -72,10 +93,10 @@ export const BigFeature = ({
                 height={500}
                 className="rounded-md w-full h-auto object-contain"
               />
-            </div>
-          ) : (
-            <div className="bg-muted rounded-md w-full aspect-video h-full flex-1"></div>
-          )}
+            ) : (
+              <div className="bg-muted rounded-md w-full aspect-video h-full flex-1"></div>
+            )}
+          </div>
         </div>
       </div>
     </div>

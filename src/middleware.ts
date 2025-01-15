@@ -11,6 +11,8 @@ const excludePaths = [
   "/jobs",
   "/manifest.webmanifest",
   "manifest.json",
+  "/legal/tos",
+  "/legal/privacy",
 ]
 
 export async function middleware(request: NextRequest) {

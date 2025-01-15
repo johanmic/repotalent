@@ -14,7 +14,8 @@ export const matchCleanup = schedules.task({
   cron: "*/30 * * * *", // Every 30 minutes
   run: async () => {
     logger.log("Checking for incomplete job processing")
-
+    const oneMonthAgo = new Date()
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
     const jobPosts = await prisma.jobPost.findMany({
       where: {
         OR: REQUIRED_ACTIONS.map((action) => ({
@@ -24,6 +25,44 @@ export const matchCleanup = schedules.task({
             },
           },
         })),
+        organization: {
+          OR: [
+            {
+              users: {
+                some: {
+                  githubInstallationId: {
+                    not: null,
+                  },
+                  subscription: {
+                    some: {
+                      purchases: {
+                        some: {
+                          leadsEnabled: true,
+                          createdAt: { gt: oneMonthAgo },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            {
+              users: {
+                some: {
+                  githubInstallationId: {
+                    not: null,
+                  },
+                  promoCodeUsage: {
+                    some: {
+                      createdAt: { gt: oneMonthAgo },
+                      promoCode: { leadsEnabled: true },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        },
       },
       include: {
         jobActionsLog: true,

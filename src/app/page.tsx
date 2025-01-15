@@ -8,7 +8,9 @@ import { DotBackground } from "@/components/ui/dot-background"
 import { BigFeature } from "@/components/landing/bigFeature"
 import { acceptedFileNames } from "@/utils/filenames"
 import { Metadata } from "next"
+import { SiteFooter } from "@/components/landing/footer"
 import { getProducts } from "./actions/product"
+import { Title } from "@/components/title"
 export const metadata: Metadata = {
   title: "Job Description Generator",
   description: "Generate job descriptions in one click",
@@ -50,6 +52,40 @@ export default async function Home() {
           reverse
         />
         <BigFeature
+          title="Leads"
+          subtitle="Repotalent scans all packages you use to source candidates from github"
+          features={[
+            "Qualified leads based on open-source contributions",
+            "Search by location, languages, libraries, and more",
+            "Fetches leads from github",
+            "Verified “hireable” status",
+            "Bookmarks leads",
+            "Auto writes intros (coming soon)",
+          ]}
+          animatedBoarder={false}
+          image="/leads2.png"
+          badge="Pro Feature"
+          extra={
+            <div>
+              <div className="text-lg font-black text-rose-500">
+                500-1500 leads
+              </div>
+              <p className="pt-2">
+                is what an average{" "}
+                <span className="bg-black text-white text-xs font-bold p-2 rounded-lg">
+                  package.json
+                </span>{" "}
+                will find*
+              </p>
+              <p className="pt-4 text-[10px]">
+                *This is an estimate, the number of leads will vary based on the
+                size of your codebase and the number of packages you use.
+              </p>
+            </div>
+          }
+          reverse
+        />
+        <BigFeature
           title="Job board included"
           subtitle="Your openings will be listed on our job board, where developers can search by job details, titles, or even specific libraries and tools from npm, pip, or CocoaPods to find their next gig."
           image="/jobboard.png"
@@ -66,6 +102,7 @@ export default async function Home() {
           <Pricing mode="landing" plans={plans} />
         </DotBackground>
       </main>
+      <SiteFooter />
     </div>
   )
 }

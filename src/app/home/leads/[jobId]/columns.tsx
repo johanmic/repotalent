@@ -17,24 +17,8 @@ import { Contributor } from "@/app/actions/leads"
 import { starContributor, unstarContributor } from "@actions/leads"
 import { useState } from "react"
 import { StarComp } from "./star"
+import { Icon } from "@/components/icon"
 export const columns = (jobId?: string): ColumnDef<Contributor>[] => [
-  {
-    accessorKey: "bookmarked",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Starred" />
-    ),
-    cell: ({ row }) => {
-      const isStarred = row.original.jobPostContributorBookmark?.starred
-
-      return (
-        <StarComp
-          jobId={jobId}
-          contributorId={row.original.id}
-          active={isStarred || false}
-        />
-      )
-    },
-  },
   {
     accessorKey: "name",
     header: ({ column }) => (
@@ -42,20 +26,28 @@ export const columns = (jobId?: string): ColumnDef<Contributor>[] => [
     ),
     cell: ({ row }) => {
       const name = row.getValue("name") as string | null
+      const isStarred = row.original.jobPostContributorBookmark?.starred
       return (
-        <div className="flex items-center space-x-2">
-          {row.original.avatar && (
-            <img
-              src={row.original.avatar}
-              alt={`${name || "User"}'s avatar`}
-              className="h-10 w-10 rounded-full min-w-10 min-h-10"
-            />
-          )}
-          <div className="space-y-1">
-            <div className="text-xs font-bold text-muted-foreground">
-              {name || "N/A"}
+        <div className="flex items-center space-x-2 max-w-48">
+          <StarComp
+            jobId={jobId}
+            contributorId={row.original.id}
+            active={isStarred || false}
+          />
+          <div className="flex items-center space-x-2">
+            {row.original.avatar && (
+              <img
+                src={row.original.avatar}
+                alt={`${name || "User"}'s avatar`}
+                className="h-10 w-10 rounded-full min-w-10 min-h-10 object-cover"
+              />
+            )}
+            <div className="space-y-1">
+              <div className="text-xs font-bold text-muted-foreground">
+                {name || "N/A"}
+              </div>
+              <LeadBadge followers={row.original.followers || 0} />
             </div>
-            <LeadBadge followers={row.original.followers || 0} />
           </div>
         </div>
       )
@@ -81,7 +73,7 @@ export const columns = (jobId?: string): ColumnDef<Contributor>[] => [
       <DataTableColumnHeader column={column} title="Company" />
     ),
     cell: ({ row }) => (
-      <div className="text-xs text-muted-foreground">
+      <div className="text-xs text-muted-foreground max-w-32 truncate">
         {row.getValue("company")}
       </div>
     ),
@@ -115,7 +107,13 @@ export const columns = (jobId?: string): ColumnDef<Contributor>[] => [
       const value = row.getValue("hireable")
       return (
         <div className="text-xs text-muted-foreground">
-          {value === null ? "N/A" : value ? "Yes" : "No"}
+          {value === null ? (
+            "N/A"
+          ) : value ? (
+            <Icon name="check" className="w-4 h-4" />
+          ) : (
+            <Icon name="circleHelp" className="w-4 h-4" />
+          )}
         </div>
       )
     },
@@ -136,18 +134,18 @@ export const columns = (jobId?: string): ColumnDef<Contributor>[] => [
                   key={contrib.id}
                   className="flex items-center gap-2 text-xs text-muted-foreground"
                 >
-                  {contrib.githubRepo.logo && (
+                  {contrib?.githubRepo?.logo && (
                     <img
-                      src={contrib.githubRepo.logo}
-                      alt={`${contrib.githubRepo.name} logo`}
+                      src={contrib?.githubRepo?.logo}
+                      alt={`${contrib?.githubRepo?.name} logo`}
                       className="h-4 w-4 rounded-full flex-shrink-0"
                     />
                   )}
                   <span className="font-medium truncate">
-                    {contrib.githubRepo.name}
+                    {contrib?.githubRepo?.name}
                   </span>
                   <span className="flex-shrink-0">
-                    {contrib.contributions.toLocaleString()}
+                    {contrib?.contributions?.toLocaleString() || 0}
                   </span>
                 </div>
               ))}

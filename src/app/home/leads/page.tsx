@@ -22,7 +22,11 @@ const JobsPage = async () => {
   return (
     <div className="container mx-auto py-10">
       {leadsEnabled && (
-        <DataTable columns={columns} data={jobs} rowClickUrl={"/home/leads/"} />
+        <DataTable
+          columns={columns}
+          data={jobs}
+          rowClickUrl={"/home/leads/{id}"}
+        />
       )}
       {!leadsEnabled && (
         <Popup title="Leads are disabled" text="Leads are disabled" />

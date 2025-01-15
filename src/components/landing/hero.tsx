@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { CompareDemo } from "@/components/landing/compare"
 import Link from "next/link"
 export const Hero = () => (
-  <div className="w-full py-10 lg:py-10 ">
+  <div className="w-full py-10 lg:py-10 md:max-h-[75vh]">
     <div className="container mx-auto">
       <div className="grid grid-cols-1 gap-2 items-center lg:grid-cols-2">
         <div className="flex gap-4 flex-col">

@@ -20,6 +20,7 @@ import Lead from "./lead"
 import { toast } from "sonner"
 import { Spinner } from "@/components/ui/spinner"
 import { Title } from "@/components/title"
+
 export const LeadsTable = ({ job }: { job: JobPost }) => {
   const [leads, setLeads] = useState<Contributor[]>([])
   const [isSheetOpen, setIsSheetOpen] = useState(false)

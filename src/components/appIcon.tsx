@@ -119,6 +119,7 @@ import {
   SiMacos,
   SiFirefox,
   SiSafari,
+  SiBluesky,
 } from "react-icons/si"
 import { cn } from "@/lib/utils"
 export const AppIcons = {
@@ -247,6 +248,7 @@ export const AppIcons = {
   linux: SiLinux,
   macos: SiMacos,
   firefox: SiFirefox,
+  bluesky: SiBluesky,
   safari: SiSafari,
 }
 

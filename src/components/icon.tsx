@@ -51,6 +51,7 @@ import {
   Github,
   TrendingUp,
   FileSliders,
+  CircleHelp,
 } from "lucide-react"
 
 export const icons = {
@@ -102,6 +103,7 @@ export const icons = {
   markdown: FileCode,
   x: X,
   star: Star,
+  circleHelp: CircleHelp,
   gitFork: GitFork,
   lock: Lock,
   code: Code,

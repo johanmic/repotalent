@@ -22,7 +22,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { FilterForm } from "./[jobId]/filter-form"
 import { FilterOptions } from "@/app/actions/leads"
 export const LeadsTable = ({ jobs }: { jobs: JobPost[] }) => {

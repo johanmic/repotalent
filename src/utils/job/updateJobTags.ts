@@ -58,8 +58,15 @@ const addPackages = async ({
 export const updateJobDepsAsync = async (jobId: string) => {
   const job = await prisma.jobPost.findUniqueOrThrow({
     where: { id: jobId },
+    include: {
+      organization: {
+        include: {
+          users: true,
+        },
+      },
+    },
   })
-  if (!job.data) return
+  if (!job.data) return { shouldContinue: false }
 
   if (job.source === "package.json") {
     const packagesJson = JSON.parse(job.data)
@@ -112,4 +119,33 @@ export const updateJobDepsAsync = async (jobId: string) => {
       completed: true,
     },
   })
+  const oneMonthAgo = new Date()
+  oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
+  const dbUser = await prisma.user.findFirst({
+    where: {
+      id: job?.organization?.users[0]?.id,
+      OR: [
+        {
+          purchase: {
+            some: {
+              leadsEnabled: true,
+              createdAt: { gt: oneMonthAgo },
+            },
+          },
+        },
+        {
+          promoCodeUsage: {
+            some: {
+              createdAt: { gt: oneMonthAgo },
+              promoCode: { leadsEnabled: true },
+            },
+          },
+        },
+      ],
+    },
+  })
+
+  return {
+    shouldContinue: Boolean(dbUser),
+  }
 }
