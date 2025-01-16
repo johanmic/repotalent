@@ -50,7 +50,7 @@ export const renderHTML = ({
     }),
     TextStyle.configure({
       HTMLAttributes: {
-        style: ({ color }) => ({
+        style: ({ color }: { color: string }) => ({
           color: color || "inherit",
         }),
       },
