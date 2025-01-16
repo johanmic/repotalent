@@ -99,6 +99,7 @@ export const updateUser = async (
       name: data.name,
       hasAvatar: !!data.avatar,
       hasBio: !!data.bio,
+      lastSeen: new Date(),
     },
   })
 
@@ -213,4 +214,11 @@ export const getLeadsEnabled = async (): Promise<boolean> => {
   })
 
   return Boolean(dbUser)
+}
+
+export const updateLastSeen = async (userId: string) => {
+  await prisma.user.update({
+    where: { id: userId },
+    data: { lastSeen: new Date() },
+  })
 }

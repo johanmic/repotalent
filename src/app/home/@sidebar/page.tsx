@@ -13,7 +13,7 @@ import Icon from "@/components/icon"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
-import { getUser, getLeadsEnabled } from "@actions/user"
+import { getUser, getLeadsEnabled, updateLastSeen } from "@actions/user"
 import { Separator } from "@/components/ui/separator"
 import { getUserSubscriptionFromDB } from "@actions/subscriptions"
 // import { SidebarUser } from "@/components/sidebar-user"
@@ -30,6 +30,9 @@ type SidebarItem = {
 
 const SidebarComponent = async () => {
   const user = await getUser()
+  if (user) {
+    await updateLastSeen(user.id)
+  }
   const items: SidebarItem[] = [
     // {
     //   label: "Home",

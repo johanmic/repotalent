@@ -8,7 +8,7 @@ if (!apiKey) {
   throw new Error("Stripe API key is not set in environment variables")
 }
 
-const stripe = new Stripe(apiKey, { apiVersion: "2024-11-20.acacia" })
+const stripe = new Stripe(apiKey)
 
 export const GET = async (request: NextRequest) => {
   try {

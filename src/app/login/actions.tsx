@@ -28,8 +28,13 @@ export const verifyOTP = async (formData: FormData) => {
   const supUser = await supabase.auth.getUser()
   await prisma.user.upsert({
     where: { email },
-    update: { email, id: supUser.data.user?.id, updatedAt: new Date() },
-    create: { email, id: supUser.data.user?.id },
+    update: {
+      email,
+      id: supUser.data.user?.id,
+      updatedAt: new Date(),
+      lastSeen: new Date(),
+    },
+    create: { email, id: supUser.data.user?.id, lastSeen: new Date() },
   })
 
   if (error) {
