@@ -21,13 +21,13 @@ interface HomeProps {
 }
 
 export const metadata: Metadata = {
-  title: "Job Description Generator",
-  description: "Generate job descriptions and find leadsin one click",
+  title: "Repotalent - Job Description Generator and Lead Finder",
+  description: "Generate job descriptions and find leads in one click",
   openGraph: {
-    title: "Job Description Generator",
-    description: "Generate job descriptions in one click",
+    title: "Repotalent - Job Description Generator and Lead Finder",
+    description: "Generate job descriptions and find leads in one click",
     url: "https://repotalent.com",
-    siteName: "Job Description Generator",
+    siteName: "Repotalent - Job Description Generator and Lead Finder",
     images: [{ url: "/OG.png" }],
   },
 }
@@ -35,7 +35,6 @@ export const metadata: Metadata = {
 export default async function Home({ searchParams }: HomeProps) {
   const params = await searchParams
   const plans = await getProducts()
-  console.log("::::REF", params.ref)
   return (
     <div className="font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col max-w-6xl justify-center items-center mx-auto p-4 pt-16">
