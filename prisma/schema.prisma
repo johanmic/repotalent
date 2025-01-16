@@ -38,7 +38,7 @@ model user {
     subscription         subscription[]
     githubInstallationId Int?
     skipGithub           Boolean?
-
+    lastSeen             DateTime?
     @@index([organizationId])
     @@index([cityId])
     @@index([email])
@@ -531,6 +531,7 @@ model jobActionsLog {
     updatedAt DateTime @updatedAt
     action    String
     completed Boolean  @default(false)
+    found     Int?     @default(0)
+    processed Int?     @default(0)
+    error     Int?     @default(0)
 }
-
-/// YOU ARE ADDING CONTRIBUTIONS TO THE MANY TO MANY ON GITHUB -> CONTRUBUTOR

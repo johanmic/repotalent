@@ -28,6 +28,7 @@ const NewPost = ({
   showDropzone = true,
   metadata,
 }: NewPostProps) => {
+  console.log("metadata", metadata)
   const router = useRouter()
   const [isProcessing, setIsProcessing] = useState(false)
   const [showCodeParser, setShowCodeParser] = useState(false)
@@ -72,6 +73,7 @@ const NewPost = ({
       }
     } catch (error) {
       console.error("Error processing file:", error)
+      router.push("/home/create/error")
     } finally {
       setIsLoading(false)
       setIsProcessing(false)

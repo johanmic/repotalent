@@ -6,7 +6,7 @@ import { Prisma } from "@prisma/client"
 import { mapJS } from "@/utils/mapIcons"
 import { parseRequirementsTxt } from "@/utils/parseRequirementsTXT"
 import { parsePodfileLock } from "@/utils/podfileLockParser"
-import { prepareQuestions } from "@/utils/questionsPrompt"
+import { generateJobPost } from "@/utils/questionsPrompt"
 import { createSlug } from "@/utils/slug"
 import { getUser } from "@/utils/supabase/server"
 import { getRepoMetaFiles } from "@/utils/getRepoMetaFiles"
@@ -14,6 +14,7 @@ import { AcceptedFileName } from "@/utils/filenames"
 import { tasks } from "@trigger.dev/sdk/v3"
 import { UPDATE_JOB_DEPS } from "@/trigger/constants"
 import posthog from "@/utils/posthog-node"
+import { generateCode } from "@/utils/code"
 import {
   city,
   country,
@@ -114,8 +115,10 @@ export const createJobPost = async (data: {
     path?: string
   }
 }): Promise<JobPost> => {
+  const startTime = performance.now()
   let jobId: string | null = null
   let creditUsageId: string | null = null
+  console.log("data", data.meta)
   try {
     const { user } = await getUser()
     if (!user?.id) {
@@ -155,11 +158,13 @@ export const createJobPost = async (data: {
     const job = await prisma.jobPost.create({
       data: {
         title: "",
-        slug: "",
+        slug: generateCode({ length: 12 }),
         source: data.filename,
         organizationId,
         published: null,
         data: data.data,
+        githubPath: data.meta?.path || undefined,
+        githubRepo: data.meta?.repo || null,
       },
     })
 
@@ -167,32 +172,20 @@ export const createJobPost = async (data: {
       jobId: job.id,
     })
 
-    const promptReuslts = await prepareQuestions({
+    const promptReuslts = await generateJobPost({
       data,
       extra,
       jobPostId: job.id,
       userId: user.id,
     })
 
-    const slug = await checkedSlug({
-      name: `${promptReuslts.suggestedTitle || "job"}-${
-        dbUser.organization?.name
-      }`,
-      table: "jobPost",
-    })
     const updatedJob = await prisma.$transaction(async ($tx) => {
       const uniqTags = uniq(promptReuslts.tags)
       const results = await $tx.jobPost.update({
         where: { id: job.id },
         data: {
           title: promptReuslts.suggestedTitle,
-          slug,
           seniority: promptReuslts.seniority,
-          source: data.filename,
-          published: null,
-          organizationId,
-          githubPath: data.meta?.path || undefined,
-          githubRepo: data.meta?.repo || null,
           questions: {
             create: promptReuslts.questions.map((question) => ({
               question,
@@ -329,8 +322,14 @@ export const createJobPost = async (data: {
       },
     })
 
+    const endTime = performance.now()
+    const duration = ((endTime - startTime) / 1000).toFixed(2)
+    console.log(`createJobPost completed in ${duration} seconds`)
     return updatedJob
   } catch (err) {
+    const endTime = performance.now()
+    const duration = ((endTime - startTime) / 1000).toFixed(2)
+    console.log(`createJobPost failed after ${duration} seconds`)
     if (!jobId && creditUsageId) {
       await prisma.creditUsage.delete({
         where: { id: creditUsageId },
@@ -787,4 +786,14 @@ export const listPublishedJobs = async ({
   })
 
   return jobs as JobPost[]
+}
+
+export const getJobPostTokenUsage = async (
+  jobPostId: string
+): Promise<number> => {
+  const jobPost = await prisma.jobPostTokenUsage.aggregate({
+    where: { jobPostId },
+    _sum: { tokensUsed: true },
+  })
+  return jobPost._sum.tokensUsed || 0
 }

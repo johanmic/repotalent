@@ -8,24 +8,41 @@ import {
 const Faq1 = () => {
   const faqs = [
     {
-      question: "What is a FAQ?",
+      question: "Why dont you have a free option?",
       answer:
-        "A FAQ is a list of frequently asked questions and answers on a particular topic.",
+        "Generating a job description from code and running multiple calls against APIs is unfortunately a bit pricey. We are working on a free tier, but it is not ready yet.",
     },
     {
-      question: "What is the purpose of a FAQ?",
+      question: "How does the tokens work",
       answer:
-        "The purpose of a FAQ is to provide answers to common questions and help users find the information they need quickly and easily.",
+        "Creating a job costs one token. This includes regenerations and edits as well as one month of publishing on the job board",
     },
     {
-      question: "How do I create a FAQ?",
+      question: "How do I get the leads database?",
       answer:
-        "To create a FAQ, you need to compile a list of common questions and answers on a particular topic and organize them in a clear and easy-to-navigate format.",
+        "Leads is a pro feature, pro users tokens also get one month of access to the leads database",
     },
     {
-      question: "What are the benefits of a FAQ?",
+      question: "Can I create job posts without publishing them?",
       answer:
-        "The benefits of a FAQ include providing quick and easy access to information, reducing the number of support requests, and improving the overall user experience.",
+        "Yes, you can create job posts without publishing them. You can always edit them later. or export them to PDF or Markdown",
+    },
+    {
+      question: "What does Hireable mean",
+      answer: (
+        <div>
+          Hireable is a feature that allows you to indicate that a developer is
+          available for hire on your GitHub profile.
+          <a href="https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-user-account-settings/about-available-for-hire">
+            Learn more
+          </a>
+        </div>
+      ),
+    },
+    {
+      question: "I dont want to be listed as a developer on RepoTalent",
+      answer:
+        "Sure, you can always email support@repotalent.com and we will mark you as not being listed",
     },
   ]
 

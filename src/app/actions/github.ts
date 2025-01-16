@@ -195,39 +195,35 @@ export const listRepoFolders = async ({
   return contents
 }
 
-export const listRepoFiles = async (path: string = "") => {
+export const listRepoFiles = async ({
+  owner,
+  repo,
+  path = "",
+}: {
+  owner: string
+  repo: string
+  path?: string
+}) => {
   const user = await getDBUser()
   if (!user.githubInstallationId) {
     throw new Error("No GitHub installation found")
   }
 
-  // Get the first repo
-  const repos = await listUserRepos()
-  if (!repos.length) {
-    throw new Error("No repositories found")
-  }
-  const repo = repos[0]
-
-  // Get installation access token
   const installationAuth = await auth({
     type: "installation",
     installationId: user.githubInstallationId,
   })
 
-  // Create Octokit instance with installation token
   const octokit = new Octokit({
     auth: installationAuth.token,
   })
 
-  // Get repository contents
-  const [owner, repoName] = repo.fullName.split("/")
   const { data: contents } = await octokit.rest.repos.getContent({
     owner,
-    repo: repoName,
+    repo,
     path,
   })
 
-  // Handle array response (directory contents)
   if (Array.isArray(contents)) {
     return contents.map((item) => ({
       name: item.name,
@@ -240,7 +236,6 @@ export const listRepoFiles = async (path: string = "") => {
     }))
   }
 
-  // Handle single file response
   return [
     {
       name: contents.name,

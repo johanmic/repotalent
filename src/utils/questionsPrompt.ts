@@ -2,7 +2,7 @@
 import { openai } from "@ai-sdk/openai"
 import { generateText } from "ai"
 import prisma from "@/store/prisma"
-import { getUser } from "@/utils/supabase/server"
+import { shortenPackageJson } from "./packageJsonShortener"
 
 const packageJSONDescription = `
   look for design systems, build systems, react, next, node, typescript, etc.
@@ -71,7 +71,7 @@ export interface PrepQuestionsResponse {
   tags: string[]
 }
 
-export const prepareQuestions = async ({
+export const generateJobPost = async ({
   data,
   extra,
   jobPostId,
@@ -87,74 +87,56 @@ export const prepareQuestions = async ({
 }): Promise<PrepQuestionsResponse> => {
   try {
     const filename = data.filename
-    const dataString = data.data
+    let dataString = data.data
+    if (filename === "package.json") {
+      dataString = shortenPackageJson(JSON.parse(dataString))
+    }
     const languagePrompt = getPrompt(filename)
     const prompt = `
-    we are creating a job description for a technical role.
-  we are basing it from the project ${filename} 
-  here is the content :
-  ${dataString}
+we are creating a job description for a technical role.
+we are basing it from the project ${filename} 
+here is the content :
+${dataString}
 
-  ${extra ? `here is the extra content: ${extra}` : ""}
+${extra ? `here is the extra content: ${extra}` : ""}
 
-  make them no more than 4. make them yes or no questions.
+make them no more than 4. make them yes or no questions.
 
-  ask a few questions that will help us create a good job description. make them distinct from the Packages, since they rate those.
-  also extract the most important packages and technologies used in the project.
-  also check if there are any versions that are very low like 0.0.1 which means they are using unstable versions and factor that in to the questions
-  group out packages, technologies and platforms,
+ask a few questions that will help us create a good job description. make them distinct from the Packages, since they rate those.
+also extract the most important packages and technologies used in the project.
+also check if there are any versions that are very low like 0.0.1 which means they are using unstable versions and factor that in to the questions
+group out packages, technologies and platforms,
 
-  questions:
-  questions are for help tuning the job description. not to the applicant. ENSURE THE QUESTIONS ARE DISTINCT FROM THE PACKAGES.
-  ask questions to improve the quality of the job description.
+questions:
+questions are for help tuning the job description. not to the applicant. ENSURE THE QUESTIONS ARE DISTINCT FROM THE PACKAGES.
+ask questions to improve the quality of the job description.
 
-  title: make it a good title and a little bit more descriptive than "Senior XX developer"
-  ${languagePrompt}
-  
+title: make it a good title and a little bit more descriptive than "Senior XX developer"
+${languagePrompt}
 
-  always return the following json format:
-  based on the project, what is the seniority level of the candidate? from 0 to 1, 0 being the lowest and 1 being the highest.
-  it can never be 0, but it can be 1. Base the seniority on the mix of the packages, technologies and platforms used.
-  suggest a title for the job description based on the project.
 
-  {
-    suggestedTitle: "Senior Next.js Developer",
-    openSource: true,
-    seniority: 0.7,
-      "packages": [
-          "package1",
-          "package2",
-          "package3"
-      ],
-      "questions": [
-          "question1",
-          "question2",
-          "question3"
-      ],
-      "tags": [
-          "tag1",
-          "tag2",
-          "tag3"
-      ]
-  }
+always return the following json format:
+based on the project, what is the seniority level of the candidate? from 0 to 1, 0 being the lowest and 1 being the highest.
+it can never be 0, but it can be 1. Base the seniority on the mix of the packages, technologies and platforms used.
+suggest a title for the job description based on the project.
+
+{
+"suggestedTitle": "Senior Next.js Developer",
+"openSource": true,
+"seniority": 0.7,
+"packages": ["packageName"],
+"questions": ["question"],
+"tags": ["tagName"]
+}
 
     
 `
-    // const cleanedText = responseFixture
-    // const results = await prisma.jobPost.create({
-    //   data: {
-    //     title: cleanedText.suggestedTitle,
-    //     seniority: cleanedText.seniority,
-    //     source: filename,
-    //   },
-    // })
-
-    // return responseFixture
+    console.log(prompt)
 
     const { text, usage } = await generateText({
       model: openai("gpt-4o"),
-      system: "You are a friendly assistant!",
-      prompt: `Create a post about ${prompt}`,
+      system: "You are a Job Description Generator",
+      prompt,
     })
 
     await prisma.jobPostTokenUsage.create({
@@ -176,14 +158,6 @@ export const prepareQuestions = async ({
     if (!parsedResponse || typeof parsedResponse !== "object") {
       throw new Error("Invalid response format")
     }
-    // const results = await prisma.jobPost.create({
-    //   data: {
-    //     title: parsedResponse.suggestedTitle,
-    //     seniority: parsedResponse.seniority,
-    //     source: filename,
-    //     slug: `${parsedResponse.suggestedTitle}-${organizationName}`,
-    //   },
-    // })
 
     return parsedResponse as PrepQuestionsResponse
   } catch (error) {

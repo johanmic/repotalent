@@ -35,6 +35,7 @@ import * as zod from "zod"
 import { useRouter } from "next/navigation"
 import { CurrencySelector } from "@/components/currency-selector"
 import { Currency } from "@/app/actions/city"
+
 import {
   Dialog,
   DialogContent,
@@ -140,9 +141,11 @@ interface FormErrors {
 const EditJobPost = ({
   job,
   currencies,
+  canRegenerate,
 }: {
   job: JobPost
   currencies: Currency[]
+  canRegenerate: boolean
 }) => {
   const form = useForm<zod.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -159,6 +162,10 @@ const EditJobPost = ({
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const handleRewriteClick = () => {
+    if (!canRegenerate) {
+      toast.error("You have reached the maximum number of regenerations")
+      return
+    }
     setIsModalOpen(true)
   }
 
@@ -558,7 +565,6 @@ const EditJobPost = ({
                 <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                   <Link href={`/home/jobs/${jobId}/complete`}>
                     <Button
-                      role="submit"
                       className="btn btn-secondary"
                       variant="ghost"
                       disabled={isLoading}
@@ -568,22 +574,23 @@ const EditJobPost = ({
                       Edit Questions
                     </Button>
                   </Link>
-                  <DialogTrigger asChild>
-                    <Button
-                      onClick={handleRewriteClick}
-                      disabled={isLoading}
-                      className="btn btn-primary"
-                      size="sm"
-                      variant={job.description ? "ghost" : "default"}
-                    >
-                      {isLoading ? (
-                        <Icon name="spinner" />
-                      ) : (
-                        <Icon name="rotate" />
-                      )}
-                      {isLoading ? "Writing..." : "Rewrite"}
-                    </Button>
-                  </DialogTrigger>
+                  <Button
+                    type="button"
+                    onClick={handleRewriteClick}
+                    disabled={isLoading}
+                    className={`btn btn-primary ${
+                      !canRegenerate ? "btn-disabled" : ""
+                    }`}
+                    size="sm"
+                    variant={job.description ? "ghost" : "default"}
+                  >
+                    {isLoading ? (
+                      <Icon name="spinner" />
+                    ) : (
+                      <Icon name="rotate" />
+                    )}
+                    {isLoading ? "Writing..." : "Rewrite"}
+                  </Button>
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Rewrite Job Description</DialogTitle>

@@ -32,8 +32,8 @@ export const getRepoMetaFiles = async ({
   type: AcceptedFileName
 }): Promise<string | null> => {
   try {
-    const files = await listRepoFiles(path)
-    if (!files || files.length === 0) {
+    const files = await listRepoFiles({ owner, repo, path })
+    if (!files?.length) {
       console.warn("No files found in repository")
       return null
     }
@@ -52,10 +52,10 @@ export const getRepoMetaFiles = async ({
     const metaFileContent = await Promise.allSettled(
       matchedFiles.map(async (file) => {
         try {
-          const results = await getFileContent({ owner, repo, path: file.path })
+          const content = await getFileContent({ owner, repo, path: file.path })
           return {
             filename: file.name,
-            content: results,
+            content,
           }
         } catch (err) {
           console.warn(`Failed to fetch content for ${file.path}:`, err)
