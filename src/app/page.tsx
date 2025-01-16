@@ -1,19 +1,28 @@
-import Image from "next/image"
-import { Hero } from "@/components/landing/hero"
-import { Pricing } from "@/components/pricing"
-import { Feature } from "@/components/landing/feature"
-import { TopMenu } from "@/components/landing/topMenu"
-import { Typewriter } from "@/components/ui/typewriter"
-import { DotBackground } from "@/components/ui/dot-background"
 import { BigFeature } from "@/components/landing/bigFeature"
+import FAQ from "@/components/landing/faq"
+import { Feature } from "@/components/landing/feature"
+import { SiteFooter } from "@/components/landing/footer"
+import { Hero } from "@/components/landing/hero"
+import { TopMenu } from "@/components/landing/topMenu"
+import { Pricing } from "@/components/pricing"
+import { StatsCounter } from "@/components/stats-counter"
+import { DotBackground } from "@/components/ui/dot-background"
+import { Typewriter } from "@/components/ui/typewriter"
 import { acceptedFileNames } from "@/utils/filenames"
 import { Metadata } from "next"
-import { SiteFooter } from "@/components/landing/footer"
 import { getProducts } from "./actions/product"
-import { Title } from "@/components/title"
+
+type SearchParams = Promise<{
+  ref?: string | null
+}>
+
+interface HomeProps {
+  searchParams: SearchParams
+}
+
 export const metadata: Metadata = {
   title: "Job Description Generator",
-  description: "Generate job descriptions in one click",
+  description: "Generate job descriptions and find leadsin one click",
   openGraph: {
     title: "Job Description Generator",
     description: "Generate job descriptions in one click",
@@ -23,12 +32,14 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function Home() {
+export default async function Home({ searchParams }: HomeProps) {
+  const params = await searchParams
   const plans = await getProducts()
+  console.log("::::REF", params.ref)
   return (
     <div className="font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col  max-w-6xl justify-center items-center mx-auto p-4">
-        <TopMenu />
+      <main className="flex flex-col max-w-6xl justify-center items-center mx-auto p-4 pt-16">
+        <TopMenu promoRef={params.ref} />
         <Hero />
         <Feature
           title={
@@ -67,8 +78,9 @@ export default async function Home() {
           badge="Pro Feature"
           extra={
             <div>
-              <div className="text-lg font-black text-rose-500">
-                500-1500 leads
+              <div className="text-4xl flex gap-2 font-black text-rose-500">
+                <StatsCounter number={500} /> - <StatsCounter number={1500} />{" "}
+                leads
               </div>
               <p className="pt-2">
                 is what an average{" "}
@@ -78,8 +90,8 @@ export default async function Home() {
                 will find*
               </p>
               <p className="pt-4 text-[10px]">
-                *This is an estimate, the number of leads will vary based on the
-                size of your codebase and the number of packages you use.
+                *the number of leads will vary based on the size of your
+                codebase. Not all leads are marked hireable. not all have emails
               </p>
             </div>
           }
@@ -98,9 +110,10 @@ export default async function Home() {
           CTA="Open Job board"
           CTA_link="/jobs"
         />
-        <DotBackground>
+        <DotBackground className="">
           <Pricing mode="landing" plans={plans} />
         </DotBackground>
+        <FAQ />
       </main>
       <SiteFooter />
     </div>

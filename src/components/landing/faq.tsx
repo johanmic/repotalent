@@ -5,7 +5,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 
-const Faq1 = () => {
+const FaqYou = () => {
   const faqs = [
     {
       question: "Why dont you have a free option?",
@@ -47,7 +47,7 @@ const Faq1 = () => {
   ]
 
   return (
-    <section className="py-32">
+    <section className="py-32 relative">
       <div className="container">
         <h1 className="mb-4 text-3xl font-semibold md:mb-11 md:text-5xl">
           Frequently asked questions
@@ -67,4 +67,4 @@ const Faq1 = () => {
   )
 }
 
-export default Faq1
+export default FaqYou

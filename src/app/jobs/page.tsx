@@ -11,7 +11,7 @@ export default async function JobsPage() {
   return (
     <div className="max-auto">
       <DotBackground>
-        <div className="flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center justify-center pt-10 p-4">
           <Logo size="lg" />
           <Jobs publishedJobs={publishedJobs} />
         </div>
