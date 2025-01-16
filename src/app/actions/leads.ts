@@ -8,6 +8,7 @@ import {
   jobPostContributorBookmark,
 } from "@prisma/client"
 import { revalidatePath } from "next/cache"
+import posthog from "@/utils/posthog-node"
 
 export type Contribution = contribution & {
   githubRepo: githubRepo
@@ -311,6 +312,15 @@ export const starContributor = async ({
     },
   })
 
+  posthog.capture({
+    distinctId: user.id,
+    event: "contributor starred",
+    properties: {
+      contributorId,
+      jobId,
+    },
+  })
+
   return results
 }
 
@@ -321,6 +331,11 @@ export const unstarContributor = async ({
   contributorId: string
   jobId: string
 }) => {
+  const { user } = await getUser()
+  if (!user?.id) {
+    throw new Error("User not authenticated")
+  }
+
   const results = await prisma.jobPostContributorBookmark.update({
     where: {
       jobPostId_contributorId: {
@@ -332,8 +347,17 @@ export const unstarContributor = async ({
       starred: null,
     },
   })
-  revalidatePath(`/home/leads/${jobId}`)
 
+  posthog.capture({
+    distinctId: user.id,
+    event: "contributor unstarred",
+    properties: {
+      contributorId,
+      jobId,
+    },
+  })
+
+  revalidatePath(`/home/leads/${jobId}`)
   return results
 }
 
@@ -346,6 +370,11 @@ export const commentOnContributor = async ({
   jobId: string
   comment: string
 }) => {
+  const { user } = await getUser()
+  if (!user?.id) {
+    throw new Error("User not authenticated")
+  }
+
   const results = await prisma.jobPostContributorBookmark.update({
     where: {
       jobPostId_contributorId: {
@@ -357,6 +386,17 @@ export const commentOnContributor = async ({
       comment: comment,
     },
   })
+
+  posthog.capture({
+    distinctId: user.id,
+    event: "contributor commented",
+    properties: {
+      contributorId,
+      jobId,
+      commentLength: comment.length,
+    },
+  })
+
   revalidatePath(`/home/leads/${jobId}`)
   return results
 }

@@ -13,6 +13,7 @@ import { getRepoMetaFiles } from "@/utils/getRepoMetaFiles"
 import { AcceptedFileName } from "@/utils/filenames"
 import { tasks } from "@trigger.dev/sdk/v3"
 import { UPDATE_JOB_DEPS } from "@/trigger/constants"
+import posthog from "@/utils/posthog-node"
 import {
   city,
   country,
@@ -318,6 +319,16 @@ export const createJobPost = async (data: {
     }
 
     jobId = job.id
+
+    posthog.capture({
+      distinctId: user.id,
+      event: "job created",
+      properties: {
+        source: data.filename,
+        hasGithubMeta: !!data.meta?.repo,
+      },
+    })
+
     return updatedJob
   } catch (err) {
     if (!jobId && creditUsageId) {
@@ -525,6 +536,15 @@ export const updateJobPost = async ({
     },
   })
 
+  posthog.capture({
+    distinctId: user.id,
+    event: "job updated",
+    properties: {
+      jobId,
+      updatedFields: Object.keys(data),
+    },
+  })
+
   if (shouldRedirect) {
     redirect(`/home/jobs/${jobId}/edit`)
   }
@@ -539,10 +559,21 @@ export const setPublished = async ({
   jobId: string
   published: boolean
 }) => {
+  const { user } = await getUser()
+  if (!user?.id) {
+    throw new Error("User not authenticated")
+  }
   await prisma.jobPost.update({
     where: { id: jobId },
     data: { published: published ? new Date() : null },
   })
+
+  posthog.capture({
+    distinctId: user.id,
+    event: published ? "job published" : "job unpublished",
+    properties: { jobId },
+  })
+
   revalidatePath(`/home/jobs/${jobId}/preview`)
   revalidatePath(`/home/jobs/${jobId}`)
 }

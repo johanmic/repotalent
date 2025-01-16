@@ -8,6 +8,8 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { omit } from "ramda"
 import { z } from "zod"
+import posthog from "@/utils/posthog-node"
+
 type OrganizationForm = z.infer<typeof schema>
 
 export interface Organization extends organization {
@@ -64,12 +66,30 @@ export const createOrganization = async (data: OrganizationForm) => {
       },
     })
 
+    // Add PostHog tracking
+    posthog.capture({
+      distinctId: user.id,
+      event: "organization created",
+      properties: {
+        organizationId: organization.id,
+        organizationName: organization.name,
+        hasCityData: !!data.city,
+      },
+    })
+
     revalidatePath("/home", "layout")
     revalidatePath("/home/org", "layout")
     return organization as Organization
   } catch (error) {
-    console.error("Failed to create organization:", error)
-    throw new Error("Failed to create organization. Please try again.")
+    // Add error tracking
+    posthog.capture({
+      distinctId: user.id,
+      event: "organization creation failed",
+      properties: {
+        error: (error as Error).message,
+      },
+    })
+    throw error
   }
 }
 
@@ -83,21 +103,46 @@ export const updateOrganization = async (data: OrganizationForm) => {
     throw new Error("Organization ID is required for updates")
   }
 
-  const organization = await prisma.organization.update({
-    where: { id: data.id },
-    data: {
-      ...omit(["city", "id"], data),
-      city: data.city ? { connect: { id: data.city.id } } : undefined,
-      users: { connect: { id: user.id } },
-    },
-    include: {
-      city: {
-        include: {
-          country: true,
+  try {
+    const organization = await prisma.organization.update({
+      where: { id: data.id },
+      data: {
+        ...omit(["city", "id"], data),
+        city: data.city ? { connect: { id: data.city.id } } : undefined,
+        users: { connect: { id: user.id } },
+      },
+      include: {
+        city: {
+          include: {
+            country: true,
+          },
         },
       },
-    },
-  })
-  revalidatePath("/home", "layout")
-  return organization as Organization
+    })
+
+    // Add PostHog tracking
+    posthog.capture({
+      distinctId: user.id,
+      event: "organization updated",
+      properties: {
+        organizationId: organization.id,
+        organizationName: organization.name,
+        updatedFields: Object.keys(omit(["id"], data)),
+      },
+    })
+
+    revalidatePath("/home", "layout")
+    return organization as Organization
+  } catch (error) {
+    // Add error tracking
+    posthog.capture({
+      distinctId: user.id,
+      event: "organization update failed",
+      properties: {
+        organizationId: data.id,
+        error: (error as Error).message,
+      },
+    })
+    throw error
+  }
 }
