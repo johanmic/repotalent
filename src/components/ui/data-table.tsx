@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import {
   ColumnDef,
   SortingState,
@@ -87,42 +88,58 @@ export function DataTable<TData extends BaseData, TValue>({
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className="cursor-pointer"
-                  onClick={() => {
-                    if (onRowClick) {
-                      onRowClick(row.original)
-                    } else if (rowClickUrl) {
-                      const formattedUrl = rowClickUrl.replace(
-                        "{id}",
-                        String(row.original.id)
-                      )
-                      router.push(formattedUrl)
-                    }
-                  }}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className="text-sm"
-                      onClick={() => {
-                        const cellClickHandler = onCellClick?.[cell.column.id]
-                        if (cellClickHandler) {
-                          cellClickHandler(cell.getContext().row.original)
-                        }
-                      }}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+              <AnimatePresence mode="popLayout">
+                {table.getRowModel().rows.map((row, index) => (
+                  <motion.tr
+                    key={row.id}
+                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                    transition={{
+                      duration: 0.3,
+                      delay: index * 0.05,
+                      ease: [0.16, 1, 0.3, 1],
+                    }}
+                    layout
+                    style={{
+                      backgroundColor: "inherit",
+                      transformOrigin: "center",
+                      width: "100%",
+                    }}
+                    data-state={row.getIsSelected() && "selected"}
+                    className="cursor-pointer border-b transition-colors hover:bg-muted/50 [&>td]:animate-none"
+                    onClick={() => {
+                      if (onRowClick) {
+                        onRowClick(row.original)
+                      } else if (rowClickUrl) {
+                        const formattedUrl = rowClickUrl.replace(
+                          "{id}",
+                          String(row.original.id)
+                        )
+                        router.push(formattedUrl)
+                      }
+                    }}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell
+                        key={cell.id}
+                        className="text-sm"
+                        onClick={() => {
+                          const cellClickHandler = onCellClick?.[cell.column.id]
+                          if (cellClickHandler) {
+                            cellClickHandler(cell.getContext().row.original)
+                          }
+                        }}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </motion.tr>
+                ))}
+              </AnimatePresence>
             ) : (
               <TableRow>
                 <TableCell

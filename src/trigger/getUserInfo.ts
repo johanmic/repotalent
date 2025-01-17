@@ -4,7 +4,7 @@ import { GET_USER_INFO, CALC_SCORES } from "./constants"
 export const updateJobDeps = task({
   id: GET_USER_INFO,
   // Set an optional maxDuration to prevent tasks from running indefinitely
-  maxDuration: 300, // Stop executing after 300 secs (5 mins) of compute
+  maxDuration: 900, // Stop executing after 300 secs (5 mins) of compute
   run: async (
     payload: {
       jobId: string

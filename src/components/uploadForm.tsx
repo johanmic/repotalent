@@ -148,7 +148,7 @@ const UploadForm = ({
         </Select>
         <Textarea
           placeholder="Enter your package.json / requirements.txt / Makefile / Podfile content here..."
-          className="lg:min-h-[500px] h-full max-h-[60vh] text-xs text-white bg-zinc-800 w-full font-mono"
+          className="min-h-[500px] lg:min-h-[500px] h-full max-h-[60vh] text-xs text-white bg-zinc-800 w-full font-mono"
           {...form.register("data")}
         ></Textarea>
         <Button type="submit" onClick={onSubmit}>

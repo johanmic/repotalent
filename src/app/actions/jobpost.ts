@@ -27,6 +27,7 @@ import {
   openSourcePackageVersion,
   organization,
   creditUsage,
+  githubRepo,
   purchase,
   jobActionsLog,
 } from "@prisma/client"
@@ -48,7 +49,9 @@ export interface JobPost extends jobPost {
   jobActionsLog?: jobActionsLog[]
   packages?: {
     packageVersion?: {
-      package: openSourcePackage
+      package: openSourcePackage & {
+        githubRepo?: githubRepo
+      }
       version: string
     }
   }[]
@@ -402,6 +405,19 @@ export const getJobPost = async ({
       currency: true,
       questions: true,
       ratings: true,
+      packages: {
+        include: {
+          packageVersion: {
+            include: {
+              package: {
+                include: {
+                  githubRepo: true,
+                },
+              },
+            },
+          },
+        },
+      },
       creditUsage: {
         include: {
           purchase: true,

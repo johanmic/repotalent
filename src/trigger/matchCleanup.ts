@@ -12,6 +12,7 @@ import { REQUIRED_ACTIONS } from "@/utils/job/constants"
 export const matchCleanup = schedules.task({
   id: "match-cleanup",
   cron: "*/30 * * * *", // Every 30 minutes
+  maxDuration: 3600,
   run: async () => {
     logger.log("Checking for incomplete job processing")
     const oneMonthAgo = new Date()

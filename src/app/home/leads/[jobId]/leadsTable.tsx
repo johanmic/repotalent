@@ -40,6 +40,7 @@ export const LeadsTable = ({ job }: { job: JobPost }) => {
     languages: [],
     repoIds: [],
     starred: false,
+    faang: false,
   })
 
   useEffect(() => {
@@ -107,6 +108,7 @@ export const LeadsTable = ({ job }: { job: JobPost }) => {
       )}
       <div className="flex justify-end gap-2">
         <FilterForm
+          job={job}
           options={filterOptions}
           onOptionsChange={(options) => setFilterOptions(options)}
           maxFollowers={stats?.maxFollowers || 10000}

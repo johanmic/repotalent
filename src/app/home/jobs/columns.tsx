@@ -27,18 +27,18 @@ export const columns: ColumnDef<JobPost>[] = [
       <DataTableColumnHeader column={column} title="Title" />
     ),
   },
-  {
-    accessorKey: "organizationName",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Organization" />
-    ),
-  },
-  {
-    accessorKey: "workLocation",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Location" />
-    ),
-  },
+  // {
+  //   accessorKey: "organizationName",
+  //   header: ({ column }) => (
+  //     <DataTableColumnHeader column={column} title="Organization" />
+  //   ),
+  // },
+  // {
+  //   accessorKey: "workLocation",
+  //   header: ({ column }) => (
+  //     <DataTableColumnHeader column={column} title="Location" />
+  //   ),
+  // },
   {
     accessorKey: "published",
     header: ({ column }) => (

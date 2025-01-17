@@ -1,6 +1,6 @@
 "use client"
 
-import CodeParser from "@/components/codeParser"
+import CodeParser from "@/components/code-parser"
 import UploadForm from "@/components/uploadForm"
 import { createJobPost } from "@actions/jobpost"
 import { useEffect, useState } from "react"

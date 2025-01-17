@@ -592,9 +592,8 @@ const EditJobPost = ({
                     {isLoading ? "Writing..." : "Rewrite"}
                   </Button>
                   <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Rewrite Job Description</DialogTitle>
-                    </DialogHeader>
+                    <DialogTitle>Rewrite Job Description</DialogTitle>
+
                     <div className="space-y-4">
                       <p className="text-warning text-xs font-light">
                         Warning: This will remove edits to the job description.
@@ -642,9 +641,8 @@ const EditJobPost = ({
                 </Button>
               </DialogTrigger>
               <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Rewrite Job Description</DialogTitle>
-                </DialogHeader>
+                <DialogTitle>Rewrite Job Description</DialogTitle>
+
                 <div className="space-y-4">
                   <p className="text-warning text-xs font-light">
                     Warning: This will remove all previous data.

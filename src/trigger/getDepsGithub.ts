@@ -4,7 +4,7 @@ import { GET_DEPS_GITHUB, GET_REPO_INFO } from "./constants"
 export const getDepsGithub = task({
   id: GET_DEPS_GITHUB,
   // Set an optional maxDuration to prevent tasks from running indefinitely
-  maxDuration: 300, // Stop executing after 300 secs (5 mins) of compute
+  maxDuration: 900, // Stop executing after 300 secs (5 mins) of compute
   run: async (
     payload: {
       jobId: string

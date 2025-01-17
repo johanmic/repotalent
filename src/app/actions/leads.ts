@@ -40,6 +40,7 @@ export type FilterOptions = {
   location: string | null
   languages: string[] | null
   repoIds: string[] | null
+  faang: boolean | null
 }
 
 export const getLeadsForJob = async ({
@@ -57,6 +58,7 @@ export const getLeadsForJob = async ({
   if (!user?.id) {
     throw new Error("User not authenticated")
   }
+  console.log(options)
 
   const baseWhere = {
     fetchedAt: {
@@ -104,6 +106,12 @@ export const getLeadsForJob = async ({
         starred: true,
         jobPostId: jobId,
       },
+    }
+  }
+
+  if (options?.faang) {
+    where.company = {
+      in: ["Google", "Facebook", "Apple", "Amazon", "Netflix"],
     }
   }
 

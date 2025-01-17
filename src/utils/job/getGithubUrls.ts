@@ -84,7 +84,7 @@ export const getGithubUrls = async (jobId: string) => {
   const job = await prisma.jobPost.findUniqueOrThrow({
     where: { id: jobId },
   })
-
+  const found = packages.length
   logger.log("Getting github urls", { jobId, jobSource: job.source })
   switch (job?.source) {
     case "package.json":
@@ -111,6 +111,7 @@ export const getGithubUrls = async (jobId: string) => {
       jobPostId: jobId,
       action: "getGithubUrls",
       completed: true,
+      found,
     },
   })
 }

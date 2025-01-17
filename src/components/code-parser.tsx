@@ -7,27 +7,30 @@ import parsePipRequirementsFile from "@/utils/parseRequirementsTXT"
 import { parsePodfileLock } from "@/utils/podfileLockParser"
 import { parsePyprojectToml } from "@/utils/pyprojectTomlParser"
 import { AcceptedFileName } from "@/utils/filenames"
+import { CodeParserProgress } from "@/components/code-parser-progress"
 interface CodeParserProps {
   data?: string
   filename?: AcceptedFileName
 }
 
-function parsePackageJson(file: string) {
+function parsePackageJson(file: string): { [key: string]: string } {
   return JSON.parse(file)
 }
 
-function parseRequirementsTxt(file: string) {
+function parseRequirementsTxt(file: string): { [key: string]: string } {
   const reuslts = parsePipRequirementsFile(file)
-
   return reuslts
 }
 
-const parsePodfile = (file: string) => {
+const parsePodfile = (file: string): { [key: string]: string } => {
   const reuslts = parsePodfileLock(file)
   return reuslts
 }
 
-const getFileData = (data: string, filename: AcceptedFileName) => {
+const getFileData = (
+  data: string,
+  filename: AcceptedFileName
+): { [key: string]: string } | null => {
   switch (filename) {
     case "package.json":
       return parsePackageJson(data)
@@ -37,6 +40,8 @@ const getFileData = (data: string, filename: AcceptedFileName) => {
       return parsePodfile(data)
     case "pyproject.toml":
       return parsePyprojectToml(data)
+    default:
+      return null
   }
 }
 
@@ -63,7 +68,7 @@ const CodeParser = ({ data, filename = "package.json" }: CodeParserProps) => {
         currentPaths.forEach((path, index) => {
           setTimeout(() => {
             setHighlightedItems((prev) => new Set([...prev, path]))
-          }, index * (fileData.length > 20 ? 100 : 200))
+          }, index * (Object.keys(fileData).length > 20 ? 100 : 200))
         })
       }
 
@@ -229,12 +234,15 @@ const CodeParser = ({ data, filename = "package.json" }: CodeParserProps) => {
   }
 
   return (
-    <Card className="bg-zinc-800 p-4">
-      <CardHeader>
-        <CardTitle className="text-white">{filename}</CardTitle>
-      </CardHeader>
-      <CardContent>{renderObject(fileData)}</CardContent>
-    </Card>
+    <div className="space-y-4 max-w-screen overflow-x-hidden">
+      <CodeParserProgress packages={fileData} filename={filename} />
+      <Card className="bg-zinc-800 p-4 min-h-[500px]">
+        <CardHeader>
+          <CardTitle className="text-white">{filename}</CardTitle>
+        </CardHeader>
+        <CardContent>{renderObject(fileData)}</CardContent>
+      </Card>
+    </div>
   )
 }
 
