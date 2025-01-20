@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { generateJSONFromMarkdown } from "@/utils/tiptapUtils"
-import { JobPost, updateJobPost } from "@actions/jobpost"
+import { JobPost, updateJobPost, deleteJobPost } from "@actions/jobpost"
 import { writeJobDescription } from "@actions/write"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { readStreamableValue } from "ai/rsc"
@@ -36,6 +36,14 @@ import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { PackageRatings } from "@/components/package-ratings"
 import * as zod from "zod"
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 import {
   Dialog,
@@ -152,7 +160,7 @@ const EditJobPost = ({
     defaultValues: mapJobPostToForm(job),
   })
   const router = useRouter()
-
+  const [done, setDone] = useState(false)
   const jobId = job.id
   const [generation, setGeneration] = useState<string>("")
   const [additionalInfo, setAdditionalInfo] = useState<string>(
@@ -162,6 +170,7 @@ const EditJobPost = ({
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const handleRewriteClick = () => {
+    setDone(false)
     if (!canRegenerate) {
       toast.error("You have reached the maximum number of regenerations")
       return
@@ -177,15 +186,18 @@ const EditJobPost = ({
   const onStreamingDone = useCallback(
     async (fullValue: string) => {
       const json = await generateJSONFromMarkdown(fullValue)
-      toast.success("Job description generated successfully")
+      if (!done) {
+        setDone(true)
+        toast.success("Job description generated successfully")
 
-      await updateJobPost({
-        jobId: jobId as string,
-        data: { description: JSON.stringify(json) },
-        shouldRedirect: false,
-      })
+        await updateJobPost({
+          jobId: jobId as string,
+          data: { description: JSON.stringify(json) },
+          shouldRedirect: false,
+        })
+      }
     },
-    [generation]
+    [generation, done]
   )
   const handleWrite = useCallback(async () => {
     try {
@@ -247,6 +259,17 @@ const EditJobPost = ({
     },
     [generation, jobId, router, form.formState.errors]
   )
+
+  const handleDelete = async () => {
+    try {
+      await deleteJobPost(jobId)
+      toast.success("Job post deleted successfully")
+      router.push("/home/jobs")
+    } catch (error) {
+      toast.error("Failed to delete job post")
+    }
+  }
+
   return (
     <div className="p-4 space-y-4 mb-48 max-w-6xl">
       <div className="flex justify-between items-center">
@@ -257,14 +280,42 @@ const EditJobPost = ({
           </p>
         </div>
 
-        <Link href={`/home/jobs/${jobId}/preview`}>
-          <Button variant="outline" size="sm" asChild>
-            <div>
-              <Icon name="preview" />
-              Preview
-            </div>
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm">
+                <Icon name="trash" />
+                Delete
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete your
+                job post.
+              </AlertDialogDescription>
+              <div className="flex justify-end gap-2 mt-4">
+                <AlertDialogCancel asChild>
+                  <Button variant="outline" size="sm">
+                    Cancel
+                  </Button>
+                </AlertDialogCancel>
+                <Button variant="destructive" size="sm" onClick={handleDelete}>
+                  Delete
+                </Button>
+              </div>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <Link href={`/home/jobs/${jobId}/preview`}>
+            <Button variant="outline" size="sm" asChild>
+              <div>
+                <Icon name="preview" />
+                Preview
+              </div>
+            </Button>
+          </Link>
+        </div>
       </div>
       <Form {...form}>
         <form

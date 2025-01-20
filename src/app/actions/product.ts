@@ -8,5 +8,6 @@ export type Product = product & { features: productFeature[] }
 export const getProducts = async (): Promise<Product[]> => {
   return await prisma.product.findMany({
     include: { features: true },
+    orderBy: { price: "asc" },
   })
 }

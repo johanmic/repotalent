@@ -52,6 +52,7 @@ import {
   TrendingUp,
   FileSliders,
   CircleHelp,
+  Trash,
 } from "lucide-react"
 
 export const icons = {
@@ -109,6 +110,7 @@ export const icons = {
   code: Code,
   trendingUp: TrendingUp,
   fileSliders: FileSliders,
+  trash: Trash,
 }
 
 export const Icon = ({

@@ -71,7 +71,7 @@ function shortenPackages(
   })
 
   // Return comma-separated list without versions
-  return Array.from(result).slice(0, 30).join(", ")
+  return Array.from(result).join(", ")
 }
 
 const makePrompt = ({
@@ -84,53 +84,55 @@ const makePrompt = ({
   packageRequirementsInstructions: string
 }) => {
   return `
-You are a job description generator. Generate a concise description in markdown format with titles, lists, and paragraphs.
+  You are a job description generator. You are given a job post and you need to generate a description for it.
+  Output simple markdown with titles, lists, paragraphs.
+  Keep the text clean and concise.
+  IMPORTANT:
+  leave out the following as they are rendered in the job post:
+  job title, location, company name, company website, company description, where to apply, company contact, all weights or numerical inputs, tags or categorical inputs
 
-Exclude the following (already rendered elsewhere):
-- Job title, location, company name, website, description, application details, contact info
-- Numerical inputs, tags, and categories
+  The job post is as follows:
+  Suggested title: ${job.title}
+  Use Tone of voice ${job.tone || "neutral"}
 
-Suggested title: ${job.title}
-Use Tone of voice ${job.tone || "neutral"}
+  Company name: ${job.organization?.name}
+  ${
+    job.organization?.website
+      ? `Company website: ${job.organization?.website}`
+      : ""
+  }
+  ${
+    job.organization?.description
+      ? `Company description: ${job.organization?.description}`
+      : ""
+  }
+  ${
+    job.organization?.city
+      ? `City: ${job.organization.city.name}, Country: ${job.organization.city.country.name}`
+      : ""
+  }
 
-Company name: ${job.organization?.name}
-${
-  job.organization?.website
-    ? `Company website: ${job.organization?.website}`
-    : ""
-}
-${
-  job.organization?.description
-    ? `Company description: ${job.organization?.description}`
-    : ""
-}
-${
-  job.organization?.city
-    ? `City: ${job.organization.city.name}, Country: ${job.organization.city.country.name}`
-    : ""
-}
+  Some additional information about the job post:
+  
+  Job Ratings (1-100) 100 being a subject matter expert:
+  ${job.ratings
+    ?.map((rating) => `${rating.question}: ${rating.rating}`)
+    .join("\n")}
 
-Some additional information about the job post:
+  Job Questions:
+  ${job?.questions
+    ?.map((question) => `${question.question}: ${question.answer}`)
+    .join(",")}
 
-Job Ratings (1-100) 100 being a subject matter expert:
-${job.ratings
-  ?.map((rating) => `${rating.question}: ${rating.rating}`)
-  .join("\n")}
+  Job Tags:
+  ${job?.tags?.map((tag) => `${tag.tag.tag}`).join(",")}
 
-Job Questions:
-${job?.questions
-  ?.map((question) => `${question.question}: ${question.answer}`)
-  .join(",")}
+  Job Packages (source ${job.source})
+  ${job.packages ? shortenPackages(job.packages) : ""}
 
-Job Tags:
-${job?.tags?.map((tag) => `${tag.tag.tag}`).join(",")}
-
-Job Packages (source ${job.source})
-${job.packages ? shortenPackages(job.packages) : ""}
-
-${packageRequirementsInstructions}
-
-${additionalInfo ? `Additional instructions: ${additionalInfo}` : ""}
+  ${packageRequirementsInstructions}
+  
+  ${additionalInfo ? `Additional instructions: ${additionalInfo}` : ""}
 
 
   `

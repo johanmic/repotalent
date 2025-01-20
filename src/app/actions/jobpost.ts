@@ -866,6 +866,11 @@ export const getJobPackages = async (
 export const updatePackageRatings = async (
   jobPackages: Partial<JobPackageToVersion>[]
 ) => {
+  const { user } = await getUser()
+  if (!user?.id) {
+    throw new Error("User not authenticated")
+  }
+
   for (const jobPackage of jobPackages) {
     if (!jobPackage.jobPostId || !jobPackage.packageVersionId) continue
     await prisma.jobPostToPackageVersion.update({
@@ -880,4 +885,66 @@ export const updatePackageRatings = async (
       },
     })
   }
+}
+
+export const deleteJobPost = async (jobId: string) => {
+  const { user } = await getUser()
+  if (!user?.id) {
+    throw new Error("User not authenticated")
+  }
+
+  const userOwnsPost = await prisma.jobPost.findFirst({
+    where: {
+      id: jobId,
+      organization: {
+        users: { some: { id: user.id } },
+      },
+    },
+  })
+
+  if (!userOwnsPost) {
+    throw new Error("User does not own this job post")
+  }
+
+  await prisma.$transaction(async ($tx) => {
+    // Delete related records in order of dependencies
+    await $tx.jobPostTokenUsage.deleteMany({
+      where: { jobPostId: jobId },
+    })
+
+    await $tx.jobActionsLog.deleteMany({
+      where: { jobPostId: jobId },
+    })
+
+    await $tx.jobPostToPackageVersion.deleteMany({
+      where: { jobPostId: jobId },
+    })
+
+    await $tx.jobPostQuestion.deleteMany({
+      where: { jobPostId: jobId },
+    })
+
+    await $tx.jobPostRatings.deleteMany({
+      where: { jobPostId: jobId },
+    })
+
+    await $tx.jobPostToTag.deleteMany({
+      where: { jobPostId: jobId },
+    })
+
+    await $tx.jobPostContributorBookmark.deleteMany({
+      where: { jobPostId: jobId },
+    })
+
+    await $tx.creditUsage.deleteMany({
+      where: { jobPostId: jobId },
+    })
+
+    // Finally delete the job post itself
+    await $tx.jobPost.delete({
+      where: { id: jobId },
+    })
+  })
+
+  revalidatePath("/home/jobs")
 }

@@ -11,7 +11,7 @@ import { Typewriter } from "@/components/ui/typewriter"
 import { acceptedFileNames } from "@/utils/filenames"
 import { Metadata } from "next"
 import { getProducts } from "./actions/product"
-
+import { VideoPopup } from "@/components/landing/videoPopup"
 type SearchParams = Promise<{
   ref?: string | null
 }>
@@ -41,6 +41,7 @@ export default async function Home({ searchParams }: HomeProps) {
         <TopMenu promoRef={params.ref} />
         <Hero />
         <Feature
+          imageComponent={<VideoPopup />}
           title={
             <div id="features">
               Generate job descriptions from

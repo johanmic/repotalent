@@ -5,6 +5,7 @@ import { motion, useInView } from "framer-motion"
 import React, { useRef } from "react"
 interface FeatureProps {
   title: string | React.ReactNode
+  imageComponent?: React.ReactNode
   subtitle: string
   image: string
   badge?: string
@@ -15,6 +16,7 @@ export const Feature = ({
   subtitle,
   badge,
   image,
+  imageComponent,
   reverse = false,
 }: FeatureProps) => {
   const ref = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>
@@ -58,7 +60,9 @@ export const Feature = ({
               </p>
             </div>
           </div>
-          {image ? (
+          {imageComponent ? (
+            imageComponent
+          ) : image ? (
             <div className="md:w-1/2 border rounded-md drop-shadow-xl p-4 bg-white border-muted">
               <Image
                 src={image}
