@@ -28,7 +28,6 @@ const NewPost = ({
   showDropzone = true,
   metadata,
 }: NewPostProps) => {
-  console.log("metadata", metadata)
   const router = useRouter()
   const [isProcessing, setIsProcessing] = useState(false)
   const [showCodeParser, setShowCodeParser] = useState(false)
@@ -50,27 +49,27 @@ const NewPost = ({
       }
     }
   }, [initialFileData])
-  const submit = async () => {
-    if (!fileData?.filename || !fileData?.data?.length || isProcessing) return
+  const submit = async (data: { filename: AcceptedFileName; data: string }) => {
+    if (!data?.filename || !data?.data?.length || isProcessing) return
     setSubmitted(true)
 
     try {
       setIsLoading(true)
       setIsProcessing(true)
       setShowCodeParser(true)
-      const job = await createJobPost({
-        ...fileData,
-        meta: {
-          repo: metadata?.repo,
-          owner: metadata?.owner,
-          path: metadata?.path,
-        },
-      })
-      if (job) {
-        router.push(`/home/jobs/${job.id}/complete`)
-      } else {
-        router.push("/home/create/error")
-      }
+      // const job = await createJobPost({
+      //   ...fileData,
+      //   meta: {
+      //     repo: metadata?.repo,
+      //     owner: metadata?.owner,
+      //     path: metadata?.path,
+      //   },
+      // })
+      // if (job) {
+      //   router.push(`/home/jobs/${job.id}/complete`)
+      // } else {
+      //   router.push("/home/create/error")
+      // }
     } catch (error) {
       console.error("Error processing file:", error)
       router.push("/home/create/error")
@@ -86,15 +85,24 @@ const NewPost = ({
     }
   }, [fileData, isLoading])
 
+  const handleFormData = (data: {
+    filename: AcceptedFileName
+    data: string
+  }) => {
+    setFileData(data)
+    submit(data)
+  }
+
   return (
     <div className="space-y-6 flex flex-col h-full">
       <h1 className="text-2xl font-bold">Create job description</h1>
       {!submitted && (
         <UploadForm
-          onUpdate={setFileData}
+          onSubmit={(fileData) => {
+            handleFormData(fileData)
+          }}
           fileData={fileData}
           showDropzone={showDropzone}
-          onSubmit={submit}
         />
       )}
       {submitted && showCodeParser && fileData && (

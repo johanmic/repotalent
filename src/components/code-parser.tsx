@@ -8,6 +8,7 @@ import { parsePodfileLock } from "@/utils/podfileLockParser"
 import { parsePyprojectToml } from "@/utils/pyprojectTomlParser"
 import { AcceptedFileName } from "@/utils/filenames"
 import { CodeParserProgress } from "@/components/code-parser-progress"
+import { parsePubspecYaml } from "@/utils/parsePubspecYaml"
 interface CodeParserProps {
   data?: string
   filename?: AcceptedFileName
@@ -40,6 +41,8 @@ const getFileData = (
       return parsePodfile(data)
     case "pyproject.toml":
       return parsePyprojectToml(data)
+    case "pubspec.yaml":
+      return parsePubspecYaml(data)
     default:
       return null
   }

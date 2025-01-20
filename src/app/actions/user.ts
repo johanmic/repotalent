@@ -7,7 +7,7 @@ import { createClient } from "@/utils/supabase/server"
 import { getGithubUser } from "@/app/actions/github"
 import { raw } from "@/utils/deburr"
 import posthog from "@/utils/posthog-node"
-
+import { User as SupabaseUser } from "@supabase/supabase-js"
 export interface User extends user {
   organization: organization
   creditsInfo?: {
@@ -128,35 +128,44 @@ export const setStripeCustomerId = async (stripeCustomerId: string) => {
   })
 }
 
-export const registerGithubUser = async () => {
-  const { user } = await getUserFromSupabase()
-  if (!user) {
-    throw new Error("User not found")
-  }
-  if (!user.email) {
-    throw new Error("User not found")
+export const registerGithubUser = async (user: SupabaseUser) => {
+  if (!user?.email) {
+    throw new Error("User email is required")
   }
 
   const query = {
     email: user.email,
-    name: user.user_metadata.user_name,
-    avatar: user.user_metadata.avatar_url,
-    githubId: user.user_metadata.user_name,
+    name: user.user_metadata?.user_name || user.email.split("@")[0],
+    avatar: user.user_metadata?.avatar_url,
+    githubId: user.user_metadata?.user_name,
   }
 
-  await prisma.user.upsert({
-    where: { email: user.email },
-    update: query,
-    create: { ...query, id: user.id },
+  // First check if user exists
+  const existingUser = await prisma.user.findUnique({
+    where: { id: user.id },
   })
+
+  let result
+  if (existingUser) {
+    // Update existing user
+    result = await prisma.user.update({
+      where: { id: user.id },
+      data: query,
+    })
+  } else {
+    // Create new user
+    result = await prisma.user.create({
+      data: { ...query, id: user.id },
+    })
+  }
 
   posthog.identify({
     distinctId: user.id,
     properties: {
       email: user.email,
-      name: user.user_metadata.user_name,
-      avatar: user.user_metadata.avatar_url,
-      githubId: user.user_metadata.user_name,
+      name: query.name,
+      avatar: query.avatar,
+      githubId: query.githubId,
     },
   })
 
@@ -165,9 +174,11 @@ export const registerGithubUser = async () => {
     event: "user connected github",
     properties: {
       email: user.email,
-      githubUsername: user.user_metadata.user_name,
+      githubUsername: query.githubId,
     },
   })
+
+  return result
 }
 
 export const setSkipGithubSetup = async (skip: boolean) => {

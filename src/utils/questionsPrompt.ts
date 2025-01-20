@@ -131,7 +131,6 @@ suggest a title for the job description based on the project.
 
     
 `
-    console.log(prompt)
 
     const { text, usage } = await generateText({
       model: openai("gpt-4o"),

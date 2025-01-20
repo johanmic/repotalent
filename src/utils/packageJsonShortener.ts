@@ -8,7 +8,6 @@ export interface PackageJson {
 }
 
 export const shortenPackageJson = (packageJson: PackageJson): string => {
-  console.log("shortenPackageJson")
   const processDependencies = (deps: Record<string, string>) => {
     const seen = new Set<string>()
     const filtered: Record<string, string> = {}

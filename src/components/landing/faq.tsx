@@ -8,14 +8,9 @@ import {
 const FaqYou = () => {
   const faqs = [
     {
-      question: "Why dont you have a free option?",
+      question: "Do I have to share my entire codebase?",
       answer:
-        "Generating a job description from code and running multiple calls against APIs is unfortunately a bit pricey. We are working on a free tier, but it is not ready yet.",
-    },
-    {
-      question: "How does the tokens work",
-      answer:
-        "Creating a job costs one token. This includes regenerations and edits as well as one month of publishing on the job board",
+        "No, you can login in with github and auto sync your codebase, however you can also upload a file manually",
     },
     {
       question: "How do I get the leads database?",
@@ -23,9 +18,19 @@ const FaqYou = () => {
         "Leads is a pro feature, pro users tokens also get one month of access to the leads database",
     },
     {
+      question: "How does the tokens work",
+      answer:
+        "Creating a job costs one token. This includes regenerations and edits as well as one month of publishing on the job board",
+    },
+    {
       question: "Can I create job posts without publishing them?",
       answer:
         "Yes, you can create job posts without publishing them. You can always edit them later. or export them to PDF or Markdown",
+    },
+    {
+      question: "Why dont you have a free option?",
+      answer:
+        "Generating a job description from code and running multiple calls against APIs is unfortunately a bit pricey. We are working on a free tier, but it is not ready yet.",
     },
     {
       question: "What does Hireable mean",
@@ -48,20 +53,22 @@ const FaqYou = () => {
 
   return (
     <section className="py-32 relative">
-      <div className="container">
+      <div className="container max-w-3xl mx-auto px-4">
         <h1 className="mb-4 text-3xl font-semibold md:mb-11 md:text-5xl">
           Frequently asked questions
         </h1>
-        {faqs.map((faq, index) => (
-          <Accordion key={index} type="single" collapsible>
-            <AccordionItem value={`item-${index}`}>
-              <AccordionTrigger className="hover:text-foreground/60 hover:no-underline">
-                {faq.question}
-              </AccordionTrigger>
-              <AccordionContent>{faq.answer}</AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        ))}
+        <div className="space-y-2">
+          {faqs.map((faq, index) => (
+            <Accordion key={index} type="single" collapsible>
+              <AccordionItem value={`item-${index}`}>
+                <AccordionTrigger className="hover:text-foreground/60 hover:no-underline text-left">
+                  {faq.question}
+                </AccordionTrigger>
+                <AccordionContent>{faq.answer}</AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          ))}
+        </div>
       </div>
     </section>
   )

@@ -123,6 +123,7 @@ import {
   SiJavascript,
   SiSafari,
   SiBluesky,
+  SiFlutter,
 } from "react-icons/si"
 import { cn } from "@/lib/utils"
 export const AppIcons = {
@@ -257,6 +258,7 @@ export const AppIcons = {
   firefox: SiFirefox,
   bluesky: SiBluesky,
   safari: SiSafari,
+  flutter: SiFlutter,
 }
 
 export const Icon = ({

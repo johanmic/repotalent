@@ -29,12 +29,18 @@ const detectFileType = (content: string): string => {
   ) {
     return "package.json"
   }
-  if (/^[a-zA-Z0-9\-_.]+==[\d.]+$/m.test(content)) {
+  if (
+    /^[a-zA-Z0-9\-_.]+==[\d.]+$/m.test(content) ||
+    content.includes("pip install")
+  ) {
     // Matches patterns like "package==1.0.0"
     return "requirements.txt"
   }
   if (content.includes("COCOAPODS: ") || content.includes("target ")) {
     return "Podfile.lock"
+  }
+  if (content.includes("flutter") && content.includes("dependencies:")) {
+    return "pubspec.yaml"
   }
   if (content.includes(".PHONY:") || /^[\w\-]+:/m.test(content)) {
     // Matches Makefile targets
@@ -51,14 +57,14 @@ const detectFileType = (content: string): string => {
 }
 
 interface UploadFormProps {
-  onUpdate: (questions: { filename: AcceptedFileName; data: string }) => void
-  onSubmit: () => void
-  fileData: { filename: string; data: string } | null
+  // onUpdate: (questions: { filename: AcceptedFileName; data: string }) => void
+  onSubmit: (fileData: { filename: AcceptedFileName; data: string }) => void
+  fileData: { filename: AcceptedFileName; data: string } | null
   showDropzone?: boolean
 }
 
 const UploadForm = ({
-  onUpdate,
+  // onUpdate,
   fileData,
   showDropzone,
   onSubmit,
@@ -93,7 +99,8 @@ const UploadForm = ({
       toast.error("Please enter some content before submitting")
       return
     }
-    onUpdate({ filename: data.filename as AcceptedFileName, data: data.data })
+    // onUpdate({ filename: data.filename as AcceptedFileName, data: data.data })
+    onSubmit({ filename: data.filename as AcceptedFileName, data: data.data })
   })
 
   return (
@@ -144,6 +151,12 @@ const UploadForm = ({
                 <span>Podfile.lock</span>
               </div>
             </SelectItem>
+            <SelectItem value="pubspec.yaml">
+              <div className="flex items-center gap-2">
+                <AppIcon name="flutter" />
+                <span>pubspec.yaml</span>
+              </div>
+            </SelectItem>
           </SelectContent>
         </Select>
         <Textarea
@@ -151,9 +164,7 @@ const UploadForm = ({
           className="min-h-[500px] lg:min-h-[500px] h-full max-h-[60vh] text-xs text-white bg-zinc-800 w-full font-mono"
           {...form.register("data")}
         ></Textarea>
-        <Button type="submit" onClick={onSubmit}>
-          Create Post
-        </Button>
+        <Button type="submit">Create Job Description</Button>
       </form>
       {showDropzone && (
         <Dropzone

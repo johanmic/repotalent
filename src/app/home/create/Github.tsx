@@ -45,7 +45,7 @@ const GithubPicker = ({ hasGithub }: { hasGithub: boolean }) => {
   useEffect(() => {
     const fetchRepos = async () => {
       const repos = await listUserRepos()
-      console.log(repos)
+
       setRepos(
         repos.map((repo) => ({
           ...repo,

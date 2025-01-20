@@ -54,7 +54,7 @@ export const FilterForm = ({
     },
     [onOptionsChange]
   )
-  console.log(job)
+
   return (
     <Collapsible className="w-full border-none">
       <CollapsibleTrigger asChild>

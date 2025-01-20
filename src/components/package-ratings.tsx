@@ -53,7 +53,7 @@ export const PackageRatings = ({ jobPostId }: { jobPostId: string }) => {
     if (isOpen) {
       const fetchPackages = async () => {
         const packages = await getJobPackages(jobPostId)
-        console.log("packages", packages)
+
         setPackages(packages)
         setRatings(
           Object.fromEntries(packages.map((pkg) => [pkg.packageVersionId, 0]))

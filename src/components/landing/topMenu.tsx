@@ -11,9 +11,10 @@ export const TopMenu = ({
   promoRef?: string | null | undefined
 }) => (
   <div
-    className={`flex justify-between items-center fixed top-${
-      promoRef ? "10" : "0"
-    } left-0 right-0 z-[50] mx-4 md:mx-0`}
+    className={`flex justify-between items-center fixed left-0 right-0 z-[50] mx-4 md:mx-0`}
+    style={{
+      top: promoRef ? "40px" : "0px",
+    }}
   >
     <div className="flex gap-4 justify-between items-center border max-w-5xl border-muted mx-auto w-full rounded-lg m-2 bg-white shadow-lg">
       <Logo size="md" className="p-2" />

@@ -58,7 +58,6 @@ export const getLeadsForJob = async ({
   if (!user?.id) {
     throw new Error("User not authenticated")
   }
-  console.log(options)
 
   const baseWhere = {
     fetchedAt: {

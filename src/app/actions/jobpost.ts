@@ -15,6 +15,7 @@ import { tasks } from "@trigger.dev/sdk/v3"
 import { UPDATE_JOB_DEPS } from "@/trigger/constants"
 import posthog from "@/utils/posthog-node"
 import { generateCode } from "@/utils/code"
+import { parsePubspecYaml } from "@/utils/parsePubspecYaml"
 import {
   city,
   country,
@@ -121,7 +122,7 @@ export const createJobPost = async (data: {
   const startTime = performance.now()
   let jobId: string | null = null
   let creditUsageId: string | null = null
-  console.log("data", data.meta)
+
   try {
     const { user } = await getUser()
     if (!user?.id) {
@@ -312,6 +313,17 @@ export const createJobPost = async (data: {
         existingTags,
         defaultTags,
       })
+    } else if (data.filename === "pubspec.yaml") {
+      const dependencies = Object.entries(parsePubspecYaml(data.data)).map(
+        ([name, version]) => ({ name, version: version as string })
+      )
+      const defaultTags = ["flutter"]
+      await processTags({
+        jobId: job.id,
+        dependencies,
+        existingTags,
+        defaultTags,
+      })
     }
 
     jobId = job.id
@@ -327,12 +339,12 @@ export const createJobPost = async (data: {
 
     const endTime = performance.now()
     const duration = ((endTime - startTime) / 1000).toFixed(2)
-    console.log(`createJobPost completed in ${duration} seconds`)
+
     return updatedJob
   } catch (err) {
     const endTime = performance.now()
     const duration = ((endTime - startTime) / 1000).toFixed(2)
-    console.log(`createJobPost failed after ${duration} seconds`)
+
     if (!jobId && creditUsageId) {
       await prisma.creditUsage.delete({
         where: { id: creditUsageId },

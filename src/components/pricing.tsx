@@ -72,6 +72,11 @@ const PricingCard = (props: PricingCardProps) => {
     popular,
     onSelect,
   } = props
+
+  const displayPrice = isYearly ? yearlyPrice || "N/A" : price
+  const displayPeriod = isYearly ? (yearlyPrice ? "/year" : "") : "/month"
+  const savings = yearlyPrice && price ? price * 12 - yearlyPrice : 0
+
   return (
     <Card
       className={cn(
@@ -86,32 +91,20 @@ const PricingCard = (props: PricingCardProps) => {
     >
       <div>
         <CardHeader className="pb-8 pt-4">
-          {isYearly && yearlyPrice && price ? (
-            <div className="flex justify-between">
-              <CardTitle className="dark:text-secondary-dark text-lg">
-                {title}
-              </CardTitle>
-              <Badge className="text-sm animate-fade-in">
-                Save ${price * 12 - yearlyPrice}
-              </Badge>
-            </div>
-          ) : (
-            <Text as="h2" className="text-lg">
+          <div className="flex justify-between">
+            <CardTitle className="dark:text-secondary-dark text-lg">
               {title}
-            </Text>
-          )}
+            </CardTitle>
+            {isYearly && savings > 0 && (
+              <Badge className="text-sm animate-fade-in">Save ${savings}</Badge>
+            )}
+          </div>
           <div className="flex gap-0.5">
             <h3 className="text-3xl font-black">
-              {price
-                ? "$" + price
-                : yearlyPrice && isYearly
-                ? "$" + yearlyPrice
-                : price
-                ? "$" + price
-                : null}
+              {displayPrice === "N/A" ? "N/A" : `$${displayPrice}`}
             </h3>
-            <span className="flex flex-col justify-end text-sm mb-1">
-              {yearlyPrice && isYearly ? "/year" : price ? "/month" : null}
+            <span className="flex flex-col justify-end text-sm mb-1 text-muted-foreground">
+              {displayPrice ? displayPeriod : null}
             </span>
           </div>
           <CardDescription className="pt-1.5 h-12">
@@ -154,10 +147,18 @@ export const Pricing = ({
   )
   const togglePricingPeriod = (value: string) =>
     setIsYearly(parseInt(value) === 1)
-  const handleSelectPlan = useCallback((plan: PricingCardProps) => {
-    setSelectedPlan(plan)
-    setDialogOpen(true)
-  }, [])
+
+  const handleSelectPlan = useCallback(
+    (plan: PricingCardProps) => {
+      if (mode === "landing") {
+        window.location.href = "/login"
+        return
+      }
+      setSelectedPlan(plan)
+      setDialogOpen(true)
+    },
+    [mode]
+  )
 
   if (selectedPlan && dialogOpen) {
     return (
@@ -189,13 +190,23 @@ export const Pricing = ({
             <PricingCard
               key={plan.title}
               {...plan}
-              actionLabel="Get Started"
+              actionLabel={mode === "landing" ? "Get Started" : "Select Plan"}
               isYearly={isYearly}
               onSelect={mode === "purchase" ? handleSelectPlan : () => {}}
             />
           )
         })}
       </section>
+      {mode === "landing" && (
+        <div className="text-center flex justify-center mt-8 w-full">
+          <Text>
+            Already have an account?{" "}
+            <a href="/login" className="text-primary hover:underline">
+              Log in
+            </a>
+          </Text>
+        </div>
+      )}
     </div>
   )
 }

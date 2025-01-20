@@ -212,7 +212,7 @@ export const writeJobDescription = async ({
       label: string
     }[]
     const grouped = groupBy((pkg) => pkg.label, ratings)
-    console.log("grouped", grouped)
+
     let packageRequirementsInstructions = ""
     const packageRequirements = Object.entries(grouped)
       .map(
@@ -220,7 +220,6 @@ export const writeJobDescription = async ({
       )
       .join("\n")
 
-    console.log("packageRequirements", packageRequirements)
     if (packageRequirements) {
       packageRequirementsInstructions = `
       Important: Consider the following packages when writing the job description:
@@ -245,7 +244,6 @@ export const writeJobDescription = async ({
       additionalInfo,
       packageRequirementsInstructions,
     })
-    console.log("prompt", prompt)
 
     const { textStream, usage } = await streamText({
       model: openai("gpt-4o-mini"),

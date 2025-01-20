@@ -67,7 +67,7 @@ const Lead = ({
   const [isStarred, setIsStarred] = useState(
     contributor.jobPostContributorBookmark?.starred || false
   )
-  console.log("contributor", contributor)
+
   const [comment, setComment] = useState("")
   const [isCommenting, setIsCommenting] = useState(false)
 
