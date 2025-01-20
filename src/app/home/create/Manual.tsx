@@ -3,7 +3,7 @@
 import CodeParser from "@/components/code-parser"
 import UploadForm from "@/components/uploadForm"
 import { createJobPost } from "@actions/jobpost"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import {
   AcceptedFileName,
   isAcceptedFileName,
@@ -49,35 +49,38 @@ const NewPost = ({
       }
     }
   }, [initialFileData])
-  const submit = async (data: { filename: AcceptedFileName; data: string }) => {
-    if (!data?.filename || !data?.data?.length || isProcessing) return
-    setSubmitted(true)
+  const submit = useCallback(
+    async (data: { filename: AcceptedFileName; data: string }) => {
+      if (!data?.filename || !data?.data?.length || isProcessing) return
+      setSubmitted(true)
 
-    try {
-      setIsLoading(true)
-      setIsProcessing(true)
-      setShowCodeParser(true)
-      // const job = await createJobPost({
-      //   ...fileData,
-      //   meta: {
-      //     repo: metadata?.repo,
-      //     owner: metadata?.owner,
-      //     path: metadata?.path,
-      //   },
-      // })
-      // if (job) {
-      //   router.push(`/home/jobs/${job.id}/complete`)
-      // } else {
-      //   router.push("/home/create/error")
-      // }
-    } catch (error) {
-      console.error("Error processing file:", error)
-      router.push("/home/create/error")
-    } finally {
-      setIsLoading(false)
-      setIsProcessing(false)
-    }
-  }
+      try {
+        setIsLoading(true)
+        setIsProcessing(true)
+        setShowCodeParser(true)
+        const job = await createJobPost({
+          ...data,
+          meta: {
+            repo: metadata?.repo,
+            owner: metadata?.owner,
+            path: metadata?.path,
+          },
+        })
+        if (job) {
+          router.push(`/home/jobs/${job.id}/complete`)
+        } else {
+          router.push("/home/create/error")
+        }
+      } catch (error) {
+        console.error("Error processing file:", error)
+        router.push("/home/create/error")
+      } finally {
+        setIsLoading(false)
+        setIsProcessing(false)
+      }
+    },
+    [isProcessing, metadata, router]
+  )
 
   useEffect(() => {
     if (!isLoading && fileData) {
