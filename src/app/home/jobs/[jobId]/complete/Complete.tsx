@@ -84,7 +84,7 @@ const PrepQuestionStepper = ({ jobPost }: { jobPost: JobPost }) => {
 const CompleteJobPost = ({ jobPost }: { jobPost: JobPost }) => {
   return (
     <div>
-      <div className="space-y-6 flex flex-col h-full min-h-screen">
+      <div className="space-y-6 mt-4 flex flex-col h-full min-h-screen">
         <div className="flex items-center justify-center w-full">
           <h1 className="text-2xl font-bold">Complete your job post</h1>
         </div>

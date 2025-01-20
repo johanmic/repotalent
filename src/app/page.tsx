@@ -22,10 +22,10 @@ interface HomeProps {
 
 export const metadata: Metadata = {
   title: "Repotalent - Job Description Generator and Lead Finder",
-  description: "Generate job descriptions and find leads in one click",
+  description: "Generate job descriptions and find leads in a few clicks",
   openGraph: {
     title: "Repotalent - Job Description Generator and Lead Finder",
-    description: "Generate job descriptions and find leads in one click",
+    description: "Generate job descriptions and find leads in a few clicks",
     url: "https://repotalent.com",
     siteName: "Repotalent - Job Description Generator and Lead Finder",
     images: [{ url: "/OG.png" }],
@@ -50,7 +50,7 @@ export default async function Home({ searchParams }: HomeProps) {
               </span>
             </div>
           }
-          subtitle="Job descriptions generated in one click"
+          subtitle="Job descriptions generated in a few clicks"
           image="/questions.png"
           badge="Platform"
         />

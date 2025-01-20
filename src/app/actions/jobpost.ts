@@ -813,3 +813,71 @@ export const getJobPostTokenUsage = async (
   })
   return jobPost._sum.tokensUsed || 0
 }
+
+export interface JobPackageToVersion {
+  jobPostId: string
+  packageVersionId: string
+  importance: number
+  packageVersion: {
+    id: string
+    package: {
+      id: string
+      name: string
+      githubRepo: {
+        id: string
+        name: string
+        gitUrl: string
+        website: string
+        description: string
+        logo: string
+        createdAt: Date
+        updatedAt: Date
+        repoUpdatedAt: Date
+        repoCreatedAt: Date
+        archived: boolean
+        language: string
+        stars: number
+        watchers: number
+      }
+    }
+  }
+}
+
+export const getJobPackages = async (
+  jobId: string
+): Promise<JobPackageToVersion[]> => {
+  const packages = await prisma.jobPostToPackageVersion.findMany({
+    where: { jobPostId: jobId },
+    include: {
+      packageVersion: {
+        include: {
+          package: {
+            include: {
+              githubRepo: true,
+            },
+          },
+        },
+      },
+    },
+  })
+  return packages as JobPackageToVersion[]
+}
+
+export const updatePackageRatings = async (
+  jobPackages: Partial<JobPackageToVersion>[]
+) => {
+  for (const jobPackage of jobPackages) {
+    if (!jobPackage.jobPostId || !jobPackage.packageVersionId) continue
+    await prisma.jobPostToPackageVersion.update({
+      where: {
+        jobPostId_packageVersionId: {
+          jobPostId: jobPackage?.jobPostId,
+          packageVersionId: jobPackage?.packageVersionId,
+        },
+      },
+      data: {
+        importance: jobPackage.importance,
+      },
+    })
+  }
+}

@@ -45,9 +45,11 @@ const GithubPicker = ({ hasGithub }: { hasGithub: boolean }) => {
   useEffect(() => {
     const fetchRepos = async () => {
       const repos = await listUserRepos()
+      console.log(repos)
       setRepos(
         repos.map((repo) => ({
           ...repo,
+          language: repo.language ?? undefined,
           full_name: repo.fullName,
           updated_at: repo.updated_at ?? new Date().toISOString(),
           created_at: new Date().toISOString(),
@@ -129,7 +131,7 @@ const GithubPicker = ({ hasGithub }: { hasGithub: boolean }) => {
     return (
       <div>
         <div className="flex justify-end">
-          <Button onClick={() => setSelectedFile(null)}>
+          <Button variant="outline" onClick={() => setSelectedFile(null)}>
             <Icon name="moveLeft" className="mr-2 h-4 w-4" />
             Back to files
           </Button>
@@ -155,22 +157,34 @@ const GithubPicker = ({ hasGithub }: { hasGithub: boolean }) => {
 
       {/* Repository Selection */}
       {!selectedRepo && (
-        <div className="grid grid-cols-1 gap-2 bg-sidebar p-4 rounded-lg">
+        <div className="grid grid-cols-1 gap-2 bg-sidebar py-4 rounded-lg">
           {repos.map((repo) => {
             const updated = dayjs(repo.updated_at)
             const isOld = updated.isBefore(dayjs().subtract(1, "month"))
             return (
-              <Button
+              <div
                 key={repo.id}
-                variant="outline"
-                className={`justify-start ${isOld ? "opacity-50" : ""}`}
+                // variant="ghost"
+                className={`flex my-2 border-b cursor-pointer hover:bg-muted px-2 items-center  justify-start ${
+                  isOld ? "opacity-50" : ""
+                }`}
                 onClick={() => setSelectedRepo(repo)}
               >
                 <AppIcon name="github" className="mr-2 h-4 w-4" />
-                <span>{repo.name}</span>
-                <span className="ml-2">updated: {updated.fromNow()}</span>
+                <div className="flex items-center h-12">
+                  <AppIcon
+                    name={repo.language?.toLowerCase() as keyof typeof AppIcon}
+                    className="mr-2 h-4 w-4"
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium">{repo.name}</span>
+                    <span className="text-xs">
+                      updated: {updated.fromNow()}
+                    </span>
+                  </div>
+                </div>
                 <Icon name="chevronRight" className="ml-auto h-4 w-4" />
-              </Button>
+              </div>
             )
           })}
         </div>

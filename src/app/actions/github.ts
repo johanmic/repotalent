@@ -39,6 +39,7 @@ export interface GithubRepo {
   name: string
   full_name: string
   owner: string
+  language?: string
   private: boolean
   description: string | null
   url: string
@@ -122,6 +123,7 @@ export const listUserRepos = async () => {
   return repos.repositories
     .map((repo) => ({
       id: repo.id,
+      language: repo.language,
       name: repo.name,
       owner: repo.owner.login,
       fullName: repo.full_name,

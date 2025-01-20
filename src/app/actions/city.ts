@@ -7,6 +7,7 @@ import { city, country, currency } from "@prisma/client"
 import { uniqBy } from "ramda"
 export type City = city & { country: country }
 import { getUser } from "@/utils/supabase/server"
+
 export type Currency = currency & {
   countries: {
     countryId: string

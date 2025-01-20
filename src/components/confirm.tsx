@@ -21,6 +21,7 @@ import { CheckIcon, PencilIcon } from "lucide-react"
 import { useState, useEffect } from "react"
 import { reCalculateTitleAndSeniority } from "@/app/actions/prompt"
 import type { jobPostQuestion, jobPostRatings } from "@prisma/client"
+import { PackageRatings } from "@/components/package-ratings"
 const toneOptions = [
   { value: "professional", label: "Professional" },
   { value: "casual", label: "Casual" },
@@ -165,7 +166,7 @@ export default function Confirm({
               )}
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <Label className="flex items-center gap-2">
+                  <Label className="flex items-center gap-2 opacity-70">
                     Suggested Title{" "}
                     <Text className="flex-0 text-xs text-rose-500">
                       (AI Suggested)
@@ -183,7 +184,7 @@ export default function Confirm({
                 </div>
 
                 <div>
-                  <Label className="flex items-center gap-2">
+                  <Label className="flex items-center gap-2 opacity-70">
                     Experience Level
                     <Text className="flex-0 text-xs text-rose-500">
                       (AI Suggested)
@@ -231,6 +232,7 @@ export default function Confirm({
                 className="w-full"
               />
             </div>
+            <PackageRatings jobPostId={jobPost.id} />
           </div>
         </div>
       )}

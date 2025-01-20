@@ -73,7 +73,7 @@ export const FilterForm = ({
           <CardContent className="pt-6">
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 my-2">
                   <Checkbox
                     id="hireable"
                     checked={options.hireable || false}
@@ -81,10 +81,15 @@ export const FilterForm = ({
                       handleInputChange("hireable", checked)
                     }
                   />
-                  <Label htmlFor="hireable">Hireable</Label>
+                  <div className="flex flex-col">
+                    <Label htmlFor="hireable">Hireable</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Contributors marked hireable on github
+                    </p>
+                  </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 my-2">
                   <Checkbox
                     id="starred"
                     checked={options.starred || false}
@@ -92,10 +97,15 @@ export const FilterForm = ({
                       handleInputChange("starred", checked)
                     }
                   />
-                  <Label htmlFor="starred">Starred</Label>
+                  <div className="flex flex-col">
+                    <Label htmlFor="starred">Starred</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Contributors starred on github
+                    </p>
+                  </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 my-2">
                   <Checkbox
                     id="faang"
                     checked={options.faang || false}
@@ -103,10 +113,19 @@ export const FilterForm = ({
                       handleInputChange("faang", checked)
                     }
                   />
-                  <Label htmlFor="faang">FAANG</Label>
+                  <div className="flex flex-col">
+                    <Label htmlFor="faang">FAANG</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Contributors from FAANG (Facebook, Apple, Amazon, Netflix,
+                      Google) companies
+                    </p>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Followers</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Contributors with at least this many followers
+                  </p>
                   <div className="flex gap-2">
                     <Input
                       type="number"
@@ -136,17 +155,22 @@ export const FilterForm = ({
               <div>
                 <div className="space-y-2">
                   <Label>Contributions</Label>
-                  <Slider
-                    min={0}
-                    max={5000}
-                    step={50}
-                    value={[options.minContributions || 0]}
-                    onValueChange={([value]) => {
-                      handleInputChange("minContributions", value)
-                    }}
-                  />
-                  <div className="text-xs text-muted-foreground">
-                    {options.minContributions || 0}+
+                  <p className="text-xs text-muted-foreground">
+                    Contributors with at least this many contributions
+                  </p>
+                  <div className="flex flex-col">
+                    <Slider
+                      min={0}
+                      max={5000}
+                      step={50}
+                      value={[options.minContributions || 0]}
+                      onValueChange={([value]) => {
+                        handleInputChange("minContributions", value)
+                      }}
+                    />
+                    <div className="text-xs text-muted-foreground mt-2">
+                      {options.minContributions || 0}+
+                    </div>
                   </div>
                 </div>
 

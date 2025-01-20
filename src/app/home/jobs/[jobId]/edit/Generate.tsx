@@ -1,5 +1,7 @@
 "use client"
 
+import { Currency } from "@/app/actions/city"
+import { CurrencySelector } from "@/components/currency-selector"
 import Icon from "@/components/icon"
 import { TextEditor } from "@/components/text-editor"
 import { Title } from "@/components/title"
@@ -28,18 +30,16 @@ import { writeJobDescription } from "@actions/write"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { readStreamableValue } from "ai/rsc"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
+import { PackageRatings } from "@/components/package-ratings"
 import * as zod from "zod"
-import { useRouter } from "next/navigation"
-import { CurrencySelector } from "@/components/currency-selector"
-import { Currency } from "@/app/actions/city"
 
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
@@ -177,7 +177,7 @@ const EditJobPost = ({
   const onStreamingDone = useCallback(
     async (fullValue: string) => {
       const json = await generateJSONFromMarkdown(fullValue)
-      toast.success("Generated")
+      toast.success("Job description generated successfully")
 
       await updateJobPost({
         jobId: jobId as string,
@@ -229,10 +229,10 @@ const EditJobPost = ({
           data: data as Partial<JobPost>,
           shouldRedirect: false,
         })
-        toast.success("Job description saved")
+        toast.success("Job post details saved successfully")
         // router.push(`/home/jobs/${jobId}/preview`)
       } catch (error) {
-        toast.error("Failed to save job post")
+        toast.error("Failed to save job post details")
         // Highlight fields with errors
         const errorFields = Object.keys(form.formState.errors)
         const newErrors = errorFields.reduce(
@@ -614,9 +614,11 @@ const EditJobPost = ({
                   </DialogContent>
                 </Dialog>
 
+                <PackageRatings jobPostId={jobId} />
+
                 <Button
                   role="submit"
-                  className="btn btn-secondary"
+                  className="btn btn-secondary w-full"
                   disabled={isLoading}
                   size="sm"
                 >
