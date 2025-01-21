@@ -13,10 +13,9 @@ export const updateJobDeps = task({
   ) => {
     logger.log("Updating job deps", { jobId: payload.jobId, ctx })
 
-    const { shouldContinue } = await updateJobDepsAsync(payload.jobId)
-    if (shouldContinue) {
-      await tasks.trigger(GET_DEPS_GITHUB, { jobId: payload.jobId })
-    }
+    await updateJobDepsAsync(payload.jobId)
+
+    await tasks.trigger(GET_DEPS_GITHUB, { jobId: payload.jobId })
 
     return {
       message: "Job deps updated",

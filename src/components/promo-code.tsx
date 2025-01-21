@@ -4,7 +4,7 @@ import { Icon } from "@/components/icon"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useCallback, useState } from "react"
-
+import { toast } from "sonner"
 export const PromoCode = () => {
   const [code, setCode] = useState("")
   const [message, setMessage] = useState<string | null>(null)
@@ -17,10 +17,15 @@ export const PromoCode = () => {
   const handleUsePromoCode = useCallback(async () => {
     setLoading(true)
     try {
-      const purchase = await redeemPromoCode({ code })
-      setPurchased(purchase)
-      setMessage("Promo code applied successfully!")
-      setError(null)
+      const { success, purchase, error } = await redeemPromoCode({ code })
+      if (success) {
+        setPurchased(purchase)
+        setMessage("Promo code applied successfully!")
+        setError(null)
+      } else {
+        toast.error(error || "An unexpected error occurred")
+        setError(error || "An unexpected error occurred")
+      }
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "An unexpected error occurred"

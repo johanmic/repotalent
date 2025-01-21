@@ -4,53 +4,46 @@ import prisma from "@/store/prisma"
 import { getUser } from "@/utils/supabase/server"
 import { promoCode } from "@prisma/client"
 import { revalidatePath } from "next/cache"
+
 export const redeemPromoCode = async ({ code }: { code: string }) => {
-  const { user } = await getUser()
-  if (!user) {
-    throw new Error("User not found")
-  }
+  try {
+    const { user } = await getUser()
+    if (!user) {
+      return { error: "Please sign in to redeem a promo code" }
+    }
 
-  const { valid, message, promoCode } = await validatePromoCode({ code })
-  if (!valid) {
-    throw new Error(message)
-  }
-  if (!promoCode) {
-    throw new Error("Promo code not found")
-  }
+    const { valid, message, promoCode } = await validatePromoCode({ code })
+    if (!valid) {
+      return { error: message }
+    }
+    if (!promoCode) {
+      return { error: "Invalid promo code" }
+    }
 
-  const purchase = await prisma.purchase.create({
-    data: {
-      user: {
-        connect: {
-          id: user.id,
-        },
+    const purchase = await prisma.purchase.create({
+      data: {
+        user: { connect: { id: user.id } },
+        stripePurchaseId: `promo-${promoCode.id}-${user.id}`,
+        creditsBought: promoCode.credits,
+        promoCode: { connect: { id: promoCode.id } },
       },
-      stripePurchaseId: `promo-${promoCode.id}-${user.id}`,
-      creditsBought: promoCode.credits,
-      promoCode: {
-        connect: {
-          id: promoCode.id,
-        },
-      },
-    },
-  })
+    })
 
-  await prisma.promoCodeUsage.create({
-    data: {
-      user: {
-        connect: {
-          id: user.id,
-        },
+    await prisma.promoCodeUsage.create({
+      data: {
+        user: { connect: { id: user.id } },
+        promoCode: { connect: { id: promoCode.id } },
       },
-      promoCode: {
-        connect: {
-          id: promoCode.id,
-        },
-      },
-    },
-  })
-  revalidatePath("/home", "layout")
-  return purchase
+    })
+
+    revalidatePath("/home", "layout")
+    return { success: true, purchase }
+  } catch (error) {
+    return {
+      error:
+        "Unable to redeem promo code at this time. Please try again later.",
+    }
+  }
 }
 
 export const validatePromoCode = async ({
