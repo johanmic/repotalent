@@ -34,7 +34,9 @@ export const Hero = () => (
             </Link>
           </div>
         </div>
-        <CompareDemo />
+        <div className="flex justify-center items-center">
+          <CompareDemo />
+        </div>
       </div>
     </div>
   </div>

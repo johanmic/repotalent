@@ -16,6 +16,12 @@ export function SiteFooter() {
               <Icon name="bluesky" />
             </a>
           </div>
+          <div className="flex flex-row gap-2 text-center justify-center text-xs text-muted-foreground">
+            Open Sourced for your pleasure
+            <Link href="https://github.com/johanmic/repotalent">
+              <Icon name="github" />
+            </Link>
+          </div>
           <div className="text-center text-xs leading-loose text-muted-foreground md:text-left flex items-center justify-center gap-2">
             <Link href="/legal/tos">Terms of Service</Link>
             <Link href="/legal/privacy">Privacy Policy</Link>

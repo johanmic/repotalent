@@ -22,13 +22,13 @@ export const VideoPopup = () => {
             />
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="bg-black/30 p-4 rounded-full group-hover:bg-black/50 transition-colors">
-                <Play className="w-8 h-8 text-white" />
+                <Play className="w-8 h-8 ml-1 text-white" />
               </div>
             </div>
           </div>
         </DialogTrigger>
-        <DialogContent className="max-w-4xl">
-          <DialogTitle>See Repotalent in action</DialogTitle>
+        <DialogContent className="max-w-4xl p-0 m-0">
+          <DialogTitle className="p-4">Repotalent in action</DialogTitle>
           <video controls autoPlay muted className="w-full focus:outline-none">
             <source src={videoURL} type="video/mp4" />
             Your browser does not support the video tag.

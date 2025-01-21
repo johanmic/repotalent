@@ -13,6 +13,11 @@ const FaqYou = () => {
         "No, you can login in with github and auto sync your codebase, however you can also upload a file manually",
     },
     {
+      question: "What do you do with my code?",
+      answer:
+        "We mostly read meta files like package.json, requirements.txt, etc. We do not read much else. We're open source so take a look yourself",
+    },
+    {
       question: "How do I get the leads database?",
       answer:
         "Leads is a pro feature, pro users tokens also get one month of access to the leads database",
@@ -57,7 +62,7 @@ const FaqYou = () => {
         <h1 className="mb-4 text-3xl font-semibold md:mb-11 md:text-5xl">
           Frequently asked questions
         </h1>
-        <div className="space-y-2">
+        <div className="space-y-2 max-w-3xl">
           {faqs.map((faq, index) => (
             <Accordion key={index} type="single" collapsible>
               <AccordionItem value={`item-${index}`}>

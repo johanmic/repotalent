@@ -23,7 +23,7 @@ Generate a job description from a package.json file, and it will automatically d
 **Job Description Generator**: Automatically generates detailed technical job descriptions from your project files (package.json, requirements.txt, etc.).<br/>
 **Rich Job Post Editor**: Fine-tune auto-generated job descriptions and export them to markdown or PDF format.<br/>
 **Smart Lead Finder**: Scans your package dependencies to source qualified candidates from GitHub based on their open-source contributions.<br/>
-**Job Board Integration**: Your job postings are automatically listed on our specialized tech job board.<br/>
+**Job Board**: Your job postings are automatically listed on our specialized tech job board.<br/>
 **Advanced Search**: Find developers by location, programming languages, libraries, and more.<br/>
 **Candidate Verification**: Confirms "hireable" status and validates candidate availability.<br/>
 
@@ -52,16 +52,6 @@ Generate a job description from a package.json file, and it will automatically d
 
 Visit our [documentation](GettingStarted.md) to get started with Repotalent.
 
-## License
-
-This project is licensed under the **[AGPL-3.0](https://opensource.org/licenses/AGPL-3.0)** for non-commercial use.
-
-### Commercial Use
-
-For commercial use or custom deployments, please contact us at [support@repotalent.com](mailto:support@repotalent.com).
-
-By using this software, you agree to the terms of the license.
-
 ## Contributing
 
 Contributions are welcome! Please see the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information.
@@ -75,3 +65,13 @@ Contributions are welcome! Please see the [CONTRIBUTING.md](CONTRIBUTING.md) fil
 - [ ] Small outreach CRM system
 - [ ] SEO
 - [ ] Email (resend.com)
+
+## License
+
+This project is licensed under the **[AGPL-3.0](https://opensource.org/licenses/AGPL-3.0)** for non-commercial use.
+
+### Commercial Use
+
+For commercial use or custom deployments, please contact us at [support@repotalent.com](mailto:support@repotalent.com).
+
+By using this software, you agree to the terms of the license.
