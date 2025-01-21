@@ -6,8 +6,6 @@ if [ "$NODE_ENV" = "production" ]; then
     pnpm prisma generate
     pnpm prisma migrate deploy
     
-    echo "🎯 Deploying trigger.dev jobs"
-    npx trigger.dev@latest deploy
 else
     echo "⚠️ Not in production mode - skipping Prisma commands"
     exit 0
