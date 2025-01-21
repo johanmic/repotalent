@@ -1,4 +1,4 @@
-![hero](github.png)
+![hero](header.png)
 
 <p align="center">
 	<h1 align="center"><b>Repotalent</b></h1>
@@ -15,7 +15,8 @@
 
 ## About Repotalent
 
-Repotalent is an innovative tool designed to streamline technical recruitment processes. It combines automated job description generation with intelligent developer lead sourcing, making it easier for companies to find and attract the right technical talent.
+Repotalent is a platform from creating job descriptions and finding leads.
+Generate a job description from a package.json file, and it will automatically dig through all your repos to find contributors from github to reach out to.
 
 ## Features
 
