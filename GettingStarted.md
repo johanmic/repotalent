@@ -42,8 +42,9 @@ callback should be domain
 
 ## DB
 
-follow the instructions here: https://supabase.com/partners/integrations/prisma
+Pick your favorite DB Provider,
 install postgis extension
+install pg_trgm extension
 possibly run seed script as we're loading 126K cities with countries in to the database
 ensure postgis has been correctly installed
 

@@ -27,7 +27,7 @@ import { useCallback } from "react"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { getImageUrl } from "@/utils/image"
-
+import { useRouter } from "next/navigation"
 const citySchema = z
   .object({
     id: z.string({ required_error: "Please select a city" }),
@@ -57,6 +57,7 @@ const CreateOrgForm = ({
 }: {
   organization?: Organization | null
 }) => {
+  const router = useRouter()
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -84,8 +85,9 @@ const CreateOrgForm = ({
         await updateOrganization(organizationData)
         toast.success("Organization updated")
       } else {
-        await createOrganization(organizationData)
+        const newOrg = await createOrganization(organizationData)
         toast.success("Organization created")
+        router.push(`/home/org/${newOrg.id}`)
       }
     },
     [organization]

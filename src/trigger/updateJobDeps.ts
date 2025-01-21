@@ -3,8 +3,7 @@ import { updateJobDepsAsync } from "@/utils/job/updateJobTags"
 import { UPDATE_JOB_DEPS, GET_DEPS_GITHUB } from "./constants"
 export const updateJobDeps = task({
   id: UPDATE_JOB_DEPS,
-  // Set an optional maxDuration to prevent tasks from running indefinitely
-  maxDuration: 900, // Stop executing after 300 secs (5 mins) of compute
+  maxDuration: 900,
   run: async (
     payload: {
       jobId: string

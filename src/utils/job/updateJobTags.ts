@@ -4,6 +4,8 @@ import { parsePodfileLock } from "@/utils/podfileLockParser"
 import { parsePyprojectToml } from "@/utils/pyprojectTomlParser"
 import { logger } from "@trigger.dev/sdk/v3"
 
+const BATCH_SIZE = 10
+
 const addPackages = async ({
   jobId,
   dependencies,
@@ -12,36 +14,62 @@ const addPackages = async ({
   dependencies: { name: string; version: string }[]
 }) => {
   try {
-    // Process dependencies sequentially to avoid race conditions
-    for (const { name, version } of dependencies) {
-      const pkg = await prisma.openSourcePackage.upsert({
-        where: { name },
-        create: { name },
-        update: {},
-        select: { id: true },
-      })
+    // Process dependencies in batches
+    for (let i = 0; i < dependencies.length; i += BATCH_SIZE) {
+      const batch = dependencies.slice(i, i + BATCH_SIZE)
 
-      const pkgVersion = await prisma.openSourcePackageVersion.upsert({
-        where: {
-          packageId_version: {
-            packageId: pkg.id,
-            version,
-          },
-        },
-        create: {
-          version,
-          packageId: pkg.id,
-          createdAt: new Date(),
-        },
-        update: {},
-        select: { id: true },
-      })
+      await prisma.$transaction(
+        async (tx) => {
+          const operations = batch.map(async ({ name, version }) => {
+            const pkg = await tx.openSourcePackage.upsert({
+              where: { name },
+              create: { name },
+              update: {},
+              select: { id: true },
+            })
 
-      await prisma.jobPostToPackageVersion.create({
-        data: {
-          jobPostId: jobId,
-          packageVersionId: pkgVersion.id,
+            const pkgVersion = await tx.openSourcePackageVersion.upsert({
+              where: {
+                packageId_version: {
+                  packageId: pkg.id,
+                  version,
+                },
+              },
+              create: {
+                version,
+                packageId: pkg.id,
+                createdAt: new Date(),
+              },
+              update: {},
+              select: { id: true },
+            })
+
+            await tx.jobPostToPackageVersion.create({
+              data: {
+                jobPostId: jobId,
+                packageVersionId: pkgVersion.id,
+              },
+            })
+          })
+
+          // Execute all operations in parallel within the smaller batch
+          await Promise.all(operations)
         },
+        {
+          timeout: 180000, // 3 minutes timeout
+          maxWait: 10000, // 10 seconds max wait time
+        }
+      )
+
+      // Add delay between batches to reduce database load
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+
+      logger.log("Processed batch", {
+        jobId,
+        batchSize: batch.length,
+        progress: `${Math.min(i + BATCH_SIZE, dependencies.length)}/${
+          dependencies.length
+        }`,
       })
     }
   } catch (e) {
@@ -70,6 +98,7 @@ export const updateJobDepsAsync = async (jobId: string) => {
         ...packagesJson.dependencies,
         ...packagesJson.devDependencies,
       }).map(([name, version]) => ({ name, version: version as string }))
+
       logger.log("Adding packages", {
         jobId: job.id,
         dependencies: dependencies.length,
