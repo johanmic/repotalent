@@ -180,7 +180,7 @@ export const Pricing = ({
   return (
     <div className="py-8" id="pricing">
       <PricingHeader
-        title="Pricing Plans"
+        title="Pricing"
         subtitle="Choose the plan that's right for you"
       />
       <PricingSwitch onSwitch={togglePricingPeriod} />

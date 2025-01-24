@@ -12,6 +12,8 @@ import { acceptedFileNames } from "@/utils/filenames"
 import { Metadata } from "next"
 import { getProducts } from "./actions/product"
 import { VideoPopup } from "@/components/landing/videoPopup"
+import { GlobeDemo } from "@/components/landing/globe"
+import { Stats } from "@/components/stats"
 type SearchParams = Promise<{
   ref?: string | null
 }>
@@ -62,13 +64,15 @@ export default async function Home({ searchParams }: HomeProps) {
           badge="Platform"
           reverse
         />
+      </main>
+      <main className="bg-primary py-12 md:py-40">
+        <GlobeDemo />
         <BigFeature
-          title="Leads"
-          subtitle="Repotalent scans all packages you use to source candidates from github"
+          intertedColors={true}
+          title="Your leads database"
+          subtitle="RepoTalent leads database is a curated list of contributors from your codebase"
           features={[
-            "Qualified leads based on open-source contributions",
             "Search by location, languages, libraries, and more",
-            "Fetches leads from github",
             "Verified “hireable” status",
             "Bookmarks leads",
             "Auto writes intros (coming soon)",
@@ -76,27 +80,51 @@ export default async function Home({ searchParams }: HomeProps) {
           animatedBoarder={false}
           image="/leads2.png"
           badge="Pro Feature"
-          extra={
-            <div>
-              <div className="text-4xl flex gap-2 font-black text-rose-500">
-                <StatsCounter number={500} /> - <StatsCounter number={1500} />{" "}
-                leads
-              </div>
-              <p className="pt-2">
-                is what an average{" "}
-                <span className="bg-black text-white text-xs font-bold p-2 rounded-lg">
-                  package.json
-                </span>{" "}
-                will find*
-              </p>
-              <p className="pt-4 text-[10px]">
-                *the number of leads will vary based on the size of your
-                codebase. Not all leads are marked hireable. not all have emails
-              </p>
-            </div>
-          }
+          // extra={
+          //   <div>
+          //     <div className="text-4xl flex gap-2 font-black text-rose-500">
+          //       <StatsCounter number={500} /> - <StatsCounter number={1500} />{" "}
+          //       leads
+          //     </div>
+          //     <p className="pt-2">
+          //       is what an average{" "}
+          //       <span className="bg-black text-white text-xs font-bold p-2 rounded-lg">
+          //         package.json
+          //       </span>{" "}
+          //       will find*
+          //     </p>
+          //     <p className="pt-4 text-[10px]">
+          //       *the number of leads will vary based on the size of your
+          //       codebase. Not all leads are marked hireable. not all have emails
+          //     </p>
+          //   </div>
+          // }
           reverse
         />
+        <Stats
+          title="Stats"
+          subtitle="For our own package.json we get"
+          reverse
+          stats={[
+            {
+              title: "Leads",
+              number: 1771,
+              subtitle: "from the packages and libraries we use",
+            },
+            {
+              title: "Emails",
+              number: 769,
+              subtitle: "from the contributors we find",
+            },
+            {
+              title: "Hireable",
+              number: 435,
+              subtitle: "marked as hireable on GitHub",
+            },
+          ]}
+        />
+      </main>
+      <main className="flex flex-col gap-24 my-40">
         <BigFeature
           title="Job board included"
           subtitle="Your openings will be listed on our job board, where developers can search by job details, titles, or even specific libraries and tools from npm, pip, or CocoaPods to find their next gig."
