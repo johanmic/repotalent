@@ -17,7 +17,7 @@ export function SiteFooter() {
             </a>
           </div>
           <div className="flex flex-row gap-2 text-center justify-center text-xs text-muted-foreground">
-            Open Sourced for your pleasure
+            We are an Open Source Project
             <Link href="https://github.com/johanmic/repotalent">
               <Icon name="github" />
             </Link>

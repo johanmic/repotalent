@@ -1,29 +1,28 @@
 "use client"
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-import { useState } from "react"
-import { motion } from "framer-motion"
-import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { login, verifyOTP } from "./actions"
-
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { motion } from "framer-motion"
+import Link from "next/link"
+import { useState } from "react"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+import { z } from "zod"
+import { login, verifyOTP } from "./actions"
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -124,6 +123,16 @@ const LoginForm = () => {
           </InputOTP>
         </motion.div>
       )}
+      <div className="flex flex-row text-center gap-1 justify-center text-xs text-muted-foreground">
+        By signing up you agree to our{" "}
+        <Link className="underline underline-offset-4" href="/legal/tos">
+          Terms of Service
+        </Link>{" "}
+        and
+        <Link className="underline underline-offset-4" href="/legal/privacy">
+          Privacy Policy
+        </Link>
+      </div>
     </motion.div>
   )
 }

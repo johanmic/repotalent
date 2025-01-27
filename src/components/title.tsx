@@ -1,16 +1,21 @@
-import React, { JSX } from "react"
+import React, { ReactNode, ElementType } from "react"
 
 interface TitleProps {
-  children: React.ReactNode
+  children: ReactNode
   size?: "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl"
   className?: string
 }
 
-const getSizeHtml = (size: TitleProps["size"]): keyof JSX.IntrinsicElements => {
-  if (size === "xs") return "h3"
-  if (size === "sm") return "h2"
-  if (size === "base") return "h1"
-  return "h2"
+const getSizeHtml = (size: TitleProps["size"]): "h1" | "h2" | "h3" => {
+  switch (size) {
+    case "xs":
+      return "h3"
+    case "sm":
+    case "base":
+      return "h2"
+    default:
+      return "h1"
+  }
 }
 
 const sizeClasses = {
@@ -22,21 +27,21 @@ const sizeClasses = {
   "2xl": "text-2xl",
   "3xl": "text-3xl",
   "4xl": "text-4xl",
-  "5xl": "text-5xl",
-  "6xl": "text-6xl",
 } as const
 
 export const Title = ({
   children,
   size = "xl",
   className = "",
+  ...props
 }: TitleProps) => {
   const sizeClass = sizeClasses[size]
-  const HtmlTag = getSizeHtml(size)
+  const HtmlTag: ElementType = getSizeHtml(size)
+
+  const combinedStyles = `font-semibold tracking-tight text-gray-900 dark:text-white ${sizeClass} ${className}`
+
   return (
-    <HtmlTag
-      className={`font-semibold tracking-tight text-gray-900 dark:text-white ${sizeClass} ${className}`}
-    >
+    <HtmlTag className={combinedStyles} {...props}>
       {children}
     </HtmlTag>
   )
