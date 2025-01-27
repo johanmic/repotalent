@@ -280,14 +280,15 @@ export const createPackageandRepo = async ({
   normalizedUrl: string
 }) => {
   if (!normalizedUrl) return
-  let createRepo = true
   // First try to find an existing repo with this URL
+  let githubRepoId: string | null = null
   const existingRepo = await prisma.githubRepo.findUnique({
     where: { gitUrl: normalizedUrl },
   })
 
   if (existingRepo) {
     // If repo exists, just connect the package to it
+    githubRepoId = existingRepo.id
     const results = await prisma.openSourcePackage.update({
       where: { id: pkg.id },
       data: {
@@ -297,11 +298,7 @@ export const createPackageandRepo = async ({
         githubRepo: true,
       },
     })
-    if (results.githubRepo && results.githubRepo.description) {
-      createRepo = false
-    }
-  }
-  if (createRepo) {
+  } else {
     // If no repo exists, create new one and connect the package
     const githubRepo = await prisma.githubRepo.create({
       data: {
@@ -312,6 +309,13 @@ export const createPackageandRepo = async ({
         },
       },
     })
-    await tasks.trigger(GET_REPO_INFO, { jobId, githubRepoId: githubRepo.id })
+    githubRepoId = githubRepo.id
+  }
+  if (githubRepoId) {
+    logger.log("Triggering GET_REPO_INFO", {
+      jobId,
+      githubRepoId,
+    })
+    await tasks.trigger(GET_REPO_INFO, { jobId, githubRepoId })
   }
 }

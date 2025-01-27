@@ -84,6 +84,10 @@ export const getLeadsForJob = async ({
       name: true,
     },
   })
+  console.log("connectedRepos", {
+    name: connectedRepos.map((repo) => repo.name),
+    size: connectedRepos.length,
+  })
 
   const repoIds = connectedRepos.map((repo) => repo.id)
 
@@ -227,14 +231,14 @@ export const getContributorStats = async (
   const baseWhere = {
     fetchedAt: { not: null },
     contributions: {
-      some: {
+      every: {
         githubRepo: {
           openSourcePackage: {
-            some: {
+            every: {
               versions: {
-                some: {
+                every: {
                   jobPosts: {
-                    some: {
+                    every: {
                       jobPostId: jobId,
                     },
                   },
@@ -251,12 +255,12 @@ export const getContributorStats = async (
     where: baseWhere,
   })
 
-  const matched = await prisma.contributor.count({
-    where: {
-      ...baseWhere,
-      hireable: true,
-    },
-  })
+  // const matched = await prisma.contributor.count({
+  //   where: {
+  //     ...baseWhere,
+  //     hireable: true,
+  //   },
+  // })
 
   // Update ContributorStats type to include more granular stats
   interface FollowerStats {

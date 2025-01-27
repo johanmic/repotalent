@@ -241,6 +241,10 @@ const createContributors = async ({
         },
       })
       if (!results.fetchedAt) {
+        logger.log("Triggering GET_USER_INFO", {
+          jobId,
+          contributorId: results.id,
+        })
         await tasks.trigger(GET_USER_INFO, { jobId, contributorId: results.id })
       }
     } catch (error) {

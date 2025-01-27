@@ -3,7 +3,7 @@ import { precalcRatingsHandler } from "@/utils/job/calculateJobScores"
 import { CALC_SCORES } from "./constants"
 export const calculateJobScores = task({
   id: CALC_SCORES,
-  maxDuration: 30, // Stop executing after 300 secs (5 mins) of compute
+  maxDuration: 30,
   run: async (
     payload: {
       jobId: string

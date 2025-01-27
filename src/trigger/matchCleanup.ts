@@ -90,17 +90,17 @@ export const matchCleanup = schedules.task({
 
         // Trigger appropriate tasks based on missing actions
         if (!completedActions.has("getGithubUrls")) {
-          await tasks.trigger(GET_DEPS_GITHUB, { jobId: job.id })
+          // await tasks.trigger(GET_DEPS_GITHUB, { jobId: job.id })
           continue // Wait for this to complete before triggering others
         }
 
         if (!completedActions.has("getRepoInfo")) {
-          await tasks.trigger(GET_REPO_INFO, { jobId: job.id })
+          // await tasks.trigger(GET_REPO_INFO, { jobId: job.id })
           continue
         }
 
         if (!completedActions.has("getUserInfo")) {
-          await tasks.trigger(GET_USER_INFO, { jobId: job.id })
+          // await tasks.trigger(GET_USER_INFO, { jobId: job.id })
           continue
         }
 
@@ -111,7 +111,7 @@ export const matchCleanup = schedules.task({
           completedActions.has("getRepoInfo") &&
           completedActions.has("getUserInfo")
         ) {
-          await tasks.trigger(CALC_SCORES, { jobId: job.id })
+          // await tasks.trigger(CALC_SCORES, { jobId: job.id })
         }
       }
     }

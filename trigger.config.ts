@@ -2,10 +2,10 @@ import { defineConfig } from "@trigger.dev/sdk/v3"
 import { prismaExtension } from "@trigger.dev/build/extensions/prisma"
 
 export default defineConfig({
-  project: "proj_sncazuuikejdmhqcqybm",
+  project: process.env.TRIGGER_PROJECT_ID!,
   runtime: "node",
   logLevel: "log",
-  maxDuration: 3600,
+  maxDuration: 120,
   retries: {
     enabledInDev: true,
     default: {

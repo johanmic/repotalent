@@ -14,6 +14,7 @@ export const getUserInfoHandler = async ({
 }) => {
   const githubInstallationId = await getInstallationId(jobId)
   if (!githubInstallationId) {
+    logger.error("No github installation id found", { jobId })
     return null
   }
   const rateLimit = await checkRateLimit({
@@ -21,6 +22,10 @@ export const getUserInfoHandler = async ({
   })
 
   if (rateLimit.remaining < 10) {
+    logger.log("Rate limit close, Triggering GET_USER_INFO", {
+      jobId,
+      contributorId,
+    })
     wait.until({ date: rateLimit.reset })
     tasks.trigger(GET_USER_INFO, { jobId, contributorId })
     return null

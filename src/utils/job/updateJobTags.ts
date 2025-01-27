@@ -66,6 +66,7 @@ const addPackages = async ({
       // Add delay between batches to reduce database load
       // await new Promise((resolve) => setTimeout(resolve, 100))
       for (const pkg of openSourcePackages) {
+        logger.log("Triggering GET_DEPS_GITHUB", { jobId, pkgId: pkg.id })
         await tasks.trigger(GET_DEPS_GITHUB, { jobId, pkgId: pkg.id })
       }
 
