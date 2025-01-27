@@ -26,6 +26,12 @@ interface TextStyle
   className: string
 }
 
+// Add this new type helper
+type DynamicElementProps = {
+  className: string
+  children: React.ReactNode
+}
+
 const formatActions: TextStyle[] = [
   {
     label: "Normal Text",
@@ -115,7 +121,7 @@ export const SectionOne: React.FC<SectionOneProps> = React.memo(
           })}
           aria-label={label}
         >
-          <Element className={className}>{label}</Element>
+          {React.createElement(Element, { className }, label)}
           <ShortcutKey keys={shortcuts} />
         </DropdownMenuItem>
       ),

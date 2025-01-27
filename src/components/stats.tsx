@@ -1,5 +1,5 @@
 import { StatsCounter } from "./stat"
-
+import { ReactNode } from "react"
 export const Stats = ({
   title,
   subtitle,
@@ -7,7 +7,7 @@ export const Stats = ({
   reverse = false,
 }: {
   title: string
-  subtitle: string
+  subtitle: string | ReactNode
   reverse?: boolean
   stats: { title: string; number: number; subtitle?: string }[]
 }) => {
@@ -22,13 +22,13 @@ export const Stats = ({
           >
             {title}
           </h2>
-          <p
+          <div
             className={`text-center text-base md:text-lg font-normal ${
               reverse ? "text-white" : "text-muted-foreground"
             } max-w-2xl mt-2 mx-auto`}
           >
             {subtitle}
-          </p>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full mt-8">
             {stats.map((stat, index) => (
               <StatsCounter

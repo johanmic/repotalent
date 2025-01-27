@@ -103,7 +103,18 @@ export default async function Home({ searchParams }: HomeProps) {
         />
         <Stats
           title="Stats"
-          subtitle="For our own package.json we get"
+          subtitle={
+            <div>
+              For our own{" "}
+              <a
+                className="bg-white px-4 py-2 rounded-md text-primary hover:opacity-50"
+                href="https://github.com/johanmic/repotalent/blob/main/package.json"
+              >
+                package.json
+              </a>{" "}
+              we get
+            </div>
+          }
           reverse
           stats={[
             {
