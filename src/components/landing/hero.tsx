@@ -13,7 +13,7 @@ export const Hero = () => (
           </div>
           <div className="flex gap-4 flex-col">
             <h1 className="text-5xl md:text-7xl max-w-lg tracking-tighter text-left font-bold">
-              Turn your repository into a talent engine
+              Turn your codebase into a talent engine
             </h1>
             <p className="text-xl leading-relaxed tracking-tight text-muted-foreground max-w-md text-left">
               Discover top leads and craft tailored job descriptions directly

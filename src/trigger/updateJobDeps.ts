@@ -14,7 +14,7 @@ export const updateJobDeps = task({
 
     await updateJobDepsAsync(payload.jobId)
 
-    await tasks.trigger(GET_DEPS_GITHUB, { jobId: payload.jobId })
+    // await tasks.trigger(GET_DEPS_GITHUB, { jobId: payload.jobId })
 
     return {
       message: "Job deps updated",
