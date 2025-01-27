@@ -1,23 +1,89 @@
 import prisma from "@/store/prisma"
-import { GET_USER_INFO } from "@/trigger/constants"
+import { GET_USER_INFO, CALC_SCORES } from "@/trigger/constants"
 import { checkRateLimit, getGithubUser } from "@/utils/github/repo"
-import { logger, tasks } from "@trigger.dev/sdk/v3"
-export const getUserInfo = async (jobId: string) => {
-  const job = await prisma.jobPost.findUniqueOrThrow({
-    where: { id: jobId },
-    include: {
-      organization: {
-        include: {
-          users: true,
-        },
-      },
-    },
+import { logger, wait, tasks } from "@trigger.dev/sdk/v3"
+import { getInstallationId } from "./getRepoInfo"
+import { contributor } from "@prisma/client"
+
+export const getUserInfoHandler = async ({
+  jobId,
+  contributorId,
+}: {
+  jobId: string
+  contributorId: string
+}) => {
+  const githubInstallationId = await getInstallationId(jobId)
+  if (!githubInstallationId) {
+    return null
+  }
+  const rateLimit = await checkRateLimit({
+    installationId: githubInstallationId,
   })
 
-  const githubInstallationId = job.organization?.users.find(
-    (user) => user.githubInstallationId
-  )?.githubInstallationId
+  if (rateLimit.remaining < 10) {
+    wait.until({ date: rateLimit.reset })
+    tasks.trigger(GET_USER_INFO, { jobId, contributorId })
+    return null
+  }
+  const contributor = await prisma.contributor.findUniqueOrThrow({
+    where: { id: contributorId },
+  })
+  await getUserInfo({
+    jobId,
+    contributor,
+    githubInstallationId,
+  })
+}
 
+const getUserInfo = async ({
+  jobId,
+  contributor,
+  githubInstallationId,
+}: {
+  jobId: string
+  contributor: contributor
+  githubInstallationId: number
+}) => {
+  if (!contributor.name) {
+    return
+  }
+  const results = await getGithubUser({
+    username: contributor.name,
+    installationId: githubInstallationId,
+  })
+
+  if (!results.data) {
+    await prisma.contributor.update({
+      where: { id: contributor.id },
+      data: {
+        fetchedAt: new Date(),
+      },
+    })
+  }
+
+  const user = results.data
+  await prisma.contributor.update({
+    where: { id: contributor.id },
+    data: {
+      bio: user.bio,
+      locationRaw: user.location,
+      company: user?.company?.replace("@", ""),
+      email: user.email,
+      followers: user.followers,
+      following: user.following,
+      hireable: user.hireable,
+      publicRepos: user.public_repos,
+      publicGists: user.public_gists,
+      twitter: user.twitter_username,
+      blog: user.blog,
+      fetchedAt: new Date(),
+    },
+  })
+  await tasks.trigger(CALC_SCORES, { jobId, contributorId: contributor.id })
+}
+
+export const getUserInfoCronHandler = async (jobId: string) => {
+  const githubInstallationId = await getInstallationId(jobId)
   if (!githubInstallationId) {
     return null
   }
@@ -56,7 +122,7 @@ export const getUserInfo = async (jobId: string) => {
   })
 
   if (rateLimit.remaining < 10) {
-    tasks.trigger(GET_USER_INFO, { jobId })
+    await tasks.trigger(GET_USER_INFO, { jobId })
     return null
   }
 
@@ -71,7 +137,11 @@ export const getUserInfo = async (jobId: string) => {
   if (availableToRun <= 0) {
     const waitMs = rateLimit.reset.getTime() - Date.now()
     const waitMinutes = Math.ceil(waitMs / (1000 * 60))
-    tasks.trigger(GET_USER_INFO, { jobId }, { delay: `${waitMinutes} minutes` })
+    await tasks.trigger(
+      GET_USER_INFO,
+      { jobId },
+      { delay: `${waitMinutes} minutes` }
+    )
     return null
   }
 
@@ -81,46 +151,17 @@ export const getUserInfo = async (jobId: string) => {
     if (!contributor.name) {
       continue
     }
-    const results = await getGithubUser({
-      username: contributor.name,
-      installationId: githubInstallationId,
-    })
-
-    if (!results.data) {
-      await prisma.contributor.update({
-        where: { id: contributor.id },
-        data: {
-          fetchedAt: new Date(),
-        },
-      })
-      continue
-    }
-
-    const user = results.data
-    await prisma.contributor.update({
-      where: { id: contributor.id },
-      data: {
-        bio: user.bio,
-        locationRaw: user.location,
-        company: user?.company?.replace("@", ""),
-        email: user.email,
-        followers: user.followers,
-        following: user.following,
-        hireable: user.hireable,
-        publicRepos: user.public_repos,
-        publicGists: user.public_gists,
-        twitter: user.twitter_username,
-        blog: user.blog,
-        fetchedAt: new Date(),
-      },
-    })
   }
 
   if (slicedContributors.length < contributors.length) {
     const waitMs = rateLimit.reset.getTime() - Date.now()
     const waitMinutes = Math.ceil(waitMs / (1000 * 60))
     logger.info(`Waiting for ${waitMinutes} minutes`)
-    tasks.trigger(GET_USER_INFO, { jobId }, { delay: `${waitMinutes} minutes` })
+    await tasks.trigger(
+      GET_USER_INFO,
+      { jobId },
+      { delay: `${waitMinutes} minutes` }
+    )
   }
   await prisma.jobActionsLog.create({
     data: {

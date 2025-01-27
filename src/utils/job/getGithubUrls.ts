@@ -4,10 +4,10 @@ import {
   openSourcePackage,
   openSourcePackageVersion,
 } from "@prisma/client"
-import { logger } from "@trigger.dev/sdk/v3"
+import { logger, tasks } from "@trigger.dev/sdk/v3"
 import axios from "axios"
 import semver from "semver"
-
+import { GET_REPO_INFO } from "@/trigger/constants"
 export type Package = openSourcePackage & {
   versions: openSourcePackageVersion[]
   githubRepo: githubRepo
@@ -64,22 +64,24 @@ export const getInfoFromUrl = async (
   return { owner, repo }
 }
 
-export const getGithubUrls = async (jobId: string) => {
-  const packages = (await prisma.openSourcePackage.findMany({
+export const getGithubUrls = async ({
+  jobId,
+  pkgId,
+}: {
+  jobId: string
+  pkgId: string
+}) => {
+  const results = (await prisma.openSourcePackage.findUniqueOrThrow({
     where: {
-      versions: {
-        some: {
-          jobPosts: {
-            some: {
-              jobPostId: jobId,
-            },
-          },
-        },
-      },
-      githubRepoId: null,
+      id: pkgId,
     },
-  })) as Package[]
+    include: {
+      versions: true,
+      githubRepo: true,
+    },
+  })) as Package
 
+  const packages = [results]
   if (packages.length === 0) return null
   const job = await prisma.jobPost.findUniqueOrThrow({
     where: { id: jobId },
@@ -88,19 +90,19 @@ export const getGithubUrls = async (jobId: string) => {
   logger.log("Getting github urls", { jobId, jobSource: job.source })
   switch (job?.source) {
     case "package.json":
-      await getGithubFromNPM(packages)
+      await getGithubFromNPM(packages, jobId)
     case "requirements.txt":
     case "pyproject.toml":
-      await getGithubRepoFromPyPI(packages)
+      await getGithubRepoFromPyPI(packages, jobId)
       break
     case "Podfile.lock":
-      await getGithubRepoFromPodfile(packages)
+      await getGithubRepoFromPodfile(packages, jobId)
       break
     case "Makefile":
-      await getGithubRepoFromMaven(packages)
+      await getGithubRepoFromMaven(packages, jobId)
       break
     case "pubspec.yaml":
-      await getGithubRepoFromPubspec(packages)
+      await getGithubRepoFromPubspec(packages, jobId)
       break
     default:
       logger.warn(`Unknown job source: ${job.source}`)
@@ -116,7 +118,7 @@ export const getGithubUrls = async (jobId: string) => {
   })
 }
 
-export const getGithubFromNPM = async (packages: Package[]) => {
+export const getGithubFromNPM = async (packages: Package[], jobId: string) => {
   const results = await Promise.allSettled(
     packages.map(async (pkg) => {
       try {
@@ -126,7 +128,7 @@ export const getGithubFromNPM = async (packages: Package[]) => {
         const githubUrl = response.data.repository?.url
         if (githubUrl) {
           const normalizedUrl = normalizeGithubUrl(githubUrl)
-          await createPackageandRepo(pkg, normalizedUrl)
+          await createPackageandRepo({ pkg, jobId, normalizedUrl })
         }
       } catch (error) {
         logger.warn(`Failed to fetch NPM data for ${pkg.name}`, { error })
@@ -136,7 +138,10 @@ export const getGithubFromNPM = async (packages: Package[]) => {
   return results.some((result) => result.status === "fulfilled")
 }
 
-export const getGithubRepoFromPyPI = async (packages: Package[]) => {
+export const getGithubRepoFromPyPI = async (
+  packages: Package[],
+  jobId: string
+) => {
   const results = await Promise.allSettled(
     packages.map(async (pkg) => {
       try {
@@ -149,7 +154,7 @@ export const getGithubRepoFromPyPI = async (packages: Package[]) => {
 
         if (repositoryUrl) {
           const normalizedUrl = normalizeGithubUrl(repositoryUrl)
-          await createPackageandRepo(pkg, normalizedUrl)
+          await createPackageandRepo({ pkg, jobId, normalizedUrl })
         }
       } catch (error) {
         logger.warn(`Failed to fetch PyPI data for ${pkg.name}`, { error })
@@ -159,7 +164,10 @@ export const getGithubRepoFromPyPI = async (packages: Package[]) => {
   return results.some((result) => result.status === "fulfilled")
 }
 
-export const getGithubRepoFromPodfile = async (packages: Package[]) => {
+export const getGithubRepoFromPodfile = async (
+  packages: Package[],
+  jobId: string
+) => {
   const results = await Promise.allSettled(
     packages.map(async (pkg) => {
       try {
@@ -186,7 +194,7 @@ export const getGithubRepoFromPodfile = async (packages: Package[]) => {
 
         if (url) {
           const normalizedUrl = normalizeGithubUrl(url)
-          await createPackageandRepo(pkg, normalizedUrl)
+          await createPackageandRepo({ pkg, jobId, normalizedUrl })
         }
       } catch (error) {
         logger.warn(`Failed to fetch CocoaPods data for ${pkg.name}`, { error })
@@ -196,7 +204,10 @@ export const getGithubRepoFromPodfile = async (packages: Package[]) => {
   return results.some((result) => result.status === "fulfilled")
 }
 
-export const getGithubRepoFromMaven = async (packages: Package[]) => {
+export const getGithubRepoFromMaven = async (
+  packages: Package[],
+  jobId: string
+) => {
   const results = await Promise.allSettled(
     packages.map(async (pkg) => {
       try {
@@ -212,7 +223,7 @@ export const getGithubRepoFromMaven = async (packages: Package[]) => {
 
         if (repoUrl?.includes("github.com")) {
           const normalizedUrl = normalizeGithubUrl(repoUrl)
-          await createPackageandRepo(pkg, normalizedUrl)
+          await createPackageandRepo({ pkg, jobId, normalizedUrl })
         }
       } catch (error) {
         logger.warn(`Failed to fetch Maven data for ${pkg.name}`, { error })
@@ -234,7 +245,10 @@ const getPodspecFile = async (podName: string, version: string) => {
   }
 }
 
-export const getGithubRepoFromPubspec = async (packages: Package[]) => {
+export const getGithubRepoFromPubspec = async (
+  packages: Package[],
+  jobId: string
+) => {
   const results = await Promise.allSettled(
     packages.map(async (pkg) => {
       try {
@@ -242,7 +256,11 @@ export const getGithubRepoFromPubspec = async (packages: Package[]) => {
         const data = response.data
         const repositoryUrl = data?.repositoryUrl as string | undefined
         if (repositoryUrl) {
-          await createPackageandRepo(pkg, repositoryUrl)
+          await createPackageandRepo({
+            pkg,
+            jobId,
+            normalizedUrl: repositoryUrl,
+          })
         }
       } catch (error) {
         logger.warn(`Failed to fetch Pub.dev data for ${pkg.name}`, { error })
@@ -252,11 +270,17 @@ export const getGithubRepoFromPubspec = async (packages: Package[]) => {
   return results.some((result) => result.status === "fulfilled")
 }
 
-export const createPackageandRepo = async (
-  pkg: Package,
+export const createPackageandRepo = async ({
+  pkg,
+  jobId,
+  normalizedUrl,
+}: {
+  pkg: Package
+  jobId: string
   normalizedUrl: string
-) => {
+}) => {
   if (!normalizedUrl) return
+  let createRepo = true
   // First try to find an existing repo with this URL
   const existingRepo = await prisma.githubRepo.findUnique({
     where: { gitUrl: normalizedUrl },
@@ -264,15 +288,22 @@ export const createPackageandRepo = async (
 
   if (existingRepo) {
     // If repo exists, just connect the package to it
-    await prisma.openSourcePackage.update({
+    const results = await prisma.openSourcePackage.update({
       where: { id: pkg.id },
       data: {
         githubRepoId: existingRepo.id,
       },
+      include: {
+        githubRepo: true,
+      },
     })
-  } else {
+    if (results.githubRepo && results.githubRepo.description) {
+      createRepo = false
+    }
+  }
+  if (createRepo) {
     // If no repo exists, create new one and connect the package
-    await prisma.githubRepo.create({
+    const githubRepo = await prisma.githubRepo.create({
       data: {
         name: pkg.name,
         gitUrl: normalizedUrl,
@@ -281,5 +312,6 @@ export const createPackageandRepo = async (
         },
       },
     })
+    await tasks.trigger(GET_REPO_INFO, { jobId, githubRepoId: githubRepo.id })
   }
 }

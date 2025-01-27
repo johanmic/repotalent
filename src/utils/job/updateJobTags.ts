@@ -2,8 +2,8 @@ import prisma from "@/store/prisma"
 import { parseRequirementsTxt } from "@/utils/parseRequirementsTXT"
 import { parsePodfileLock } from "@/utils/podfileLockParser"
 import { parsePyprojectToml } from "@/utils/pyprojectTomlParser"
-import { logger } from "@trigger.dev/sdk/v3"
-
+import { logger, tasks } from "@trigger.dev/sdk/v3"
+import { GET_DEPS_GITHUB } from "@/trigger/constants"
 const BATCH_SIZE = 10
 
 const addPackages = async ({
@@ -18,7 +18,7 @@ const addPackages = async ({
     for (let i = 0; i < dependencies.length; i += BATCH_SIZE) {
       const batch = dependencies.slice(i, i + BATCH_SIZE)
 
-      await prisma.$transaction(
+      const openSourcePackages = await prisma.$transaction(
         async (tx) => {
           const operations = batch.map(async ({ name, version }) => {
             const pkg = await tx.openSourcePackage.upsert({
@@ -50,19 +50,24 @@ const addPackages = async ({
                 packageVersionId: pkgVersion.id,
               },
             })
+            return pkg
           })
 
           // Execute all operations in parallel within the smaller batch
-          await Promise.all(operations)
+          const pkgs = await Promise.all(operations)
+          return pkgs
         },
         {
           timeout: 180000, // 3 minutes timeout
           maxWait: 10000, // 10 seconds max wait time
         }
       )
-
+      console.log("openSourcePackages", openSourcePackages)
       // Add delay between batches to reduce database load
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      // await new Promise((resolve) => setTimeout(resolve, 100))
+      for (const pkg of openSourcePackages) {
+        await tasks.trigger(GET_DEPS_GITHUB, { jobId, pkgId: pkg.id })
+      }
 
       logger.log("Processed batch", {
         jobId,

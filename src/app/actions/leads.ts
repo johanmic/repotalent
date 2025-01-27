@@ -9,6 +9,7 @@ import {
 } from "@prisma/client"
 import { revalidatePath } from "next/cache"
 import posthog from "@/utils/posthog-node"
+import { ChartNoAxesColumnDecreasingIcon } from "lucide-react"
 
 export type Contribution = contribution & {
   githubRepo: githubRepo
@@ -59,26 +60,41 @@ export const getLeadsForJob = async ({
     throw new Error("User not authenticated")
   }
 
+  // First get the repos connected to this job
+  const connectedRepos = await prisma.githubRepo.findMany({
+    where: {
+      openSourcePackage: {
+        every: {
+          versions: {
+            every: {
+              jobPosts: {
+                every: {
+                  jobPost: {
+                    id: jobId,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+  })
+
+  const repoIds = connectedRepos.map((repo) => repo.id)
+
   const baseWhere = {
     fetchedAt: {
       not: null,
     },
     contributions: {
       some: {
-        githubRepo: {
-          openSourcePackage: {
-            some: {
-              versions: {
-                some: {
-                  jobPosts: {
-                    some: {
-                      jobPostId: jobId,
-                    },
-                  },
-                },
-              },
-            },
-          },
+        githubRepoId: {
+          in: repoIds,
         },
       },
     },
@@ -142,9 +158,42 @@ export const getLeadsForJob = async ({
     where,
     include: {
       contributions: {
+        where: {
+          githubRepo: {
+            openSourcePackage: {
+              some: {
+                versions: {
+                  some: {
+                    jobPosts: {
+                      some: {
+                        jobPostId: jobId,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
         distinct: ["githubRepoId"],
         include: {
-          githubRepo: true,
+          githubRepo: {
+            include: {
+              openSourcePackage: {
+                where: {
+                  versions: {
+                    some: {
+                      jobPosts: {
+                        some: {
+                          jobPostId: jobId,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       },
       jobPostContributorBookmark: {

@@ -2,8 +2,13 @@ import prisma from "@/store/prisma"
 import { getRepo, getRepoContributors } from "@/utils/github/repo"
 import { getInfoFromUrl, normalizeGithubUrl } from "@/utils/job/getGithubUrls"
 import type { RestEndpointMethodTypes } from "@octokit/rest"
+import type { githubRepo } from "@prisma/client"
+import { logger, tasks } from "@trigger.dev/sdk/v3"
+import { GET_USER_INFO } from "@/trigger/constants"
 
-export const getJobRepoInfo = async (jobId: string) => {
+export const getInstallationId = async (
+  jobId: string
+): Promise<number | null> => {
   const job = await prisma.jobPost.findUniqueOrThrow({
     where: { id: jobId },
     include: {
@@ -20,7 +25,84 @@ export const getJobRepoInfo = async (jobId: string) => {
   )?.githubInstallationId
 
   if (!githubInstallationId) {
+    logger.error("No github installation id found for job", { jobId })
     return null
+  }
+  return githubInstallationId
+}
+
+export const getRepoInfoHandler = async ({
+  githubRepoId,
+  jobId,
+}: {
+  githubRepoId: string
+  jobId: string
+}) => {
+  const githubRepo = await prisma.githubRepo.findUniqueOrThrow({
+    where: { id: githubRepoId },
+    include: {
+      openSourcePackage: true,
+    },
+  })
+  const githubInstallationId = await getInstallationId(jobId)
+  if (!githubInstallationId) {
+    return
+  }
+  await getRepoInfo({
+    githubRepo,
+    githubInstallationId,
+    jobId,
+  })
+}
+
+const getRepoInfo = async ({
+  githubRepo,
+  githubInstallationId,
+  jobId,
+}: {
+  githubRepo: githubRepo
+  githubInstallationId: number
+  jobId: string
+}) => {
+  try {
+    if (!githubRepo.gitUrl) {
+      return
+    }
+    const normalizedUrl = normalizeGithubUrl(githubRepo.gitUrl)
+    const { owner, repo } = await getInfoFromUrl(normalizedUrl)
+
+    const repoData = await getRepo({
+      owner,
+      repo,
+      githubInstallationId,
+    })
+
+    if (!repoData) {
+      return
+    }
+
+    await updateRepoInfo({ id: githubRepo.id, repoData })
+
+    const contributors = await getRepoContributors({
+      owner,
+      repo,
+      githubInstallationId,
+    })
+
+    await createContributors({
+      id: githubRepo.id,
+      jobId,
+      contributors,
+    })
+  } catch (error) {
+    console.error(`Failed to process package ${githubRepo.gitUrl}:`, error)
+  }
+}
+
+export const getJobRepoInfoCronHandler = async (jobId: string) => {
+  const githubInstallationId = await getInstallationId(jobId)
+  if (!githubInstallationId) {
+    return
   }
   const packages = await prisma.openSourcePackage.findMany({
     where: {
@@ -47,37 +129,11 @@ export const getJobRepoInfo = async (jobId: string) => {
     if (!pkg.githubRepo?.gitUrl || !pkg.githubRepoId) {
       continue
     }
-
-    try {
-      const normalizedUrl = normalizeGithubUrl(pkg.githubRepo.gitUrl)
-      const { owner, repo } = await getInfoFromUrl(normalizedUrl)
-
-      const repoData = await getRepo({
-        owner,
-        repo,
-        githubInstallationId,
-      })
-
-      if (!repoData) {
-        continue
-      }
-
-      await updateRepoInfo({ id: pkg.githubRepoId, repoData })
-
-      const contributors = await getRepoContributors({
-        owner,
-        repo,
-        githubInstallationId,
-      })
-
-      await createContributors(pkg.githubRepoId, contributors)
-    } catch (error) {
-      console.error(
-        `Failed to process package ${pkg.githubRepo.gitUrl}:`,
-        error
-      )
-      continue
-    }
+    await getRepoInfo({
+      githubRepo: pkg.githubRepo,
+      githubInstallationId,
+      jobId,
+    })
   }
   await prisma.jobActionsLog.create({
     data: {
@@ -143,21 +199,22 @@ const updateRepoInfo = async ({
   })
 }
 
-const createContributors = async (
-  id: string,
+const createContributors = async ({
+  id,
+  contributors,
+  jobId,
+}: {
+  id: string
+  jobId: string
   contributors: RestEndpointMethodTypes["repos"]["listContributors"]["response"]
-) => {
-  // Process one chunk at a time instead of parallel processing
-  // const chunks = splitEvery(30, contributors.data)
-  // for (const chunk of chunks) {
-  // Process contributors sequentially to avoid race conditions
+}) => {
   for (const contributor of contributors.data) {
     if (!contributor.id || contributor.login?.includes("bot")) {
       continue
     }
 
     try {
-      await prisma.contributor.upsert({
+      const results = await prisma.contributor.upsert({
         where: {
           githubId: contributor.id,
         },
@@ -183,6 +240,9 @@ const createContributors = async (
           },
         },
       })
+      if (!results.fetchedAt) {
+        await tasks.trigger(GET_USER_INFO, { jobId, contributorId: results.id })
+      }
     } catch (error) {
       console.error(`Failed to upsert contributor ${contributor.login}:`, error)
     }
